@@ -1,0 +1,274 @@
+# T66 - AI Chat Application
+# .gitignore
+
+# ========================================
+# ENVIRONMENT & SECRETS
+# ========================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.production
+
+# API Keys and secrets
+*.key
+*.pem
+secrets/
+config/secrets/
+
+# ========================================
+# NODE.JS / NPM / YARN
+# ========================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# ========================================
+# BUILD OUTPUTS
+# ========================================
+build/
+dist/
+out/
+*.tsbuildinfo
+
+# Vite
+.vite/
+
+# Next.js
+.next/
+
+# Nuxt.js
+.nuxt/
+
+# Gatsby
+public/
+.cache/
+
+# ========================================
+# REACT / FRONTEND
+# ========================================
+# Production build
+/frontend/build
+/frontend/dist
+
+# Testing
+/frontend/coverage
+
+# ========================================
+# POCKETBASE / BACKEND
+# ========================================
+# PocketBase data directory (contains database)
+backend/pb_data/
+backend/pb_public/uploads/
+
+# PocketBase logs
+backend/logs/
+backend/*.log
+
+# Go build outputs
+backend/main
+backend/*.exe
+backend/vendor/
+
+# Go module cache
+go.sum
+
+# ========================================
+# DATABASES
+# ========================================
+*.db
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
+
+# PostgreSQL
+*.sql
+
+# ========================================
+# DOCKER
+# ========================================
+docker-compose.override.yml
+.docker/
+
+# ========================================
+# IDE / EDITOR
+# ========================================
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+.#*
+*~
+\#*\#
+
+# ========================================
+# OPERATING SYSTEM
+# ========================================
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Windows
+*.tmp
+*.temp
+Desktop.ini
+
+# Linux
+*~
+
+# ========================================
+# LOGS & DEBUGGING
+# ========================================
+logs/
+*.log
+lerna-debug.log*
+.nyc_output
+
+# Debug files
+*.tlog
+*.bak
+
+# ========================================
+# TESTING
+# ========================================
+coverage/
+.nyc_output/
+junit.xml
+
+# Jest
+jest_*
+
+# ========================================
+# TEMPORARY & CACHE FILES
+# ========================================
+tmp/
+temp/
+.tmp/
+.cache/
+.parcel-cache/
+
+# npm cache
+.npm
+
+# Yarn
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# ========================================
+# DEPLOYMENT & CI/CD
+# ========================================
+# Deployment configs (may contain secrets)
+docker-compose.prod.yml
+k8s/secrets/
+
+# CI/CD outputs
+.github/workflows/outputs/
+
+# ========================================
+# AI & ML FILES
+# ========================================
+# Model files (usually large)
+*.model
+*.pkl
+*.h5
+*.onnx
+
+# Training data
+training_data/
+datasets/
+
+# ========================================
+# USER UPLOADS & CONTENT
+# ========================================
+uploads/
+user_files/
+attachments/
+
+# Generated images
+generated_images/
+
+# ========================================
+# DEVELOPMENT TOOLS
+# ========================================
+# Storybook
+storybook-static/
+
+# ESLint
+.eslintcache
+
+# Prettier
+.prettierignore
+
+# TypeScript
+*.tsbuildinfo
+
+# ========================================
+# MISC
+# ========================================
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage
+*.lcov
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# WebStorm
+.idea/ 
