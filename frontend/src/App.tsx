@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { Send, MessageSquare, Settings, User, Moon, Sun, Plus, MoreVertical, Trash2, ChevronDown } from 'lucide-react'
+import { Send, MessageSquare, Settings, User, Moon, Sun, Plus, MoreVertical, Trash2, ChevronDown, Edit2 } from 'lucide-react'
 import './App.css'
 
 // Components
@@ -48,6 +48,8 @@ function App() {
   const [activeChat, setActiveChat] = useState<string>('1')
   const [showSettings, setShowSettings] = useState(false)
   const [showModelSelector, setShowModelSelector] = useState(false)
+  const [renamingChat, setRenamingChat] = useState<string | null>(null)
+  const [renameValue, setRenameValue] = useState('')
 
   const currentChatData = chats.find(chat => chat.id === activeChat)
 
@@ -179,6 +181,31 @@ print([fibonacci(i) for i in range(10)])
     }
   }
 
+  const startRenaming = (chatId: string) => {
+    const chat = chats.find(c => c.id === chatId)
+    if (chat) {
+      setRenamingChat(chatId)
+      setRenameValue(chat.title)
+    }
+  }
+
+  const finishRenaming = () => {
+    if (renamingChat && renameValue.trim()) {
+      setChats(prev => prev.map(chat => 
+        chat.id === renamingChat 
+          ? { ...chat, title: renameValue.trim() }
+          : chat
+      ))
+    }
+    setRenamingChat(null)
+    setRenameValue('')
+  }
+
+  const cancelRenaming = () => {
+    setRenamingChat(null)
+    setRenameValue('')
+  }
+
   const getModelName = (modelId: string) => {
     const modelNames: Record<string, string> = {
       'gpt-4o': 'GPT-4o',
@@ -234,39 +261,68 @@ print([fibonacci(i) for i in range(10)])
                       : 'hover:bg-accent/50'
                   }`}
                 >
-                  <button
-                    onClick={() => setActiveChat(chat.id)}
-                    className="flex-1 text-left min-w-0"
-                  >
-                    <div className="flex items-center gap-2">
+                  {renamingChat === chat.id ? (
+                    <div className="flex-1 flex items-center gap-2">
                       <MessageSquare size={16} />
-                      <span className="truncate">{chat.title}</span>
+                      <input
+                        type="text"
+                        value={renameValue}
+                        onChange={(e) => setRenameValue(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            finishRenaming()
+                          } else if (e.key === 'Escape') {
+                            cancelRenaming()
+                          }
+                        }}
+                        onBlur={finishRenaming}
+                        className="flex-1 px-2 py-1 text-sm bg-background border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary"
+                        autoFocus
+                      />
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {chat.messages.length} messages
-                    </p>
-                  </button>
+                  ) : (
+                    <button
+                      onClick={() => setActiveChat(chat.id)}
+                      className="flex-1 text-left min-w-0"
+                    >
+                      <div className="flex items-center gap-2">
+                        <MessageSquare size={16} />
+                        <span className="truncate">{chat.title}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {chat.messages.length} messages
+                      </p>
+                    </button>
+                  )}
                   
                   {/* Three-dot menu */}
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Dropdown
-                      trigger={
-                        <Button variant="ghost" size="icon" className="h-6 w-6">
-                          <MoreVertical size={14} />
-                        </Button>
-                      }
-                    >
-                      <DropdownItem 
-                        onClick={() => deleteChat(chat.id)}
-                        variant="destructive"
+                  {renamingChat !== chat.id && (
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Dropdown
+                        trigger={
+                          <Button variant="ghost" size="icon" className="h-6 w-6">
+                            <MoreVertical size={14} />
+                          </Button>
+                        }
                       >
-                        <div className="flex items-center gap-2">
-                          <Trash2 size={14} />
-                          Delete Chat
-                        </div>
-                      </DropdownItem>
-                    </Dropdown>
-                  </div>
+                        <DropdownItem onClick={() => startRenaming(chat.id)}>
+                          <div className="flex items-center gap-2">
+                            <Edit2 size={14} />
+                            Rename Chat
+                          </div>
+                        </DropdownItem>
+                        <DropdownItem 
+                          onClick={() => deleteChat(chat.id)}
+                          variant="destructive"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Trash2 size={14} />
+                            Delete Chat
+                          </div>
+                        </DropdownItem>
+                      </Dropdown>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
