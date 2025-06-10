@@ -26,7 +26,7 @@ function App() {
         </div>
 
         {/* Link boxes */}
-        <div className="grid grid-cols-1 md:grid-cols-3 w-1/2 justify-center mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 w-1/2 justify-center mx-auto mb-16">
           {links.map((link) => (
             <a
               key={link.title}
@@ -39,6 +39,37 @@ function App() {
               <p className="text-gray-500">Visit {link.title.toLowerCase()}</p>
             </a>
           ))}
+        </div>
+        <div className="mb-16">
+          <div className="bg-white/5 border border-white/10 rounded-xl p-8 w-2/3 mx-auto text-center">
+            <h2 className="text-3xl font-semibold text-white mb-4">Stay Tuned!</h2>
+            <p className="text-white/70">
+              This project is currently a work in progress. Check back soon for updates!
+            </p>
+          </div>
+        </div>
+        <div className="mb-20">
+          <h2 className="text-4xl font-bold text-white text-center mb-4">Features</h2>
+          <div className="bg-white/5 border border-white/10 rounded-xl p-8 w-2/3 mx-auto text-center">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="bg-white/10 p-6 rounded-lg">
+                <h3 className="text-2xl font-semibold text-white mb-2">Feature 1</h3>
+                <p className="text-white/70">Description of feature 1 goes here.</p>
+              </div>
+              <div className="bg-white/10 p-6 rounded-lg">
+                <h3 className="text-2xl font-semibold text-white mb-2">Feature 2</h3>
+                <p className="text-white/70">Description of feature 2 goes here.</p>
+              </div>
+              <div className="bg-white/10 p-6 rounded-lg">
+                <h3 className="text-2xl font-semibold text-white mb-2">Feature 3</h3>
+                <p className="text-white/70">Description of feature 3 goes here.</p>
+              </div>
+              <div className="bg-white/10 p-6 rounded-lg">
+                <h3 className="text-2xl font-semibold text-white mb-2">Feature 4</h3>
+                <p className="text-white/70">Description of feature 4 goes here.</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
