@@ -1,7 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useContext } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { Send, MessageSquare, Settings, User, Moon, Sun, Plus, MoreVertical, Trash2, ChevronDown, Edit2 } from 'lucide-react'
 import './App.css'
+import  GoogleAuth  from './Auth'
+import { AuthContext } from './context/AuthContext';
+import pb from './lib/pocketbase';
+
+
 
 // Components
 import { Button } from './components/ui/Button'
@@ -26,7 +31,38 @@ interface Chat {
   createdAt: Date
 }
 
+interface UserRecord {
+  id: string;
+  email: string;
+  name: string;
+  plan: string;
+}
+
 function App() {
+  const auth = useContext(AuthContext)
+  if (!auth) {
+    throw new Error('App must be used within AuthProvider');
+  }
+
+  const [user, setUser] = useState<UserRecord | null>(() => {
+    if (pb.authStore.isValid && pb.authStore.record) {
+      return pb.authStore.record as unknown as UserRecord;
+    }
+    return null;
+  });
+
+  useEffect(() => {
+    const remove = pb.authStore.onChange(() => {
+      if (pb.authStore.isValid && pb.authStore.record) {
+        setUser(pb.authStore.record as unknown as UserRecord);
+      } else {
+        setUser(null);
+      }
+    });
+    return () => remove();
+  }, []);
+
+
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('dark')
   const [currentMessage, setCurrentMessage] = useState('')
   const [selectedModel, setSelectedModel] = useState('gpt-4o')
@@ -334,8 +370,13 @@ print([fibonacci(i) for i in range(10)])
                   <User size={16} className="text-primary-foreground" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium">Demo User</p>
-                  <p className="text-xs text-muted-foreground">All Features Free</p>
+                  {user ? 
+                    ( <p className="text-sm font-medium">{user.name}</p>
+                  ) : (
+                    <p className="text-sm font-medium">Guest User</p>
+                  )}
+                  <p className="text-xs text-muted-foreground">Free</p>
+                  <GoogleAuth />
                 </div>
                 <Button 
                   variant="ghost" 

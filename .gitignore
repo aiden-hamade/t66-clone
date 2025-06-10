@@ -271,4 +271,8 @@ coverage
 .yarn-integrity
 
 # WebStorm
-.idea/ 
+.idea/
+
+# PocketBase data
+*pb_data/
+*admin_log*

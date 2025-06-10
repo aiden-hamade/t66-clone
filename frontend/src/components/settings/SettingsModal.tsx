@@ -9,6 +9,11 @@ interface SettingsModalProps {
   onThemeChange: (theme: 'light' | 'dark' | 'system') => void
 }
 
+interface UserInfo {
+  plan: string
+  user: string
+}
+
 export function SettingsModal({ isOpen, onClose, theme, onThemeChange }: SettingsModalProps) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Settings" size="lg">
@@ -62,7 +67,7 @@ export function SettingsModal({ isOpen, onClose, theme, onThemeChange }: Setting
             </div>
             <div className="flex items-center justify-between py-2">
               <span className="text-sm">User</span>
-              <span className="text-sm text-muted-foreground">Demo User</span>
+              <span className="text-sm text-muted-foreground"></span>
             </div>
           </div>
         </div>
