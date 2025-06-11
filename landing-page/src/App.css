@@ -1,1 +1,179 @@
 @import "tailwindcss";
+
+:root {
+  /* Color Variables */
+  --color-background: #000000;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: rgba(255, 255, 255, 0.7);
+  --color-surface: rgba(255, 255, 255, 0.05);
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-accent: #4f46e5;
+  --color-muted: #6b7280;
+  --color-card-background: #ffffff;
+  --color-hover-surface: rgba(255, 255, 255, 0.1);
+  --color-subtitle: #9ca3af;
+  
+  /* Gradient Variables */
+  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  --gradient-accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  --gradient-surface: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  --gradient-background: linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 100%);
+}
+
+/* Custom utility classes using CSS variables */
+.bg-dynamic-background {
+  background: var(--color-background);
+}
+
+.text-dynamic-primary {
+  color: var(--color-text-primary);
+}
+
+.text-dynamic-secondary {
+  color: var(--color-text-secondary);
+}
+
+.bg-dynamic-surface {
+  background: var(--color-surface);
+}
+
+.border-dynamic {
+  border-color: var(--color-border);
+}
+
+.text-dynamic-accent {
+  color: var(--color-accent);
+}
+
+.text-dynamic-muted {
+  color: var(--color-muted);
+}
+
+.bg-dynamic-card {
+  background: var(--color-card-background);
+}
+
+.hover\:bg-dynamic-hover:hover {
+  background: var(--color-hover-surface);
+}
+
+.text-dynamic-subtitle {
+  background: var(--color-subtitle);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: var(--color-subtitle); /* Fallback for browsers that don't support background-clip */
+}
+
+/* Gradient utility classes */
+.bg-dynamic-gradient-primary {
+  background: var(--gradient-primary);
+}
+
+.bg-dynamic-gradient-secondary {
+  background: var(--gradient-secondary);
+}
+
+.bg-dynamic-gradient-accent {
+  background: var(--gradient-accent);
+}
+
+.bg-dynamic-gradient-surface {
+  background: var(--gradient-surface);
+}
+
+.bg-dynamic-gradient-background {
+  background: var(--gradient-background);
+}
+
+.text-dynamic-gradient-primary {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-dynamic-gradient-accent {
+  background: var(--gradient-accent);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Fixed colors for sidebar - always readable */
+.sidebar-bg {
+  background-color: #1f1f1f;
+}
+
+.sidebar-text-primary {
+  color: #ffffff;
+}
+
+.sidebar-text-secondary {
+  color: #a0a0a0;
+}
+
+.sidebar-text-accent {
+  color: #4f46e5;
+}
+
+.sidebar-text-muted {
+  color: #6b7280;
+}
+
+.sidebar-surface {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-border {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-input-bg {
+  background-color: #2a2a2a;
+}
+
+.sidebar-hover:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Sidebar animation and layout */
+.main-content {
+  margin-right: 0;
+  transition: margin-right 0.3s ease-in-out;
+}
+
+.main-content.shift {
+  margin-right: 400px;
+}
+
+.sidebar-container {
+  position: fixed;
+  right: -400px;
+  top: 0;
+  height: 100vh;
+  width: 400px;
+  transition: right 0.3s ease-in-out;
+  z-index: 50;
+}
+
+.sidebar-container.open {
+  right: 0;
+}
+
+/* Notification animations */
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.5s ease-out forwards;
+}
