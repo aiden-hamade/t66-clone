@@ -22,6 +22,25 @@
   --gradient-background: linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 100%);
 }
 
+/* === BASE STYLES === */
+/* Fix iOS background issues */
+html {
+  background: var(--color-background);
+  min-height: 100%;
+}
+
+body {
+  background: var(--color-background);
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  background: var(--color-background);
+  min-height: 100vh;
+}
+
 /* === DYNAMIC UTILITY CLASSES === */
 /* Background Classes */
 .bg-dynamic-background {
