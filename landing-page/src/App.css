@@ -1,5 +1,6 @@
 @import "tailwindcss";
 
+/* === ROOT VARIABLES === */
 :root {
   /* Color Variables */
   --color-background: #000000;
@@ -21,33 +22,14 @@
   --gradient-background: linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 100%);
 }
 
-/* Custom utility classes using CSS variables */
+/* === DYNAMIC UTILITY CLASSES === */
+/* Background Classes */
 .bg-dynamic-background {
   background: var(--color-background);
 }
 
-.text-dynamic-primary {
-  color: var(--color-text-primary);
-}
-
-.text-dynamic-secondary {
-  color: var(--color-text-secondary);
-}
-
 .bg-dynamic-surface {
   background: var(--color-surface);
-}
-
-.border-dynamic {
-  border-color: var(--color-border);
-}
-
-.text-dynamic-accent {
-  color: var(--color-accent);
-}
-
-.text-dynamic-muted {
-  color: var(--color-muted);
 }
 
 .bg-dynamic-card {
@@ -58,15 +40,38 @@
   background: var(--color-hover-surface);
 }
 
+/* Text Classes */
+.text-dynamic-primary {
+  color: var(--color-text-primary);
+}
+
+.text-dynamic-secondary {
+  color: var(--color-text-secondary);
+}
+
+.text-dynamic-accent {
+  color: var(--color-accent);
+}
+
+.text-dynamic-muted {
+  color: var(--color-muted);
+}
+
 .text-dynamic-subtitle {
   background: var(--color-subtitle);
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  color: var(--color-subtitle); /* Fallback for browsers that don't support background-clip */
+  color: var(--color-subtitle); /* Fallback */
 }
 
-/* Gradient utility classes */
+/* Border Classes */
+.border-dynamic {
+  border-color: var(--color-border);
+}
+
+/* === GRADIENT UTILITY CLASSES === */
+/* Background Gradients */
 .bg-dynamic-gradient-primary {
   background: var(--gradient-primary);
 }
@@ -87,6 +92,7 @@
   background: var(--gradient-background);
 }
 
+/* Text Gradients */
 .text-dynamic-gradient-primary {
   background: var(--gradient-primary);
   -webkit-background-clip: text;
@@ -101,7 +107,8 @@
   -webkit-text-fill-color: transparent;
 }
 
-/* Fixed colors for sidebar - always readable */
+/* === SIDEBAR STYLES === */
+/* Sidebar Color Classes */
 .sidebar-bg {
   background-color: #1f1f1f;
 }
@@ -138,7 +145,8 @@
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Sidebar animation and layout */
+/* === LAYOUT & ANIMATIONS === */
+/* Main Content Layout */
 .main-content {
   margin-right: 0;
   transition: margin-right 0.3s ease-in-out;
@@ -148,6 +156,7 @@
   margin-right: 400px;
 }
 
+/* Sidebar Layout */
 .sidebar-container {
   position: fixed;
   right: -400px;
@@ -162,7 +171,7 @@
   right: 0;
 }
 
-/* Notification animations */
+/* Notification Animations */
 @keyframes slide-in-right {
   from {
     transform: translateX(100%);

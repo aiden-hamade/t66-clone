@@ -3,9 +3,11 @@ import wip from './assets/wip.webp'
 import './App.css'
 
 function App() {
+  /* State Management */
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isThemesModalOpen, setIsThemesModalOpen] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
+  /* Default Style Properties - T3 Theme */
   const [styleProperties, setStyleProperties] = useState({
     background: {
       mode: 'color' as 'color' | 'gradient',
@@ -99,12 +101,14 @@ function App() {
     },
   });
 
+  /* Navigation Links */
   const links = [
     { title: 'Documentation', url: 'https://example.com/docs' },
     { title: 'GitHub Repo', url: 'https://github.com/aiden-hamade/t66-clone' },
     { title: 'Live Demo', url: 'https://example.com/demo' },
   ];
 
+  /* Theme Presets */
   const themePresets = [
     {
       name: 'Cyberpunk',
@@ -227,11 +231,13 @@ function App() {
     }
   ];
 
+  /* CSS Variable Management */
   const updateCSSVariable = (property: string, value: string) => {
     console.log('Setting CSS variable:', property, 'to:', value);
     document.documentElement.style.setProperty(property, value);
   };
 
+  /* Property Labels for UI */
   const propertyLabels: { [key: string]: string } = {
     background: 'Background',
     textPrimary: 'Primary Text',
@@ -245,6 +251,7 @@ function App() {
     subtitle: 'Subtitle Text',
   };
 
+  /* Gradient Direction Options */
   const gradientDirections = [
     { value: '0deg', label: 'Top to Bottom' },
     { value: '90deg', label: 'Left to Right' },
@@ -256,6 +263,7 @@ function App() {
     { value: '315deg', label: 'Bottom-Left to Top-Right' },
   ];
 
+  /* Utility Functions */
   const buildGradientCSS = (gradient: any) => {
     const { type, direction, colors } = gradient;
     let result;
@@ -412,6 +420,7 @@ function App() {
     setIsThemesModalOpen(false);
   };
 
+  /* Effects */
   // Initialize CSS variables on component mount
   useEffect(() => {
     Object.entries(styleProperties).forEach(([key, property]) => {
@@ -435,7 +444,7 @@ function App() {
         updateCSSVariable(cssVariableMap[key], gradientCSS);
       }
     });
-  }, []); // Empty dependency array means this runs once on mount
+  }, []);
 
   // Show notification after 5 seconds
   useEffect(() => {
@@ -446,6 +455,7 @@ function App() {
     return () => clearTimeout(timer);
   }, []);
 
+  /* Event Handlers */
   const handleNotificationClick = () => {
     setShowNotification(false);
     setIsSidebarOpen(true);
@@ -455,6 +465,7 @@ function App() {
     <div className="min-h-screen bg-dynamic-background">
       <div className={`main-content ${isSidebarOpen ? 'shift' : ''}`}>
         <div className="container mx-auto px-4 py-16">
+          {/* Hero Section */}
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 bg-dynamic-surface text-dynamic-secondary px-4 py-2 rounded-full text-sm font-medium mb-6">
               <img src={wip} alt="Work in Progress" className="w-12 h-10" />
@@ -469,7 +480,7 @@ function App() {
             </p>
           </div>
 
-          {/* Link boxes */}
+          {/* Navigation Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-16">
             {links.map((link) => (
               <a
@@ -508,6 +519,7 @@ function App() {
             ))}
           </div>
 
+          {/* Work in Progress Notice */}
           <div className="mb-16">
             <div className="bg-dynamic-surface border border-dynamic rounded-xl p-8 w-2/3 mx-auto text-center">
               <h2 className="text-3xl font-semibold text-dynamic-primary mb-4">Stay Tuned!</h2>
@@ -551,7 +563,7 @@ function App() {
             </div>
           </div>
 
-          {/* All Features Section */}
+          {/* All Announced Features Section */}
           <div className="mb-16">
             <h2 className="text-4xl font-bold text-dynamic-primary text-center mb-8">All Announced Features</h2>
             <p className="text-dynamic-secondary text-center mb-12 text-lg">From core functionality to advanced capabilities</p>
@@ -692,7 +704,7 @@ function App() {
             <p className="text-dynamic-secondary text-center mt-8 text-lg">And more features going to be announced later in development</p>
           </div>
 
-          {/* Edit Style Button */}
+          {/* Style Editor Button */}
           <div className="text-center mb-8">
             <button
               onClick={() => setIsSidebarOpen(true)}
@@ -727,7 +739,7 @@ function App() {
               </button>
             </div>
             
-            {/* Style Properties */}
+            {/* Style Property Controls */}
             <div className="space-y-4">
               {Object.entries(styleProperties).map(([key, property]) => (
                 <div key={key} className="sidebar-surface p-4 rounded-lg sidebar-border border">
@@ -745,7 +757,7 @@ function App() {
                     </select>
                   </div>
                   
-                  {/* Color Mode */}
+                  {/* Color Input */}
                   {property.mode === 'color' && (
                     <div className="flex items-center gap-2">
                       <input
@@ -778,10 +790,10 @@ function App() {
                     </div>
                   )}
                   
-                  {/* Gradient Mode */}
+                  {/* Gradient Controls */}
                   {property.mode === 'gradient' && (
-                    <div className="space-y-3">
-                      {/* Gradient Preview */}
+                    <div className="space-y-3">                      
+                      {/* Preview */}
                       <div
                         className="w-full h-6 rounded sidebar-border border-2"
                         style={{ background: buildGradientCSS(property.gradient) }}
@@ -863,7 +875,7 @@ function App() {
         </div>
       </div>
 
-      {/* Themes Modal */}
+      {/* Browse Themes Modal */}
       {isThemesModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div 
@@ -916,7 +928,7 @@ function App() {
                   </div>
         )}
 
-      {/* Style Notification */}
+      {/* Notification Popup */}
       {showNotification && (
         <div className="fixed bottom-6 right-6 z-40 animate-slide-in-right">
           <div className="bg-dynamic-surface border border-dynamic rounded-xl p-4 shadow-2xl max-w-sm">
