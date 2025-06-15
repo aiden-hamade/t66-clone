@@ -23,10 +23,14 @@
 }
 
 /* === BASE STYLES === */
-/* Fix iOS background issues */
+/* Fix iOS background issues and over-scroll behavior */
 html {
   background: var(--color-background);
   min-height: 100%;
+  /* Fix iOS over-scroll background */
+  background-attachment: fixed;
+  -webkit-background-size: cover;
+  background-size: cover;
 }
 
 body {
@@ -34,11 +38,19 @@ body {
   min-height: 100vh;
   margin: 0;
   padding: 0;
+  /* Fix iOS over-scroll background */
+  background-attachment: fixed;
+  -webkit-background-size: cover;
+  background-size: cover;
+  /* Prevent horizontal scrolling on mobile */
+  overflow-x: hidden;
 }
 
 #root {
   background: var(--color-background);
   min-height: 100vh;
+  /* Ensure root takes full width */
+  width: 100%;
 }
 
 /* === DYNAMIC UTILITY CLASSES === */

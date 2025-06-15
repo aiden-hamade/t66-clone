@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { flushSync } from 'react-dom'
 import wip from './assets/wip.webp'
 import './App.css'
 
@@ -235,6 +236,12 @@ function App() {
   const updateCSSVariable = (property: string, value: string) => {
     console.log('Setting CSS variable:', property, 'to:', value);
     document.documentElement.style.setProperty(property, value);
+    
+    // Fix iOS over-scroll background by updating html and body background
+    if (property === '--color-background') {
+      document.documentElement.style.background = value;
+      document.body.style.background = value;
+    }
   };
 
   /* Property Labels for UI */
@@ -311,7 +318,7 @@ function App() {
     }
   };
 
-  const handleColorChange = (propertyKey: string, value: string) => {
+  const handleColorChange = useCallback((propertyKey: string, value: string) => {
     const currentProperty = styleProperties[propertyKey as keyof typeof styleProperties];
     const newProperties = {
       ...styleProperties,
@@ -320,9 +327,13 @@ function App() {
         color: value,
       },
     };
-    setStyleProperties(newProperties);
     
-    // Apply the new color immediately using the updated value
+    // Force synchronous state update for immediate UI sync
+    flushSync(() => {
+      setStyleProperties(newProperties);
+    });
+    
+    // Apply the new color to CSS
     if (currentProperty.mode === 'color') {
       const cssVariableMap: { [key: string]: string } = {
         background: '--color-background',
@@ -338,7 +349,7 @@ function App() {
       };
       updateCSSVariable(cssVariableMap[propertyKey], value);
     }
-  };
+  }, [styleProperties]);
 
   const handleGradientChange = (propertyKey: string, gradientProperty: string, value: any) => {
     const currentProperty = styleProperties[propertyKey as keyof typeof styleProperties];
@@ -755,7 +766,18 @@ function App() {
                     <div className="flex items-center gap-2">
                       <input
                         type="color"
-                        value={property.color.includes('rgba') ? '#ffffff' : property.color}
+                        value={(() => {
+                          if (property.color.includes('rgba')) {
+                            // Extract RGB values from rgba string for color picker
+                            const match = property.color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+                            if (match) {
+                              const [, r, g, b] = match;
+                              return `#${parseInt(r).toString(16).padStart(2, '0')}${parseInt(g).toString(16).padStart(2, '0')}${parseInt(b).toString(16).padStart(2, '0')}`;
+                            }
+                            return '#ffffff';
+                          }
+                          return property.color;
+                        })()}
                         onChange={(e) => {
                           const newValue = e.target.value;
                           if (property.color.includes('rgba')) {
@@ -836,7 +858,18 @@ function App() {
                           <div className="flex items-center gap-2">
                             <input
                               type="color"
-                              value={color.includes('rgba') ? '#ffffff' : color}
+                              value={(() => {
+                                if (color.includes('rgba')) {
+                                  // Extract RGB values from rgba string for color picker
+                                  const match = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+                                  if (match) {
+                                    const [, r, g, b] = match;
+                                    return `#${parseInt(r).toString(16).padStart(2, '0')}${parseInt(g).toString(16).padStart(2, '0')}${parseInt(b).toString(16).padStart(2, '0')}`;
+                                  }
+                                  return '#ffffff';
+                                }
+                                return color;
+                              })()}
                               onChange={(e) => handleGradientColorChange(key, colorIndex, e.target.value)}
                               className="w-6 h-6 rounded sidebar-border border cursor-pointer"
                             />
