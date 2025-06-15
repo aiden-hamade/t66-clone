@@ -276,28 +276,7 @@ function App() {
     return result;
   };
 
-  const applyStyleToCSS = (propertyKey: string) => {
-    const property = styleProperties[propertyKey as keyof typeof styleProperties];
-    const cssVariableMap: { [key: string]: string } = {
-      background: '--color-background',
-      textPrimary: '--color-text-primary',
-      textSecondary: '--color-text-secondary',
-      surface: '--color-surface',
-      border: '--color-border',
-      accent: '--color-accent',
-      muted: '--color-muted',
-      cardBackground: '--color-card-background',
-      hoverSurface: '--color-hover-surface',
-      subtitle: '--color-subtitle',
-    };
 
-    if (property.mode === 'color') {
-      updateCSSVariable(cssVariableMap[propertyKey], property.color);
-    } else {
-      const gradientCSS = buildGradientCSS(property.gradient);
-      updateCSSVariable(cssVariableMap[propertyKey], gradientCSS);
-    }
-  };
 
   const handleModeChange = (propertyKey: string, mode: 'color' | 'gradient') => {
     const newProperties = {
@@ -333,17 +312,31 @@ function App() {
   };
 
   const handleColorChange = (propertyKey: string, value: string) => {
+    const currentProperty = styleProperties[propertyKey as keyof typeof styleProperties];
     const newProperties = {
       ...styleProperties,
       [propertyKey]: {
-        ...styleProperties[propertyKey as keyof typeof styleProperties],
+        ...currentProperty,
         color: value,
       },
     };
     setStyleProperties(newProperties);
     
-    if (styleProperties[propertyKey as keyof typeof styleProperties].mode === 'color') {
-      applyStyleToCSS(propertyKey);
+    // Apply the new color immediately using the updated value
+    if (currentProperty.mode === 'color') {
+      const cssVariableMap: { [key: string]: string } = {
+        background: '--color-background',
+        textPrimary: '--color-text-primary',
+        textSecondary: '--color-text-secondary',
+        surface: '--color-surface',
+        border: '--color-border',
+        accent: '--color-accent',
+        muted: '--color-muted',
+        cardBackground: '--color-card-background',
+        hoverSurface: '--color-hover-surface',
+        subtitle: '--color-subtitle',
+      };
+      updateCSSVariable(cssVariableMap[propertyKey], value);
     }
   };
 
