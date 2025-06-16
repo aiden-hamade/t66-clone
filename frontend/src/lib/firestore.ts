@@ -212,11 +212,13 @@ export const addMessageToChat = async (
       id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     };
 
-    // Convert message timestamp to Firestore timestamp for storage
-    const messageForStorage = {
-      ...newMessage,
-      timestamp: Timestamp.fromDate(newMessage.timestamp)
-    };
+    // Convert message timestamp to Firestore timestamp for storage and clean undefined fields
+    const messageForStorage = Object.fromEntries(
+      Object.entries({
+        ...newMessage,
+        timestamp: Timestamp.fromDate(newMessage.timestamp)
+      }).filter(([_, value]) => value !== undefined)
+    );
     
     const updatedMessages = [...chat.messages, messageForStorage];
     
@@ -253,22 +255,26 @@ export const updateMessageInChat = async (
       if (index === messageIndex) {
         const updatedMessage = { ...msg, ...updates };
         
-        // Convert timestamp to Firestore timestamp for storage
-        return {
-          ...updatedMessage,
-          timestamp: updatedMessage.timestamp instanceof Date 
-            ? Timestamp.fromDate(updatedMessage.timestamp)
-            : updatedMessage.timestamp
-        };
+        // Convert timestamp to Firestore timestamp for storage and clean undefined fields
+        return Object.fromEntries(
+          Object.entries({
+            ...updatedMessage,
+            timestamp: updatedMessage.timestamp instanceof Date 
+              ? Timestamp.fromDate(updatedMessage.timestamp)
+              : updatedMessage.timestamp
+          }).filter(([_, value]) => value !== undefined)
+        );
       }
       
-      // Ensure existing messages also have proper timestamps for storage
-      return {
-        ...msg,
-        timestamp: msg.timestamp instanceof Date 
-          ? Timestamp.fromDate(msg.timestamp)
-          : msg.timestamp
-      };
+      // Ensure existing messages also have proper timestamps for storage and clean undefined fields
+      return Object.fromEntries(
+        Object.entries({
+          ...msg,
+          timestamp: msg.timestamp instanceof Date 
+            ? Timestamp.fromDate(msg.timestamp)
+            : msg.timestamp
+        }).filter(([_, value]) => value !== undefined)
+      );
     });
 
     const chatRef = doc(db, 'chats', chatId);

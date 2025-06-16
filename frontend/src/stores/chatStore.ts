@@ -182,7 +182,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
       }
       
       // Create new chat with same title but marked as split
-      const newChat = await createChat(userId, originalChat.title, originalChat.settings, originalChat.folderId);
+      const newChat = await createChat(userId, originalChat.title, originalChat.settings, originalChat.folderId || undefined);
       
       // Copy all messages to the new chat
       for (const message of originalChat.messages) {
@@ -297,18 +297,22 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
         content,
         role: 'user',
         timestamp: new Date(),
-        attachments: attachments.length > 0 ? attachments.map(att => ({
+        metadata: {
+          model: currentChat?.settings.model || 'user-input'
+        }
+      };
+
+      // Only add attachments field if there are attachments
+      if (attachments.length > 0) {
+        message.attachments = attachments.map(att => ({
           id: att.id,
           filename: att.filename,
           size: att.size,
           type: att.type,
           url: att.url,
           createdAt: att.createdAt.toISOString() // Convert Date to string
-        })) : undefined,
-        metadata: {
-          model: currentChat?.settings.model || 'user-input'
-        }
-      };
+        }));
+      }
       
       const newMessage = await addMessageToChat(chatId, message);
       
