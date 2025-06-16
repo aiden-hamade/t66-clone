@@ -3,6 +3,7 @@ import type { Chat, Message, ChatSettings, User } from '../types';
 import { 
   createChat,
   getUserChats,
+  getChat,
   updateChat,
   deleteChat as deleteFirestoreChat,
   addMessageToChat,
@@ -42,6 +43,7 @@ interface ChatActions {
   // Chat management
   loadUserChats: (userId: string) => Promise<void>;
   createNewChat: (userId: string, title: string, settings: ChatSettings) => Promise<string>;
+  splitChat: (userId: string, chatId: string) => Promise<string>;
   updateChatTitle: (chatId: string, title: string) => Promise<void>;
   updateChatSettings: (chatId: string, settings: ChatSettings) => Promise<void>;
   deleteChat: (chatId: string) => Promise<void>;
@@ -122,6 +124,56 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
     } catch (error) {
       console.error('Error creating chat:', error);
       setError('Failed to create chat');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  },
+
+  // Split chat (duplicate with all messages)
+  splitChat: async (userId, chatId) => {
+    const { setLoading, setError, setChats, setActiveChat, chats } = get();
+    
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Find the original chat
+      const originalChat = chats.find(chat => chat.id === chatId);
+      if (!originalChat) {
+        throw new Error('Original chat not found');
+      }
+      
+      // Create new chat with "Split - " prefix
+      const splitTitle = `Split - ${originalChat.title}`;
+      const newChat = await createChat(userId, splitTitle, originalChat.settings);
+      
+      // Copy all messages to the new chat
+      for (const message of originalChat.messages) {
+        const messageToAdd: Omit<Message, 'id'> = {
+          content: message.content,
+          role: message.role,
+          timestamp: new Date(), // Use current timestamp for the split
+          metadata: message.metadata
+        };
+        
+        await addMessageToChat(newChat.id, messageToAdd);
+      }
+      
+      // Reload the new chat with messages
+      const updatedNewChat = await getChat(newChat.id);
+      if (!updatedNewChat) {
+        throw new Error('Failed to reload split chat');
+      }
+      
+      const { chats: currentChats } = get();
+      setChats([updatedNewChat, ...currentChats]);
+      setActiveChat(updatedNewChat.id);
+      
+      return updatedNewChat.id;
+    } catch (error) {
+      console.error('Error splitting chat:', error);
+      setError('Failed to split chat');
       throw error;
     } finally {
       setLoading(false);

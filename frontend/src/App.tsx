@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { Send, MessageSquare, Settings, User, Moon, Sun, Plus, MoreVertical, Trash2, ChevronDown, Edit2, LogOut, Info } from 'lucide-react'
+import { Send, MessageSquare, Settings, User, Moon, Sun, Plus, MoreVertical, Trash2, ChevronDown, Edit2, LogOut, Info, Copy } from 'lucide-react'
 import './App.css'
 
 // Components
@@ -48,6 +48,7 @@ function App() {
     setUser,
     loadUserChats,
     createNewChat,
+    splitChat,
     updateChatTitle,
     deleteChat,
     sendMessage,
@@ -136,6 +137,16 @@ function App() {
       await deleteChat(chatId)
     } catch (error) {
       console.error('Error deleting chat:', error)
+    }
+  }
+
+  const handleSplitChat = async (chatId: string) => {
+    if (!user?.id) return
+    
+    try {
+      await splitChat(user.id, chatId)
+    } catch (error) {
+      console.error('Error splitting chat:', error)
     }
   }
 
@@ -273,6 +284,12 @@ function App() {
                             <div className="flex items-center gap-2">
                               <Edit2 size={14} />
                               Rename Chat
+                            </div>
+                          </DropdownItem>
+                          <DropdownItem onClick={() => handleSplitChat(chat.id)}>
+                            <div className="flex items-center gap-2">
+                              <Copy size={14} />
+                              Split Chat
                             </div>
                           </DropdownItem>
                           <DropdownItem 
