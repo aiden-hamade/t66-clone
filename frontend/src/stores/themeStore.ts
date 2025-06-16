@@ -40,6 +40,7 @@ const cssVariableMap: Record<keyof ThemeProperties, string> = {
   // Chat-specific properties
   chatUserBubble: '--theme-chat-user-bubble',
   chatAssistantBubble: '--theme-chat-assistant-bubble',
+  chatAssistantText: '--theme-chat-assistant-text',
   chatInputBackground: '--theme-chat-input-background',
   chatInputBorder: '--theme-chat-input-border',
   chatHeaderBackground: '--theme-chat-header-background',

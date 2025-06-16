@@ -24,6 +24,7 @@ export interface ThemeProperties {
   // Chat-specific properties
   chatUserBubble: ThemeProperty
   chatAssistantBubble: ThemeProperty
+  chatAssistantText: ThemeProperty
   chatInputBackground: ThemeProperty
   chatInputBorder: ThemeProperty
   chatHeaderBackground: ThemeProperty
@@ -96,6 +97,7 @@ export const propertyLabels: Record<keyof ThemeProperties, string> = {
   // Chat-specific properties
   chatUserBubble: 'User Message Bubble',
   chatAssistantBubble: 'Assistant Message Bubble',
+  chatAssistantText: 'Assistant Text',
   chatInputBackground: 'Chat Input Background',
   chatInputBorder: 'Chat Input Border',
   chatHeaderBackground: 'Chat Header Background',

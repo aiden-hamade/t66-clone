@@ -11,19 +11,22 @@ interface ModalProps {
   size?: 'sm' | 'md' | 'lg' | 'xl'
 }
 
-export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalProps) {
+export function Modal({
+  isOpen,
+  onClose,
+  title,
+  children,
+  size = 'md',
+}: ModalProps) {
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
+    const onEscape = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
 
     if (isOpen) {
-      document.addEventListener('keydown', handleEscape)
+      document.addEventListener('keydown', onEscape)
       document.body.style.overflow = 'hidden'
     }
-
     return () => {
-      document.removeEventListener('keydown', handleEscape)
+      document.removeEventListener('keydown', onEscape)
       document.body.style.overflow = 'unset'
     }
   }, [isOpen, onClose])
@@ -32,13 +35,13 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+      {/* Backdrop: tinted & blur so it adapts to the active theme */}
+      <div
+        className="absolute inset-0 bg-theme-modal/60 backdrop-blur-sm"
         onClick={onClose}
       />
-      
-      {/* Modal */}
+
+      {/* Modal panel */}
       <div
         className={cn(
           'relative bg-theme-modal border border-theme-modal rounded-lg shadow-xl',
@@ -54,7 +57,9 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
         {/* Header */}
         {title && (
           <div className="flex items-center justify-between p-6 border-b border-theme-modal">
-            <h2 className="text-lg font-semibold text-theme-primary">{title}</h2>
+            <h2 className="text-lg font-semibold text-theme-primary">
+              {title}
+            </h2>
             <Button
               variant="ghost"
               size="icon"
@@ -65,12 +70,12 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
             </Button>
           </div>
         )}
-        
-        {/* Content */}
-        <div className="overflow-y-auto max-h-[calc(90vh-120px)]">
+
+        {/* Body */}
+        <div className="overflow-y-auto max-h-[calc(90vh-120px)] p-6">
           {children}
         </div>
       </div>
     </div>
   )
-} 
+}

@@ -38,6 +38,9 @@ export interface Chat {
   user: string
   shared?: boolean
   shareId?: string
+  isSplit?: boolean
+  splitFromChatId?: string // ID of the original chat this was split from
+  folderId?: string // ID of the folder this chat belongs to
   createdAt: Date
   updatedAt: Date
 }
@@ -262,4 +265,14 @@ export interface ModalProps {
   title?: string
   children: React.ReactNode
   size?: 'sm' | 'md' | 'lg' | 'xl'
+}
+
+export interface ChatFolder {
+  id: string
+  name: string
+  color?: string
+  user: string
+  isExpanded?: boolean
+  createdAt: Date
+  updatedAt: Date
 } 

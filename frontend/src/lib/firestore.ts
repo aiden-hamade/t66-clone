@@ -14,10 +14,11 @@ import {
   Timestamp,
   setDoc,
   type DocumentSnapshot,
-  type QuerySnapshot
+  type QuerySnapshot,
+  writeBatch
 } from 'firebase/firestore';
 import { db } from './firebase';
-import type { Chat, Message, ChatSettings, User } from '../types';
+import type { Chat, Message, ChatSettings, User, ChatFolder } from '../types';
 
 // Convert Firestore timestamp to Date
 const timestampToDate = (timestamp: any): Date => {
@@ -58,6 +59,26 @@ const convertChatDoc = (doc: DocumentSnapshot): Chat | null => {
     user: data.user,
     shared: data.shared || false,
     shareId: data.shareId,
+    isSplit: data.isSplit || false,
+    splitFromChatId: data.splitFromChatId,
+    folderId: data.folderId,
+    createdAt: timestampToDate(data.createdAt),
+    updatedAt: timestampToDate(data.updatedAt)
+  };
+};
+
+// Convert ChatFolder document from Firestore
+const convertFolderDoc = (doc: DocumentSnapshot): ChatFolder | null => {
+  if (!doc.exists()) return null;
+  
+  const data = doc.data();
+  
+  return {
+    id: doc.id,
+    name: data.name,
+    color: data.color,
+    user: data.user,
+    isExpanded: data.isExpanded !== false, // Default to true
     createdAt: timestampToDate(data.createdAt),
     updatedAt: timestampToDate(data.updatedAt)
   };
@@ -67,7 +88,8 @@ const convertChatDoc = (doc: DocumentSnapshot): Chat | null => {
 export const createChat = async (
   userId: string,
   title: string,
-  settings: ChatSettings
+  settings: ChatSettings,
+  folderId?: string
 ): Promise<Chat> => {
   try {
     const chatData = {
@@ -76,6 +98,7 @@ export const createChat = async (
       settings,
       user: userId,
       shared: false,
+      folderId: folderId || undefined,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now()
     };
@@ -407,6 +430,122 @@ export const updateUser = async (userId: string, updates: Partial<User>): Promis
     await updateDoc(userRef, cleanUpdates);
   } catch (error) {
     console.error('Error updating user:', error);
+    throw error;
+  }
+};
+
+// Folder management functions
+export const createFolder = async (
+  userId: string,
+  name: string,
+  color?: string
+): Promise<ChatFolder> => {
+  try {
+    const folderData = {
+      name,
+      color: color || '#6b7280',
+      user: userId,
+      isExpanded: true,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now()
+    };
+
+    const docRef = await addDoc(collection(db, 'folders'), folderData);
+    const newFolder: ChatFolder = {
+      id: docRef.id,
+      ...folderData,
+      createdAt: folderData.createdAt.toDate(),
+      updatedAt: folderData.updatedAt.toDate()
+    };
+
+    return newFolder;
+  } catch (error) {
+    console.error('Error creating folder:', error);
+    throw error;
+  }
+};
+
+export const getUserFolders = async (userId: string): Promise<ChatFolder[]> => {
+  try {
+    const q = query(
+      collection(db, 'folders'),
+      where('user', '==', userId),
+      orderBy('createdAt', 'asc')
+    );
+
+    const querySnapshot = await getDocs(q);
+    const folders: ChatFolder[] = [];
+
+    querySnapshot.forEach((doc) => {
+      const folder = convertFolderDoc(doc);
+      if (folder) {
+        folders.push(folder);
+      }
+    });
+
+    return folders;
+  } catch (error) {
+    console.error('Error getting user folders:', error);
+    throw error;
+  }
+};
+
+export const updateFolder = async (
+  folderId: string,
+  updates: Partial<Omit<ChatFolder, 'id' | 'user' | 'createdAt'>>
+): Promise<void> => {
+  try {
+    const folderRef = doc(db, 'folders', folderId);
+    const updateData: any = {
+      ...updates,
+      updatedAt: Timestamp.now()
+    };
+
+    await updateDoc(folderRef, updateData);
+  } catch (error) {
+    console.error('Error updating folder:', error);
+    throw error;
+  }
+};
+
+export const deleteFolder = async (folderId: string): Promise<void> => {
+  try {
+    // First, remove folder reference from all chats in this folder
+    const chatsQuery = query(
+      collection(db, 'chats'),
+      where('folderId', '==', folderId)
+    );
+    
+    const chatsSnapshot = await getDocs(chatsQuery);
+    const batch = writeBatch(db);
+    
+    chatsSnapshot.forEach((chatDoc) => {
+      batch.update(chatDoc.ref, { folderId: null });
+    });
+    
+    // Delete the folder
+    const folderRef = doc(db, 'folders', folderId);
+    batch.delete(folderRef);
+    
+    await batch.commit();
+  } catch (error) {
+    console.error('Error deleting folder:', error);
+    throw error;
+  }
+};
+
+export const moveChatToFolder = async (
+  chatId: string,
+  folderId: string | null
+): Promise<void> => {
+  try {
+    const chatRef = doc(db, 'chats', chatId);
+    await updateDoc(chatRef, {
+      folderId: folderId || undefined,
+      updatedAt: Timestamp.now()
+    });
+  } catch (error) {
+    console.error('Error moving chat to folder:', error);
     throw error;
   }
 }; 

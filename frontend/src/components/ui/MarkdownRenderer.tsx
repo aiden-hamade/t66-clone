@@ -57,7 +57,7 @@ function CodeBlock({ children, className, ...props }: any) {
 
 export function MarkdownRenderer({ content, className }: MarkdownRendererProps) {
   return (
-    <div className={cn('prose prose-sm dark:prose-invert max-w-none', className)}>
+    <div className={cn('prose prose-sm dark:prose-invert max-w-none text-theme-chat-assistant', className)}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
@@ -68,11 +68,54 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
                 {children}
               </CodeBlock>
             ) : (
-              <code className="bg-theme-code px-1.5 py-0.5 rounded text-sm" {...props}>
+              <code className="bg-theme-code px-1.5 py-0.5 rounded text-sm text-theme-chat-assistant" {...props}>
                 {children}
               </code>
             )
           },
+          // Ensure all paragraph text uses theme color
+          p: ({ children, ...props }) => (
+            <p className="text-theme-chat-assistant" {...props}>
+              {children}
+            </p>
+          ),
+          // Ensure headings use theme color
+          h1: ({ children, ...props }) => (
+            <h1 className="text-theme-chat-assistant" {...props}>
+              {children}
+            </h1>
+          ),
+          h2: ({ children, ...props }) => (
+            <h2 className="text-theme-chat-assistant" {...props}>
+              {children}
+            </h2>
+          ),
+          h3: ({ children, ...props }) => (
+            <h3 className="text-theme-chat-assistant" {...props}>
+              {children}
+            </h3>
+          ),
+          h4: ({ children, ...props }) => (
+            <h4 className="text-theme-chat-assistant" {...props}>
+              {children}
+            </h4>
+          ),
+          h5: ({ children, ...props }) => (
+            <h5 className="text-theme-chat-assistant" {...props}>
+              {children}
+            </h5>
+          ),
+          h6: ({ children, ...props }) => (
+            <h6 className="text-theme-chat-assistant" {...props}>
+              {children}
+            </h6>
+          ),
+          // Ensure list items use theme color
+          li: ({ children, ...props }) => (
+            <li className="text-theme-chat-assistant" {...props}>
+              {children}
+            </li>
+          ),
           // Custom table styling
           table: ({ children, ...props }) => (
             <div className="overflow-x-auto">
@@ -82,12 +125,12 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
             </div>
           ),
           th: ({ children, ...props }) => (
-            <th className="border border-theme px-3 py-2 bg-theme-surface font-medium text-theme-primary" {...props}>
+            <th className="border border-theme px-3 py-2 bg-theme-surface font-medium text-theme-chat-assistant" {...props}>
               {children}
             </th>
           ),
           td: ({ children, ...props }) => (
-            <td className="border border-theme px-3 py-2 text-theme-primary" {...props}>
+            <td className="border border-theme px-3 py-2 text-theme-chat-assistant" {...props}>
               {children}
             </td>
           ),
@@ -99,9 +142,21 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
           ),
           // Custom blockquote styling
           blockquote: ({ children, ...props }) => (
-            <blockquote className="border-l-4 border-theme pl-4 italic" {...props}>
+            <blockquote className="border-l-4 border-theme pl-4 italic text-theme-chat-assistant" {...props}>
               {children}
             </blockquote>
+          ),
+          // Ensure strong text uses theme color
+          strong: ({ children, ...props }) => (
+            <strong className="text-theme-chat-assistant font-bold" {...props}>
+              {children}
+            </strong>
+          ),
+          // Ensure emphasis text uses theme color
+          em: ({ children, ...props }) => (
+            <em className="text-theme-chat-assistant italic" {...props}>
+              {children}
+            </em>
           ),
         }}
       >

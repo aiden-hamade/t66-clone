@@ -41,6 +41,7 @@
   /* Dynamic Theme Variables - Chat Specific */
   --theme-chat-user-bubble: linear-gradient(135deg, #571a5b, #7c2d91);
   --theme-chat-assistant-bubble: linear-gradient(135deg, #2a1f2e, #1f1823);
+  --theme-chat-assistant-text: #ffffff;
   --theme-chat-input-background: #2a1f2e;
   --theme-chat-input-border: rgba(157, 73, 212, 0.2);
   --theme-chat-header-background: linear-gradient(135deg, #2a1f2e, #1f1823);
@@ -52,12 +53,12 @@
   --theme-button-secondary-text: #c9bcd7;
   
   /* Dynamic Theme Variables - UI Elements */
-  --theme-modal-background: linear-gradient(135deg, #2a1f2e, #1f1823);
-  --theme-modal-border: rgba(157, 73, 212, 0.2);
-  --theme-dropdown-background: linear-gradient(135deg, #2a1f2e, #1f1823);
-  --theme-dropdown-hover: rgba(189, 17, 192, 0.1);
+  --theme-modal-background: #241f29;
+  --theme-modal-border: rgba(255, 255, 255, 0.1);
+  --theme-dropdown-background: #241f29;
+  --theme-dropdown-hover: rgba(255, 255, 255, 0.1);
   --theme-input-background: #2a1f2e;
-  --theme-input-border: rgba(157, 73, 212, 0.2);
+  --theme-input-border: rgba(255, 255, 255, 0.15);
   --theme-input-text: #ffffff;
   --theme-link-color: linear-gradient(135deg, #d47de1, #e078d0);
   --theme-error-color: #ef4444;
@@ -246,6 +247,10 @@ body {
 
 .bg-theme-chat-assistant {
   background: var(--theme-chat-assistant-bubble);
+}
+
+.text-theme-chat-assistant {
+  color: var(--theme-chat-assistant-text);
 }
 
 .bg-theme-chat-input {
