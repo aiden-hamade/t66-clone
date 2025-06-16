@@ -548,4 +548,69 @@ export const moveChatToFolder = async (
     console.error('Error moving chat to folder:', error);
     throw error;
   }
-}; 
+};
+
+
+export const addCollaboratorToChat = async (
+  chatId: string,
+  userEmail: string
+): Promise<void> => {
+  try {
+    // First, find the user by emailAdd commentMore actions
+    const usersQuery = query(
+      collection(db, 'users'),
+      where('email', '==', userEmail)
+    );
+    const userSnapshot = await getDocs(usersQuery);
+    
+    if (userSnapshot.empty) {
+      throw new Error('User not found with that email');
+    }
+    
+    const userId = userSnapshot.docs[0].id;
+    const chatRef = doc(db, 'chats', chatId);
+    const chatDoc = await getDoc(chatRef);
+    
+    if (!chatDoc.exists()) {
+      throw new Error('Chat not found');
+    }
+    
+    const chatData = chatDoc.data();
+    const currentCollaborators = chatData.collaborators || [];
+    
+    if (!currentCollaborators.includes(userId)) {
+      await updateDoc(chatRef, {
+        collaborators: [...currentCollaborators, userId],
+        updatedAt: Timestamp.now()
+      });
+    }
+  } catch (error) {
+    console.error('Error adding collaborator to chat:', error);
+    throw error;
+  }
+};
+
+export const removeCollaboratorFromChat = async (
+  chatId: string,
+  userId: string
+): Promise<void> => {
+  try {
+    const chatRef = doc(db, 'chats', chatId);
+    const chatDoc = await getDoc(chatRef);
+    
+    if (!chatDoc.exists()) {
+      throw new Error('Chat not found');
+    }
+    
+    const chatData = chatDoc.data();
+    const currentCollaborators = chatData.collaborators || [];
+    
+    await updateDoc(chatRef, {
+      collaborators: currentCollaborators.filter((id: string) => id !== userId),
+      updatedAt: Timestamp.now()
+    });
+  } catch (error) {
+    console.error('Error removing collaborator from chat:', error);
+    throw error;
+  }
+};
