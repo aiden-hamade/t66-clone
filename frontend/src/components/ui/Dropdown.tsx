@@ -16,7 +16,9 @@ interface DropdownItemProps {
 
 export function Dropdown({ trigger, children, align = 'right' }: DropdownProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const [dropdownPosition, setDropdownPosition] = useState<'bottom' | 'top'>('bottom')
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -34,16 +36,36 @@ export function Dropdown({ trigger, children, align = 'right' }: DropdownProps) 
     }
   }, [isOpen])
 
+  useEffect(() => {
+    if (isOpen && triggerRef.current) {
+      const triggerRect = triggerRef.current.getBoundingClientRect()
+      const viewportHeight = window.innerHeight
+      const spaceBelow = viewportHeight - triggerRect.bottom
+      const spaceAbove = triggerRect.top
+      
+      // Estimate dropdown height (you can adjust this value)
+      const estimatedDropdownHeight = 120
+      
+      // Position above if there's not enough space below but enough space above
+      if (spaceBelow < estimatedDropdownHeight && spaceAbove > estimatedDropdownHeight) {
+        setDropdownPosition('top')
+      } else {
+        setDropdownPosition('bottom')
+      }
+    }
+  }, [isOpen])
+
   return (
     <div className="relative" ref={dropdownRef}>
-      <div onClick={() => setIsOpen(!isOpen)}>
+      <div ref={triggerRef} onClick={() => setIsOpen(!isOpen)}>
         {trigger}
       </div>
       
       {isOpen && (
         <div
           className={cn(
-            'absolute top-full mt-1 min-w-[160px] bg-card border border-border rounded-md shadow-lg z-50',
+            'absolute min-w-[160px] bg-card border border-border rounded-md shadow-lg z-50',
+            dropdownPosition === 'bottom' ? 'top-full mt-1' : 'bottom-full mb-1',
             align === 'right' ? 'right-0' : 'left-0'
           )}
         >

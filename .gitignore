@@ -73,23 +73,23 @@ public/
 /frontend/coverage
 
 # ========================================
-# POCKETBASE / BACKEND
+# FIREBASE
 # ========================================
-# PocketBase data directory (contains database)
-backend/pb_data/
-backend/pb_public/uploads/
+# Firebase cache
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
 
-# PocketBase logs
-backend/logs/
-backend/*.log
+# Firebase Functions
+functions/node_modules/
+functions/lib/
+functions/logs/
 
-# Go build outputs
-backend/main
-backend/*.exe
-backend/vendor/
+# Firebase Hosting
+.firebase/hosting.*
 
-# Go module cache
-go.sum
+# Firebase Emulator data
+firebase-emulator-data/
 
 # ========================================
 # DATABASES
@@ -135,122 +135,100 @@ docker-compose.override.yml
 *~
 
 # Emacs
-.#*
 *~
 \#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
 
 # ========================================
-# OPERATING SYSTEM
+# MACOS
 # ========================================
-# macOS
 .DS_Store
-.DS_Store?
+.AppleDouble
+.LSOverride
+
+# Icon must end with two \r
+Icon
+
+# Thumbnails
 ._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
 .Spotlight-V100
+.TemporaryItems
 .Trashes
-ehthumbs.db
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# ========================================
+# WINDOWS
+# ========================================
+# Windows thumbnail cache files
 Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
 
-# Windows
-*.tmp
-*.temp
-Desktop.ini
+# Dump file
+*.stackdump
 
-# Linux
+# Folder config file
+[Dd]esktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Windows Installer files
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+
+# Windows shortcuts
+*.lnk
+
+# ========================================
+# LINUX
+# ========================================
 *~
 
+# temporary files which can be created if a process still has a handle open of a deleted file
+.fuse_hidden*
+
+# KDE directory preferences
+.directory
+
+# Linux trash folder which might appear on any partition or disk
+.Trash-*
+
+# .nfs files are created when an open file is removed but is still being accessed
+.nfs*
+
 # ========================================
-# LOGS & DEBUGGING
+# LOGS
 # ========================================
 logs/
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 lerna-debug.log*
-.nyc_output
+.pnpm-debug.log*
 
-# Debug files
-*.tlog
-*.bak
-
-# ========================================
-# TESTING
-# ========================================
-coverage/
-.nyc_output/
-junit.xml
-
-# Jest
-jest_*
-
-# ========================================
-# TEMPORARY & CACHE FILES
-# ========================================
-tmp/
-temp/
-.tmp/
-.cache/
-.parcel-cache/
-
-# npm cache
-.npm
-
-# Yarn
-.yarn/cache
-.yarn/unplugged
-.yarn/build-state.yml
-.yarn/install-state.gz
-.pnp.*
-
-# ========================================
-# DEPLOYMENT & CI/CD
-# ========================================
-# Deployment configs (may contain secrets)
-docker-compose.prod.yml
-k8s/secrets/
-
-# CI/CD outputs
-.github/workflows/outputs/
-
-# ========================================
-# AI & ML FILES
-# ========================================
-# Model files (usually large)
-*.model
-*.pkl
-*.h5
-*.onnx
-
-# Training data
-training_data/
-datasets/
-
-# ========================================
-# USER UPLOADS & CONTENT
-# ========================================
-uploads/
-user_files/
-attachments/
-
-# Generated images
-generated_images/
-
-# ========================================
-# DEVELOPMENT TOOLS
-# ========================================
-# Storybook
-storybook-static/
-
-# ESLint
-.eslintcache
-
-# Prettier
-.prettierignore
-
-# TypeScript
-*.tsbuildinfo
-
-# ========================================
-# MISC
-# ========================================
 # Runtime data
 pids
 *.pid
@@ -258,8 +236,45 @@ pids
 *.pid.lock
 
 # Coverage directory used by tools like istanbul
-coverage
+coverage/
 *.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Grunt intermediate storage (https://gruntjs.com/creating-plugins#storing-task-files)
+.grunt
+
+# Bower dependency directory (https://bower.io/)
+bower_components
+
+# node-waf configuration
+.lock-wscript
+
+# Compiled binary addons (https://nodejs.org/api/addons.html)
+build/Release
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Snowpack dependency directory (https://snowpack.dev/)
+web_modules/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
 
 # Optional REPL history
 .node_repl_history
@@ -270,5 +285,36 @@ coverage
 # Yarn Integrity file
 .yarn-integrity
 
-# WebStorm
-.idea/ 
+# dotenv environment variables file
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.production
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# Next.js build output
+.next
+out
+
+# Nuxt.js build / generate output
+.nuxt
+dist
+
+# Gatsby files
+.cache/
+# Comment in the public line in if your project uses Gatsby and not Next.js
+# https://nextjs.org/blog/next-9-1#public-directory-support
+# public
+
+# Storybook build outputs
+.out
+.storybook-out
+
+# Temporary folders
+tmp/
+temp/ 

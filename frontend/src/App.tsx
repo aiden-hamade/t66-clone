@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { Send, MessageSquare, Settings, User, Moon, Sun, Plus, MoreVertical, Trash2, ChevronDown, Edit2 } from 'lucide-react'
+import { Send, MessageSquare, Settings, User, Moon, Sun, Plus, MoreVertical, Trash2, ChevronDown, Edit2, LogOut, Info, Copy } from 'lucide-react'
 import './App.css'
 
 // Components
@@ -10,48 +10,69 @@ import { Dropdown, DropdownItem } from './components/ui/Dropdown'
 import { MarkdownRenderer } from './components/ui/MarkdownRenderer'
 import { SettingsModal } from './components/settings/SettingsModal'
 import { ModelSelectorModal } from './components/settings/ModelSelectorModal'
+import { ProtectedRoute } from './components/auth/ProtectedRoute'
+
+// Stores
+import { useAuthStore } from './stores/authStore'
+import { useChatStore } from './stores/chatStore'
+
+// Utils
+import { estimateTokenCount } from './lib/openrouter'
 
 // Types
-interface Message {
-  id: string
-  content: string
-  role: 'user' | 'assistant' | 'system'
-  timestamp: Date
-}
-
-interface Chat {
-  id: string
-  title: string
-  messages: Message[]
-  createdAt: Date
-}
+import type { ChatSettings } from './types'
 
 function App() {
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('dark')
-  const [currentMessage, setCurrentMessage] = useState('')
-  const [selectedModel, setSelectedModel] = useState('gpt-4o')
-  const [chats, setChats] = useState<Chat[]>([
-    {
-      id: '1',
-      title: 'Welcome to T66',
-      messages: [
-        {
-          id: '1',
-          content: 'Hello! Welcome to **T66**, your open-source AI chat application. I can help you with:\n\n- **Markdown formatting** with code blocks\n- Mathematical equations\n- Programming questions\n- General conversations\n\nHere\'s some code:\n\n```typescript\nfunction greet(name: string): string {\n  return `Hello, ${name}!`;\n}\n```\n\nHow can I help you today?',
-          role: 'assistant',
-          timestamp: new Date()
-        }
-      ],
-      createdAt: new Date()
-    }
-  ])
-  const [activeChat, setActiveChat] = useState<string>('1')
+  const [selectedModel, setSelectedModel] = useState('openai/gpt-4o')
   const [showSettings, setShowSettings] = useState(false)
   const [showModelSelector, setShowModelSelector] = useState(false)
   const [renamingChat, setRenamingChat] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState('')
 
+  // Auth store
+  const { user, signOut: authSignOut, setUser: setAuthUser } = useAuthStore()
+
+  // Chat store
+  const {
+    chats,
+    activeChat,
+    currentMessage,
+    isLoading,
+    isStreaming,
+    error,
+    showContinuePrompt,
+    continueMessageId,
+    setActiveChat,
+    setCurrentMessage,
+    setUser,
+    loadUserChats,
+    createNewChat,
+    splitChat,
+    updateChatTitle,
+    deleteChat,
+    sendMessage,
+    continueMessage,
+    setShowContinuePrompt,
+    setContinueMessageId,
+    clearError
+  } = useChatStore()
+
   const currentChatData = chats.find(chat => chat.id === activeChat)
+
+  // Calculate token counts
+  const currentMessageTokens = estimateTokenCount(currentMessage)
+  const totalTokensUsed = currentChatData?.messages.reduce((total, msg) => {
+    return total + estimateTokenCount(msg.content)
+  }, 0) || 0
+
+  // Load user chats when user changes and sync user to chat store
+  useEffect(() => {
+    setUser(user) // Sync user to chat store
+    if (user?.id) {
+      loadUserChats(user.id)
+    }
+  }, [user, setUser, loadUserChats])
 
   // Theme management
   useEffect(() => {
@@ -81,103 +102,51 @@ function App() {
     setTheme(newTheme)
   }
 
-  const sendMessage = () => {
-    if (!currentMessage.trim() || !activeChat) return
+  const handleSendMessage = async () => {
+    if (!currentMessage.trim() || !user?.id || isStreaming) return
 
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      content: currentMessage,
-      role: 'user',
-      timestamp: new Date()
-    }
-
-    // Add user message
-    setChats(prev => prev.map(chat => 
-      chat.id === activeChat 
-        ? { ...chat, messages: [...chat.messages, newMessage] }
-        : chat
-    ))
-
-    setCurrentMessage('')
-
-    // Simulate AI response with markdown
-    setTimeout(() => {
-      const responses = [
-        `Thanks for your message! Here's a **formatted response** with some features:
-
-## Code Example
-\`\`\`python
-def fibonacci(n):
-    if n <= 1:
-        return n
-    return fibonacci(n-1) + fibonacci(n-2)
-
-print([fibonacci(i) for i in range(10)])
-\`\`\`
-
-## Features
-- ✅ **Markdown support**
-- ✅ Code highlighting
-- ✅ Multiple AI models
-- ✅ Theme switching
-
-> This is a demo response from T66. In the full version, this would be powered by your chosen AI model: **${getModelName(selectedModel)}**`,
-
-        `I understand you're testing the **${getModelName(selectedModel)}** model. Here's what I can help with:
-
-### 🧠 Capabilities
-1. **Text Generation** - Creative writing, essays, summaries
-2. **Code Assistance** - Programming help in any language
-3. **Analysis** - Data interpretation, problem-solving
-4. **Math & Science** - Equations, explanations, calculations
-
-### 📊 Example Table
-| Model | Provider | Context Length |
-|-------|----------|----------------|
-| GPT-4o | OpenAI | 128K tokens |
-| Claude 3.5 | Anthropic | 200K tokens |
-| Gemini Pro | Google | 32K tokens |
-
-*This is a **demo response**. The actual model integration would provide real AI responses.*`
-      ]
-
-      const aiResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        content: responses[Math.floor(Math.random() * responses.length)],
-        role: 'assistant',
-        timestamp: new Date()
+    try {
+      clearError()
+      
+      // Create new chat if none exists
+      if (!activeChat) {
+        const defaultSettings: ChatSettings = {
+          model: selectedModel,
+          temperature: 0.7,
+          maxTokens: 4000,
+          provider: 'openrouter'
+        }
+        
+        await createNewChat(user.id, 'New Chat', defaultSettings)
       }
-
-      setChats(prev => prev.map(chat => 
-        chat.id === activeChat 
-          ? { ...chat, messages: [...chat.messages, aiResponse] }
-          : chat
-      ))
-    }, 1000)
+      
+      await sendMessage(user.id, currentMessage, true)
+    } catch (error) {
+      console.error('Error sending message:', error)
+    }
   }
 
-  const createNewChat = () => {
-    const newChat: Chat = {
-      id: Date.now().toString(),
-      title: `Chat ${chats.length + 1}`,
-      messages: [],
-      createdAt: new Date()
-    }
-    setChats(prev => [...prev, newChat])
-    setActiveChat(newChat.id)
+  const handleCreateNewChat = () => {
+    // Just clear the current chat selection
+    // The actual chat will be created when the first message is sent
+    setActiveChat(null)
   }
 
-  const deleteChat = (chatId: string) => {
-    if (chats.length <= 1) return // Don't delete the last chat
+  const handleDeleteChat = async (chatId: string) => {
+    try {
+      await deleteChat(chatId)
+    } catch (error) {
+      console.error('Error deleting chat:', error)
+    }
+  }
+
+  const handleSplitChat = async (chatId: string) => {
+    if (!user?.id) return
     
-    setChats(prev => prev.filter(chat => chat.id !== chatId))
-    
-    // If we deleted the active chat, switch to another one
-    if (activeChat === chatId) {
-      const remainingChats = chats.filter(chat => chat.id !== chatId)
-      if (remainingChats.length > 0) {
-        setActiveChat(remainingChats[0].id)
-      }
+    try {
+      await splitChat(user.id, chatId)
+    } catch (error) {
+      console.error('Error splitting chat:', error)
     }
   }
 
@@ -189,13 +158,13 @@ print([fibonacci(i) for i in range(10)])
     }
   }
 
-  const finishRenaming = () => {
+  const finishRenaming = async () => {
     if (renamingChat && renameValue.trim()) {
-      setChats(prev => prev.map(chat => 
-        chat.id === renamingChat 
-          ? { ...chat, title: renameValue.trim() }
-          : chat
-      ))
+      try {
+        await updateChatTitle(renamingChat, renameValue.trim())
+      } catch (error) {
+        console.error('Error updating chat title:', error)
+      }
     }
     setRenamingChat(null)
     setRenameValue('')
@@ -206,243 +175,330 @@ print([fibonacci(i) for i in range(10)])
     setRenameValue('')
   }
 
+  const handleSignOut = async () => {
+    try {
+      await authSignOut()
+    } catch (error) {
+      console.error('Error signing out:', error)
+    }
+  }
+
   const getModelName = (modelId: string) => {
     const modelNames: Record<string, string> = {
-      'gpt-4o': 'GPT-4o',
-      'gpt-4-turbo': 'GPT-4 Turbo',
-      'claude-3-5-sonnet': 'Claude 3.5 Sonnet',
-      'gemini-pro': 'Gemini Pro',
-      'command-r-plus': 'Command R+',
+      'openai/gpt-4o': 'GPT-4o',
+      'openai/gpt-4.1-nano': 'GPT-4.1 Nano',
     }
     return modelNames[modelId] || modelId
   }
 
   return (
     <Router>
-      <div className="min-h-screen">
-        <div className="flex h-screen bg-background text-foreground">
-          {/* Sidebar */}
-          <div className="w-64 bg-card border-r border-border flex flex-col">
-            {/* Header */}
-            <div className="p-4 border-b border-border">
-              <div className="flex items-center justify-between">
-                <h1 className="text-xl font-bold text-primary">T66</h1>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleThemeChange(theme === 'dark' ? 'light' : 'dark')}
-                  className="h-8 w-8"
-                >
-                  {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-                </Button>
-              </div>
-              <p className="text-sm text-muted-foreground mt-1">AI Chat Application</p>
-            </div>
-
-            {/* New Chat Button */}
-            <div className="p-4">
-              <Button
-                onClick={createNewChat}
-                className="w-full flex items-center gap-2"
-              >
-                <Plus size={18} />
-                New Chat
-              </Button>
-            </div>
-
-            {/* Chat List */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-2">
-              {chats.map(chat => (
-                <div
-                  key={chat.id}
-                  className={`group relative flex items-center p-3 rounded-lg transition-colors ${
-                    activeChat === chat.id 
-                      ? 'bg-accent text-accent-foreground' 
-                      : 'hover:bg-accent/50'
-                  }`}
-                >
-                  {renamingChat === chat.id ? (
-                    <div className="flex-1 flex items-center gap-2">
-                      <MessageSquare size={16} />
-                      <input
-                        type="text"
-                        value={renameValue}
-                        onChange={(e) => setRenameValue(e.target.value)}
-                        onKeyPress={(e) => {
-                          if (e.key === 'Enter') {
-                            finishRenaming()
-                          } else if (e.key === 'Escape') {
-                            cancelRenaming()
-                          }
-                        }}
-                        onBlur={finishRenaming}
-                        className="flex-1 px-2 py-1 text-sm bg-background border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary"
-                        autoFocus
-                      />
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => setActiveChat(chat.id)}
-                      className="flex-1 text-left min-w-0"
-                    >
-                      <div className="flex items-center gap-2">
-                        <MessageSquare size={16} />
-                        <span className="truncate">{chat.title}</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {chat.messages.length} messages
-                      </p>
-                    </button>
-                  )}
-                  
-                  {/* Three-dot menu */}
-                  {renamingChat !== chat.id && (
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Dropdown
-                        trigger={
-                          <Button variant="ghost" size="icon" className="h-6 w-6">
-                            <MoreVertical size={14} />
-                          </Button>
-                        }
-                      >
-                        <DropdownItem onClick={() => startRenaming(chat.id)}>
-                          <div className="flex items-center gap-2">
-                            <Edit2 size={14} />
-                            Rename Chat
-                          </div>
-                        </DropdownItem>
-                        <DropdownItem 
-                          onClick={() => deleteChat(chat.id)}
-                          variant="destructive"
-                        >
-                          <div className="flex items-center gap-2">
-                            <Trash2 size={14} />
-                            Delete Chat
-                          </div>
-                        </DropdownItem>
-                      </Dropdown>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* User Section */}
-            <div className="p-4 border-t border-border">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                  <User size={16} className="text-primary-foreground" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Demo User</p>
-                  <p className="text-xs text-muted-foreground">All Features Free</p>
-                </div>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-8 w-8"
-                  onClick={() => setShowSettings(true)}
-                >
-                  <Settings size={16} />
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Main Chat Area */}
-          <div className="flex-1 flex flex-col">
-            {/* Chat Header */}
-            <div className="p-4 border-b border-border bg-card">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold">{currentChatData?.title}</h2>
-                  <p className="text-sm text-muted-foreground">
-                    {currentChatData?.messages.length} messages
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
+      <ProtectedRoute>
+        <div className="min-h-screen">
+          <div className="flex h-screen bg-background text-foreground">
+            {/* Sidebar */}
+            <div className="w-64 bg-card border-r border-border flex flex-col">
+              {/* Header */}
+              <div className="p-4 border-b border-border">
+                <div className="flex items-center justify-between">
+                  <h1 className="text-xl font-bold text-primary">T66</h1>
                   <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowModelSelector(true)}
-                    className="flex items-center gap-2"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleThemeChange(theme === 'dark' ? 'light' : 'dark')}
+                    className="h-8 w-8"
                   >
-                    <span className="text-xs">{getModelName(selectedModel)}</span>
-                    <ChevronDown size={14} />
+                    {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
                   </Button>
                 </div>
+                <p className="text-sm text-muted-foreground mt-1">AI Chat Application</p>
               </div>
-            </div>
 
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {currentChatData?.messages.map(message => (
-                <div
-                  key={message.id}
-                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-[70%] p-4 rounded-lg message-enter ${
-                      message.role === 'user'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-card border border-border'
-                    }`}
-                  >
-                    {message.role === 'user' ? (
-                      <p className="text-sm">{message.content}</p>
-                    ) : (
-                      <MarkdownRenderer content={message.content} />
-                    )}
-                    <p className="text-xs opacity-70 mt-2">
-                      {message.timestamp.toLocaleTimeString()}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Message Input */}
-            <div className="p-4 border-t border-border bg-card">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={currentMessage}
-                  onChange={(e) => setCurrentMessage(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                  placeholder="Type your message..."
-                  className="flex-1 p-3 rounded-lg bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary"
-                />
+              {/* New Chat Button */}
+              <div className="p-4">
                 <Button
-                  onClick={sendMessage}
-                  disabled={!currentMessage.trim()}
-                  size="icon"
-                  className="h-12 w-12"
+                  onClick={handleCreateNewChat}
+                  className="w-full flex items-center gap-2"
                 >
-                  <Send size={18} />
+                  <Plus size={18} />
+                  New Chat
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground mt-2 text-center">
-                T66 can make mistakes. Consider checking important information.
-              </p>
+
+              {/* Chat List */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                {chats.map(chat => (
+                  <div
+                    key={chat.id}
+                    className={`group relative flex items-center p-3 rounded-lg transition-colors ${
+                      activeChat === chat.id 
+                        ? 'bg-accent text-accent-foreground' 
+                        : 'hover:bg-accent/50'
+                    }`}
+                  >
+                    {renamingChat === chat.id ? (
+                      <div className="flex-1 flex items-center gap-2">
+                        <MessageSquare size={16} />
+                        <input
+                          type="text"
+                          value={renameValue}
+                          onChange={(e) => setRenameValue(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              finishRenaming()
+                            } else if (e.key === 'Escape') {
+                              cancelRenaming()
+                            }
+                          }}
+                          onBlur={finishRenaming}
+                          className="flex-1 px-2 py-1 text-sm bg-background border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary"
+                          autoFocus
+                        />
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setActiveChat(chat.id)}
+                        className="flex-1 text-left min-w-0"
+                      >
+                        <div className="flex items-center gap-2">
+                          <MessageSquare size={16} />
+                          <span className="truncate">{chat.title}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {chat.messages.length} messages
+                        </p>
+                      </button>
+                    )}
+                    
+                    {/* Three-dot menu */}
+                    {renamingChat !== chat.id && (
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Dropdown
+                          trigger={
+                            <Button variant="ghost" size="icon" className="h-6 w-6">
+                              <MoreVertical size={14} />
+                            </Button>
+                          }
+                        >
+                          <DropdownItem onClick={() => startRenaming(chat.id)}>
+                            <div className="flex items-center gap-2">
+                              <Edit2 size={14} />
+                              Rename Chat
+                            </div>
+                          </DropdownItem>
+                          <DropdownItem onClick={() => handleSplitChat(chat.id)}>
+                            <div className="flex items-center gap-2">
+                              <Copy size={14} />
+                              Split Chat
+                            </div>
+                          </DropdownItem>
+                          <DropdownItem 
+                            onClick={() => handleDeleteChat(chat.id)}
+                            variant="destructive"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Trash2 size={14} />
+                              Delete Chat
+                            </div>
+                          </DropdownItem>
+                        </Dropdown>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* User Section */}
+              <div className="p-4 border-t border-border">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                    <User size={16} className="text-primary-foreground" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{user?.name || 'User'}</p>
+                    <p className="text-xs text-muted-foreground">{user?.email || 'No email'}</p>
+                  </div>
+                  <Dropdown
+                    trigger={
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Settings size={16} />
+                      </Button>
+                    }
+                  >
+                    <DropdownItem onClick={() => setShowSettings(true)}>
+                      <div className="flex items-center gap-2">
+                        <Settings size={14} />
+                        Settings
+                      </div>
+                    </DropdownItem>
+                    <DropdownItem onClick={handleSignOut} variant="destructive">
+                      <div className="flex items-center gap-2">
+                        <LogOut size={14} />
+                        Sign Out
+                      </div>
+                    </DropdownItem>
+                  </Dropdown>
+                </div>
+              </div>
+            </div>
+
+            {/* Main Chat Area */}
+            <div className="flex-1 flex flex-col">
+              {/* Chat Header */}
+              <div className="p-4 border-b border-border bg-card">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-lg font-semibold">{currentChatData?.title || 'New Chat'}</h2>
+                    <p className="text-sm text-muted-foreground">
+                      {currentChatData?.messages.length || 0} messages
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowModelSelector(true)}
+                      className="flex items-center gap-2"
+                    >
+                      <span className="text-xs">{getModelName(selectedModel)}</span>
+                      <ChevronDown size={14} />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Messages */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {currentChatData?.messages.map(message => (
+                  <div
+                    key={message.id}
+                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-[70%] p-4 rounded-lg message-enter ${
+                        message.role === 'user'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-card border border-border'
+                      }`}
+                    >
+                      {message.role === 'user' ? (
+                        <p className="text-sm">{message.content}</p>
+                      ) : (
+                        <MarkdownRenderer content={message.content} />
+                      )}
+                      <p className="text-xs opacity-70 mt-2 flex items-center gap-2">
+                        <span>{message.timestamp instanceof Date ? message.timestamp.toLocaleTimeString() : new Date(message.timestamp).toLocaleTimeString()}</span>
+                        {message.role === 'assistant' && message.metadata?.model && (
+                          <span className="text-muted-foreground">
+                            • Generated by {getModelName(message.metadata.model)}
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                
+                {/* Show typing indicator when streaming */}
+                {isStreaming && (
+                  <div className="flex justify-start">
+                    <div className="max-w-[70%] p-4 rounded-lg bg-card border border-border">
+                      <div className="flex items-center gap-2">
+                        <div className="flex space-x-1">
+                          <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
+                          <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                          <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                        </div>
+                        <span className="text-sm text-muted-foreground">AI is typing...</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Show continue prompt if token limit reached */}
+                {showContinuePrompt && continueMessageId && (
+                  <div className="bg-primary/10 border border-primary/20 text-primary px-4 py-3 rounded-lg text-sm">
+                    The {getModelName(currentChatData?.settings.model || 'AI')} reached its response token limit. Would you like to{' '}
+                    <button
+                      onClick={() => continueMessage(user?.id || '')}
+                      className="underline hover:no-underline font-medium"
+                      disabled={isStreaming}
+                    >
+                      continue
+                    </button>
+                    ?
+                  </div>
+                )}
+
+                {/* Show error if any */}
+                {error && (
+                  <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-lg text-sm">
+                    {error}
+                  </div>
+                )}
+              </div>
+
+              {/* Message Input */}
+              <div className="p-4 border-t border-border bg-card">
+                <div className="flex gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="relative group">
+                      <Button variant="ghost" size="icon" className="h-12 w-12">
+                        <Info size={18} />
+                      </Button>
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-card border border-border rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                        <div className="text-xs">
+                          <div>Total tokens used: {totalTokensUsed.toLocaleString()}</div>
+                          <div>Current input: {currentMessageTokens} tokens</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <input
+                    type="text"
+                    value={currentMessage}
+                    onChange={(e) => setCurrentMessage(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
+                    placeholder="Type your message..."
+                    className="flex-1 p-3 rounded-lg bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary"
+                    disabled={isStreaming}
+                  />
+                  <Button
+                    onClick={handleSendMessage}
+                    disabled={!currentMessage.trim() || isStreaming}
+                    size="icon"
+                    className="h-12 w-12"
+                  >
+                    <Send size={18} />
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2 text-center">
+                  T66 can make mistakes. Consider checking important information.
+                </p>
+              </div>
             </div>
           </div>
+
+          {/* Modals */}
+          <SettingsModal
+            isOpen={showSettings}
+            onClose={() => setShowSettings(false)}
+            theme={theme}
+            onThemeChange={handleThemeChange}
+            user={user}
+            onUserUpdate={(updatedUser) => {
+              setAuthUser(updatedUser)
+              setUser(updatedUser)
+            }}
+          />
+
+          <ModelSelectorModal
+            isOpen={showModelSelector}
+            onClose={() => setShowModelSelector(false)}
+            selectedModel={selectedModel}
+            onModelSelect={setSelectedModel}
+          />
         </div>
-
-        {/* Modals */}
-        <SettingsModal
-          isOpen={showSettings}
-          onClose={() => setShowSettings(false)}
-          theme={theme}
-          onThemeChange={handleThemeChange}
-        />
-
-        <ModelSelectorModal
-          isOpen={showModelSelector}
-          onClose={() => setShowModelSelector(false)}
-          selectedModel={selectedModel}
-          onModelSelect={setSelectedModel}
-        />
-      </div>
+      </ProtectedRoute>
     </Router>
   )
 }

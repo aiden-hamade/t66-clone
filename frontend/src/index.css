@@ -97,6 +97,39 @@ body {
   @apply bg-muted px-1.5 py-0.5 rounded text-sm;
 }
 
+/* Basic syntax highlighting */
+.prose pre code .hljs-keyword {
+  @apply text-purple-500 font-medium;
+}
+
+.prose pre code .hljs-string {
+  @apply text-green-500;
+}
+
+.prose pre code .hljs-number {
+  @apply text-blue-500;
+}
+
+.prose pre code .hljs-comment {
+  @apply text-gray-500 italic;
+}
+
+.prose pre code .hljs-function {
+  @apply text-yellow-500;
+}
+
+.prose pre code .hljs-variable {
+  @apply text-red-500;
+}
+
+.prose pre code .hljs-type {
+  @apply text-cyan-500;
+}
+
+.prose pre code .hljs-operator {
+  @apply text-orange-500;
+}
+
 /* Focus styles */
 .focus-visible {
   @apply outline-none ring-2 ring-ring ring-offset-2;

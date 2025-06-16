@@ -1,0 +1,412 @@
+import {
+  collection,
+  doc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+  orderBy,
+  limit,
+  startAfter,
+  Timestamp,
+  setDoc,
+  type DocumentSnapshot,
+  type QuerySnapshot
+} from 'firebase/firestore';
+import { db } from './firebase';
+import type { Chat, Message, ChatSettings, User } from '../types';
+
+// Convert Firestore timestamp to Date
+const timestampToDate = (timestamp: any): Date => {
+  if (timestamp?.toDate) {
+    return timestamp.toDate();
+  }
+  if (timestamp?.seconds) {
+    // Handle Firestore timestamp object
+    return new Date(timestamp.seconds * 1000);
+  }
+  if (timestamp instanceof Date) {
+    return timestamp;
+  }
+  if (typeof timestamp === 'string' || typeof timestamp === 'number') {
+    return new Date(timestamp);
+  }
+  // Fallback to current date if timestamp is invalid
+  return new Date();
+};
+
+// Convert Chat document from Firestore
+const convertChatDoc = (doc: DocumentSnapshot): Chat | null => {
+  if (!doc.exists()) return null;
+  
+  const data = doc.data();
+  
+  // Convert messages with proper timestamp handling
+  const messages = (data.messages || []).map((msg: any) => ({
+    ...msg,
+    timestamp: timestampToDate(msg.timestamp)
+  }));
+  
+  return {
+    id: doc.id,
+    title: data.title,
+    messages,
+    settings: data.settings,
+    user: data.user,
+    shared: data.shared || false,
+    shareId: data.shareId,
+    createdAt: timestampToDate(data.createdAt),
+    updatedAt: timestampToDate(data.updatedAt)
+  };
+};
+
+// Create a new chat
+export const createChat = async (
+  userId: string,
+  title: string,
+  settings: ChatSettings
+): Promise<Chat> => {
+  try {
+    const chatData = {
+      title,
+      messages: [],
+      settings,
+      user: userId,
+      shared: false,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now()
+    };
+
+    const docRef = await addDoc(collection(db, 'chats'), chatData);
+    const newChat: Chat = {
+      id: docRef.id,
+      ...chatData,
+      createdAt: chatData.createdAt.toDate(),
+      updatedAt: chatData.updatedAt.toDate()
+    };
+
+    return newChat;
+  } catch (error) {
+    console.error('Error creating chat:', error);
+    throw error;
+  }
+};
+
+// Get user's chats
+export const getUserChats = async (
+  userId: string,
+  limitCount: number = 50
+): Promise<Chat[]> => {
+  try {
+    const q = query(
+      collection(db, 'chats'),
+      where('user', '==', userId),
+      orderBy('updatedAt', 'desc'),
+      limit(limitCount)
+    );
+
+    const querySnapshot = await getDocs(q);
+    const chats: Chat[] = [];
+
+    querySnapshot.forEach((doc) => {
+      const chat = convertChatDoc(doc);
+      if (chat) {
+        chats.push(chat);
+      }
+    });
+
+    return chats;
+  } catch (error) {
+    console.error('Error getting user chats:', error);
+    throw error;
+  }
+};
+
+// Get a specific chat
+export const getChat = async (chatId: string): Promise<Chat | null> => {
+  try {
+    const docRef = doc(db, 'chats', chatId);
+    const docSnap = await getDoc(docRef);
+    return convertChatDoc(docSnap);
+  } catch (error) {
+    console.error('Error getting chat:', error);
+    throw error;
+  }
+};
+
+// Update chat
+export const updateChat = async (
+  chatId: string,
+  updates: Partial<Omit<Chat, 'id' | 'createdAt'>>
+): Promise<void> => {
+  try {
+    const chatRef = doc(db, 'chats', chatId);
+    const updateData: any = {
+      ...updates,
+      updatedAt: Timestamp.now()
+    };
+
+    await updateDoc(chatRef, updateData);
+  } catch (error) {
+    console.error('Error updating chat:', error);
+    throw error;
+  }
+};
+
+// Delete chat
+export const deleteChat = async (chatId: string): Promise<void> => {
+  try {
+    const chatRef = doc(db, 'chats', chatId);
+    await deleteDoc(chatRef);
+  } catch (error) {
+    console.error('Error deleting chat:', error);
+    throw error;
+  }
+};
+
+// Add message to chat
+export const addMessageToChat = async (
+  chatId: string,
+  message: Omit<Message, 'id'>
+): Promise<Message> => {
+  try {
+    const chatRef = doc(db, 'chats', chatId);
+    const chat = await getChat(chatId);
+    
+    if (!chat) {
+      throw new Error('Chat not found');
+    }
+
+    const newMessage: Message = {
+      ...message,
+      id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    };
+
+    // Convert message timestamp to Firestore timestamp for storage
+    const messageForStorage = {
+      ...newMessage,
+      timestamp: Timestamp.fromDate(newMessage.timestamp)
+    };
+    
+    const updatedMessages = [...chat.messages, messageForStorage];
+    
+    await updateDoc(chatRef, {
+      messages: updatedMessages,
+      updatedAt: Timestamp.now()
+    });
+
+    return newMessage;
+  } catch (error) {
+    console.error('Error adding message to chat:', error);
+    throw error;
+  }
+};
+
+// Update message in chat
+export const updateMessageInChat = async (
+  chatId: string,
+  messageId: string,
+  updates: Partial<Message>
+): Promise<void> => {
+  try {
+    const chat = await getChat(chatId);
+    if (!chat) {
+      throw new Error('Chat not found');
+    }
+
+    const messageIndex = chat.messages.findIndex(msg => msg.id === messageId);
+    if (messageIndex === -1) {
+      throw new Error('Message not found');
+    }
+
+    const updatedMessages = chat.messages.map((msg, index) => {
+      if (index === messageIndex) {
+        const updatedMessage = { ...msg, ...updates };
+        
+        // Convert timestamp to Firestore timestamp for storage
+        return {
+          ...updatedMessage,
+          timestamp: updatedMessage.timestamp instanceof Date 
+            ? Timestamp.fromDate(updatedMessage.timestamp)
+            : updatedMessage.timestamp
+        };
+      }
+      
+      // Ensure existing messages also have proper timestamps for storage
+      return {
+        ...msg,
+        timestamp: msg.timestamp instanceof Date 
+          ? Timestamp.fromDate(msg.timestamp)
+          : msg.timestamp
+      };
+    });
+
+    const chatRef = doc(db, 'chats', chatId);
+    await updateDoc(chatRef, {
+      messages: updatedMessages,
+      updatedAt: Timestamp.now()
+    });
+  } catch (error) {
+    console.error('Error updating message:', error);
+    throw error;
+  }
+};
+
+// Delete message from chat
+export const deleteMessageFromChat = async (
+  chatId: string,
+  messageId: string
+): Promise<void> => {
+  try {
+    const chat = await getChat(chatId);
+    if (!chat) {
+      throw new Error('Chat not found');
+    }
+
+    const updatedMessages = chat.messages.filter(msg => msg.id !== messageId);
+    
+    const chatRef = doc(db, 'chats', chatId);
+    await updateDoc(chatRef, {
+      messages: updatedMessages,
+      updatedAt: Timestamp.now()
+    });
+  } catch (error) {
+    console.error('Error deleting message:', error);
+    throw error;
+  }
+};
+
+// Share chat (create public share)
+export const shareChat = async (chatId: string): Promise<string> => {
+  try {
+    const shareId = `share_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    const chatRef = doc(db, 'chats', chatId);
+    await updateDoc(chatRef, {
+      shared: true,
+      shareId,
+      updatedAt: Timestamp.now()
+    });
+
+    return shareId;
+  } catch (error) {
+    console.error('Error sharing chat:', error);
+    throw error;
+  }
+};
+
+// Get shared chat
+export const getSharedChat = async (shareId: string): Promise<Chat | null> => {
+  try {
+    const q = query(
+      collection(db, 'chats'),
+      where('shareId', '==', shareId),
+      where('shared', '==', true)
+    );
+
+    const querySnapshot = await getDocs(q);
+    
+    if (querySnapshot.empty) {
+      return null;
+    }
+
+    const doc = querySnapshot.docs[0];
+    return convertChatDoc(doc);
+  } catch (error) {
+    console.error('Error getting shared chat:', error);
+    return null;
+  }
+};
+
+// Unshare chat
+export const unshareChat = async (chatId: string): Promise<void> => {
+  try {
+    const chatRef = doc(db, 'chats', chatId);
+    await updateDoc(chatRef, {
+      shared: false,
+      shareId: null,
+      updatedAt: Timestamp.now()
+    });
+  } catch (error) {
+    console.error('Error unsharing chat:', error);
+    throw error;
+  }
+};
+
+// User management functions
+export const createUser = async (userId: string, userData: Partial<User>): Promise<void> => {
+  try {
+    const userRef = doc(db, 'users', userId);
+    const now = Timestamp.now();
+    
+    // Clean the user data to remove undefined fields
+    const cleanUserData = Object.fromEntries(
+      Object.entries({
+        id: userId,
+        email: userData.email || '',
+        name: userData.name || '',
+        ...(userData.avatar !== undefined && { avatar: userData.avatar }),
+        verified: userData.verified || false,
+        plan: userData.plan || 'free',
+        ...(userData.openRouterApiKey !== undefined && { openRouterApiKey: userData.openRouterApiKey }),
+        createdAt: now,
+        updatedAt: now,
+        ...userData
+      }).filter(([_, value]) => value !== undefined)
+    );
+    
+    await setDoc(userRef, cleanUserData);
+  } catch (error) {
+    console.error('Error creating user:', error);
+    throw error;
+  }
+};
+
+export const getUser = async (userId: string): Promise<User | null> => {
+  try {
+    const userRef = doc(db, 'users', userId);
+    const userSnap = await getDoc(userRef);
+    
+    if (!userSnap.exists()) {
+      return null;
+    }
+    
+    const data = userSnap.data();
+    return {
+      id: userSnap.id,
+      email: data.email,
+      name: data.name,
+      avatar: data.avatar,
+      verified: data.verified || false,
+      plan: data.plan || 'free',
+      openRouterApiKey: data.openRouterApiKey,
+      createdAt: timestampToDate(data.createdAt),
+      updatedAt: timestampToDate(data.updatedAt)
+    };
+  } catch (error) {
+    console.error('Error getting user:', error);
+    throw error;
+  }
+};
+
+export const updateUser = async (userId: string, updates: Partial<User>): Promise<void> => {
+  try {
+    const userRef = doc(db, 'users', userId);
+    
+    // Clean the updates to remove undefined fields
+    const cleanUpdates = Object.fromEntries(
+      Object.entries({
+        ...updates,
+        updatedAt: Timestamp.now()
+      }).filter(([_, value]) => value !== undefined)
+    );
+    
+    await updateDoc(userRef, cleanUpdates);
+  } catch (error) {
+    console.error('Error updating user:', error);
+    throw error;
+  }
+}; 
