@@ -554,12 +554,13 @@ export const moveChatToFolder = async (
   }
 };
 
+
 export const addCollaboratorToChat = async (
   chatId: string,
   userEmail: string
 ): Promise<void> => {
   try {
-    // First, find the user by email
+    // First, find the user by emailAdd commentMore actions
     const usersQuery = query(
       collection(db, 'users'),
       where('email', '==', userEmail)
@@ -616,4 +617,4 @@ export const removeCollaboratorFromChat = async (
     console.error('Error removing collaborator from chat:', error);
     throw error;
   }
-}; 
+};
