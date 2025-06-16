@@ -2,34 +2,34 @@
 
 ## Overview
 
-T66 provides a comprehensive REST API for building AI chat applications. The API is built on top of PocketBase and provides endpoints for authentication, chat management, AI interactions, and more.
+T66 provides a comprehensive REST API for building AI chat applications. The API is built on Firebase and provides endpoints for authentication, chat management, AI interactions, and more.
 
 ## Base URL
 
 ```
-Development: http://localhost:8090/api
+Development: http://localhost:3000/api
 Production: https://your-domain.com/api
 ```
 
 ## Authentication
 
-T66 uses JWT-based authentication. Include the authorization header in all authenticated requests:
+T66 uses Firebase Authentication with JWT tokens. Include the authorization header in all authenticated requests:
 
 ```http
-Authorization: Bearer <your-jwt-token>
+Authorization: Bearer <your-firebase-id-token>
 ```
 
 ### Authentication Endpoints
 
 #### Register User
 ```http
-POST /auth/register
+POST /api/auth/register
 Content-Type: application/json
 
 {
   "email": "user@example.com",
   "password": "securepassword",
-  "name": "John Doe"
+  "displayName": "John Doe"
 }
 ```
 
@@ -37,19 +37,23 @@ Content-Type: application/json
 ```json
 {
   "user": {
-    "id": "user_123",
+    "uid": "user_123",
     "email": "user@example.com",
-    "name": "John Doe",
-    "verified": false,
-    "created": "2025-01-01T00:00:00Z"
+    "displayName": "John Doe",
+    "emailVerified": false,
+    "metadata": {
+      "creationTime": "2025-01-01T00:00:00Z",
+      "lastSignInTime": "2025-01-01T00:00:00Z"
+    }
   },
-  "token": "eyJhbGciOiJIUzI1NiIs..."
+  "idToken": "eyJhbGciOiJSUzI1NiIs...",
+  "refreshToken": "refresh_token_here"
 }
 ```
 
 #### Login User
 ```http
-POST /auth/login
+POST /api/auth/login
 Content-Type: application/json
 
 {
@@ -60,58 +64,60 @@ Content-Type: application/json
 
 #### Logout User
 ```http
-POST /auth/logout
+POST /api/auth/logout
 Authorization: Bearer <token>
 ```
 
 #### Refresh Token
 ```http
-POST /auth/refresh
-Authorization: Bearer <token>
+POST /api/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "refresh_token_here"
+}
 ```
 
 ## Chat Management
 
 ### Get User Chats
 ```http
-GET /collections/chats/records
+GET /api/chats
 Authorization: Bearer <token>
 ```
 
 **Query Parameters:**
-- `page` (int): Page number (default: 1)
-- `perPage` (int): Items per page (default: 30, max: 100)
-- `sort` (string): Sort field (default: -created)
-- `filter` (string): Filter expression
+- `limit` (int): Number of items to return (default: 30, max: 100)
+- `orderBy` (string): Sort field (default: createdAt)
+- `orderDirection` (string): Sort direction (asc/desc, default: desc)
+- `startAfter` (string): Cursor for pagination
 
 **Response:**
 ```json
 {
-  "page": 1,
-  "perPage": 30,
-  "totalItems": 15,
-  "totalPages": 1,
-  "items": [
+  "chats": [
     {
       "id": "chat_123",
       "title": "My Chat",
-      "user": "user_123",
-      "messages": ["msg_1", "msg_2"],
+      "userId": "user_123",
+      "messageCount": 5,
       "settings": {
         "model": "gpt-4",
         "temperature": 0.7,
         "systemMessage": "You are a helpful assistant"
       },
-      "created": "2025-01-01T00:00:00Z",
-      "updated": "2025-01-01T01:00:00Z"
+      "createdAt": "2025-01-01T00:00:00Z",
+      "updatedAt": "2025-01-01T01:00:00Z"
     }
-  ]
+  ],
+  "hasMore": false,
+  "nextCursor": null
 }
 ```
 
 ### Create New Chat
 ```http
-POST /collections/chats/records
+POST /api/chats
 Authorization: Bearer <token>
 Content-Type: application/json
 
@@ -127,7 +133,7 @@ Content-Type: application/json
 
 ### Update Chat
 ```http
-PATCH /collections/chats/records/{id}
+PATCH /api/chats/{id}
 Authorization: Bearer <token>
 Content-Type: application/json
 
@@ -141,7 +147,7 @@ Content-Type: application/json
 
 ### Delete Chat
 ```http
-DELETE /collections/chats/records/{id}
+DELETE /api/chats/{id}
 Authorization: Bearer <token>
 ```
 
@@ -149,22 +155,32 @@ Authorization: Bearer <token>
 
 ### Get Chat Messages
 ```http
-GET /collections/messages/records
+GET /api/chats/{chatId}/messages
 Authorization: Bearer <token>
-?filter=(chat='{chat_id}')&sort=created
 ```
+
+**Query Parameters:**
+- `limit` (int): Number of messages to return (default: 50)
+- `orderBy` (string): Sort field (default: createdAt)
+- `orderDirection` (string): Sort direction (asc/desc, default: asc)
+- `startAfter` (string): Cursor for pagination
 
 ### Send Message
 ```http
-POST /collections/messages/records
+POST /api/chats/{chatId}/messages
 Authorization: Bearer <token>
 Content-Type: application/json
 
 {
-  "chat": "chat_123",
   "content": "Hello, how are you?",
   "role": "user",
-  "attachments": ["file_123"]
+  "attachments": [
+    {
+      "type": "image",
+      "url": "https://storage.googleapis.com/your-bucket/image.jpg",
+      "name": "image.jpg"
+    }
+  ]
 }
 ```
 
@@ -203,59 +219,18 @@ data: {"id":"cmpl_123","object":"chat.completion.chunk","created":1234567890,"mo
 data: [DONE]
 ```
 
-### Available Models
-```http
-GET /api/models
-Authorization: Bearer <token>
-```
-
-**Response:**
-```json
-{
-  "data": [
-    {
-      "id": "gpt-4",
-      "object": "model",
-      "provider": "openai",
-      "name": "GPT-4",
-      "description": "Most capable GPT-4 model",
-      "context_length": 8192,
-      "pricing": {
-        "input": 0.03,
-        "output": 0.06
-      }
-    }
-  ]
-}
-```
-
-## Image Generation
-
-### Generate Image
+### Image Generation
 ```http
 POST /api/images/generate
 Authorization: Bearer <token>
 Content-Type: application/json
 
 {
-  "prompt": "A beautiful sunset over mountains",
+  "prompt": "A beautiful sunset over the ocean",
   "model": "dall-e-3",
   "size": "1024x1024",
   "quality": "standard",
   "n": 1
-}
-```
-
-**Response:**
-```json
-{
-  "created": 1234567890,
-  "data": [
-    {
-      "url": "https://example.com/image.png",
-      "revised_prompt": "A beautiful sunset over mountains with vibrant colors"
-    }
-  ]
 }
 ```
 
@@ -267,22 +242,28 @@ POST /api/files/upload
 Authorization: Bearer <token>
 Content-Type: multipart/form-data
 
-file: <binary-data>
+{
+  "file": <binary_data>,
+  "type": "image"
+}
 ```
 
 **Response:**
 ```json
 {
-  "id": "file_123",
-  "filename": "document.pdf",
-  "size": 1024000,
-  "type": "application/pdf",
-  "url": "https://example.com/files/document.pdf",
-  "created": "2025-01-01T00:00:00Z"
+  "file": {
+    "id": "file_123",
+    "name": "image.jpg",
+    "type": "image/jpeg",
+    "size": 1024000,
+    "url": "https://storage.googleapis.com/your-bucket/file_123.jpg",
+    "downloadUrl": "https://storage.googleapis.com/your-bucket/file_123.jpg?token=...",
+    "createdAt": "2025-01-01T00:00:00Z"
+  }
 }
 ```
 
-### Get File Info
+### Get File
 ```http
 GET /api/files/{id}
 Authorization: Bearer <token>
@@ -294,191 +275,151 @@ DELETE /api/files/{id}
 Authorization: Bearer <token>
 ```
 
-## Web Search
+## Real-time Updates
 
-### Search Web
-```http
-POST /api/search/web
-Authorization: Bearer <token>
-Content-Type: application/json
+T66 uses Firebase Realtime Database for real-time updates. Connect to the following paths:
 
-{
-  "query": "latest AI developments 2025",
-  "num_results": 10,
-  "include_images": false
-}
+### Chat Updates
+```javascript
+// Listen for new messages in a chat
+const messagesRef = firebase.database().ref(`chats/${chatId}/messages`);
+messagesRef.on('child_added', (snapshot) => {
+  const message = snapshot.val();
+  // Handle new message
+});
 ```
 
-**Response:**
-```json
-{
-  "query": "latest AI developments 2025",
-  "results": [
-    {
-      "title": "AI Breakthrough 2025",
-      "url": "https://example.com/article",
-      "snippet": "Recent developments in AI...",
-      "source": "Tech News",
-      "published": "2025-01-01"
-    }
-  ],
-  "search_time": 0.45
-}
-```
-
-## Settings & Configuration
-
-### Get User Settings
-```http
-GET /collections/user_settings/records
-Authorization: Bearer <token>
-?filter=(user='{user_id}')
-```
-
-### Update User Settings
-```http
-PATCH /collections/user_settings/records/{id}
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "theme": "dark",
-  "default_model": "gpt-4",
-  "api_keys": {
-    "openai": "sk-...",
-    "anthropic": "sk-ant-..."
-  }
-}
-```
-
-## Webhooks
-
-### Register Webhook
-```http
-POST /api/webhooks
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "url": "https://your-app.com/webhook",
-  "events": ["chat.message.created", "chat.completed"],
-  "secret": "webhook_secret"
-}
-```
-
-## Rate Limits
-
-- **Authentication**: 10 requests per minute
-- **Chat Completions**: 100 requests per hour
-- **Image Generation**: 50 requests per hour
-- **File Uploads**: 20 requests per minute
-
-Rate limit headers are included in responses:
-```http
-X-RateLimit-Limit: 100
-X-RateLimit-Remaining: 95
-X-RateLimit-Reset: 1640995200
+### Typing Indicators
+```javascript
+// Listen for typing indicators
+const typingRef = firebase.database().ref(`chats/${chatId}/typing`);
+typingRef.on('value', (snapshot) => {
+  const typing = snapshot.val();
+  // Handle typing status
+});
 ```
 
 ## Error Handling
 
-All errors follow a consistent format:
+All API endpoints return standard HTTP status codes and error responses:
 
 ```json
 {
   "error": {
-    "code": "invalid_request",
-    "message": "The request is missing required parameters",
+    "code": "INVALID_REQUEST",
+    "message": "The request is invalid",
     "details": {
-      "missing_fields": ["model", "messages"]
+      "field": "email",
+      "reason": "Email is required"
     }
   }
 }
 ```
 
 ### Common Error Codes
+- `UNAUTHENTICATED` (401): Invalid or missing authentication
+- `PERMISSION_DENIED` (403): Insufficient permissions
+- `NOT_FOUND` (404): Resource not found
+- `ALREADY_EXISTS` (409): Resource already exists
+- `INVALID_REQUEST` (400): Invalid request parameters
+- `INTERNAL_ERROR` (500): Internal server error
+- `RATE_LIMITED` (429): Too many requests
 
-- `400` - Bad Request
-- `401` - Unauthorized
-- `403` - Forbidden
-- `404` - Not Found
-- `429` - Too Many Requests
-- `500` - Internal Server Error
+## Rate Limiting
 
-## WebSocket API
+API requests are rate-limited based on user authentication:
 
-For real-time features, connect to:
+- **Authenticated users**: 1000 requests per hour
+- **AI completions**: 100 requests per hour
+- **File uploads**: 50 requests per hour
+
+Rate limit headers are included in responses:
+```http
+X-RateLimit-Limit: 1000
+X-RateLimit-Remaining: 999
+X-RateLimit-Reset: 1609459200
 ```
-ws://localhost:8090/ws?token=<jwt-token>
-```
 
-### Events
+## Webhooks
 
-#### Join Chat Room
-```json
+T66 supports webhooks for real-time notifications:
+
+### Chat Events
+```http
+POST /your-webhook-endpoint
+Content-Type: application/json
+
 {
-  "type": "join",
-  "chat_id": "chat_123"
+  "event": "message.created",
+  "data": {
+    "chatId": "chat_123",
+    "messageId": "msg_456",
+    "userId": "user_123",
+    "content": "Hello!",
+    "timestamp": "2025-01-01T00:00:00Z"
+  }
 }
 ```
 
-#### Leave Chat Room
-```json
-{
-  "type": "leave",
-  "chat_id": "chat_123"
-}
-```
+### Supported Events
+- `chat.created`
+- `chat.updated`
+- `chat.deleted`
+- `message.created`
+- `message.updated`
+- `user.created`
+- `user.updated`
 
-#### Typing Indicator
-```json
-{
-  "type": "typing",
-  "chat_id": "chat_123",
-  "user_id": "user_123"
-}
-```
-
-## SDKs and Libraries
+## SDK Examples
 
 ### JavaScript/TypeScript
-```bash
-npm install @t66/sdk
-```
-
 ```javascript
-import { T66Client } from '@t66/sdk';
+import { initializeApp } from 'firebase/app';
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { getFirestore, collection, addDoc } from 'firebase/firestore';
 
-const client = new T66Client({
-  apiUrl: 'http://localhost:8090',
-  apiKey: 'your-api-key'
-});
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-const response = await client.chat.completions.create({
-  model: 'gpt-4',
-  messages: [{ role: 'user', content: 'Hello!' }]
+// Authenticate
+const userCredential = await signInWithEmailAndPassword(auth, email, password);
+const user = userCredential.user;
+
+// Create a chat
+const chatRef = await addDoc(collection(db, 'chats'), {
+  title: 'New Chat',
+  userId: user.uid,
+  createdAt: new Date(),
+  settings: {
+    model: 'gpt-4',
+    temperature: 0.7
+  }
 });
 ```
 
 ### Python
-```bash
-pip install t66-python
-```
-
 ```python
-import t66
+import firebase_admin
+from firebase_admin import credentials, firestore, auth
 
-client = t66.Client(
-    api_url="http://localhost:8090",
-    api_key="your-api-key"
-)
+# Initialize Firebase
+cred = credentials.Certificate('path/to/serviceAccountKey.json')
+firebase_admin.initialize_app(cred)
 
-response = client.chat.completions.create(
-    model="gpt-4",
-    messages=[{"role": "user", "content": "Hello!"}]
-)
+db = firestore.client()
+
+# Create a chat
+doc_ref = db.collection('chats').add({
+    'title': 'New Chat',
+    'userId': user_id,
+    'createdAt': firestore.SERVER_TIMESTAMP,
+    'settings': {
+        'model': 'gpt-4',
+        'temperature': 0.7
+    }
+})
 ```
 
-## Examples
-
-See the [examples](./examples/) directory for complete implementation examples in various languages and frameworks. 
+For more detailed examples and advanced usage, check the [GitHub repository](https://github.com/yourusername/t66-clone). 

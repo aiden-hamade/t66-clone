@@ -6,6 +6,7 @@ export interface User {
   avatar?: string
   verified: boolean
   plan: 'free' | 'pro' | 'enterprise'
+  openRouterApiKey?: string
   createdAt: Date
   updatedAt: Date
 }

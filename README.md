@@ -2,11 +2,11 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![React](https://img.shields.io/badge/React-18.x-blue.svg)](https://reactjs.org/)
-[![PocketBase](https://img.shields.io/badge/PocketBase-Latest-green.svg)](https://pocketbase.io/)
+[![Firebase](https://img.shields.io/badge/Firebase-Latest-orange.svg)](https://firebase.google.com/)
 
 > 🚀 **T3 Chat Cloneathon Submission** - A modern, self-hostable AI chat application built for the community.
 
-**T66** is a powerful, open-source AI chat platform that brings together multiple language models in a beautiful, feature-rich interface. Built with React and PocketBase, it's designed to be self-hostable, extensible, and user-friendly.
+**T66** is a powerful, open-source AI chat platform that brings together multiple language models in a beautiful, feature-rich interface. Built with React and Firebase, it's designed to be scalable, extensible, and user-friendly.
 
 ## 🏆 Competition Features
 
@@ -47,12 +47,12 @@
 
 ### Tech Stack
 - **Frontend**: React 18+ with TypeScript
-- **Backend**: PocketBase (Go-based BaaS)
+- **Backend**: Firebase (Authentication, Firestore, Functions)
 - **Styling**: Tailwind CSS + shadcn/ui
 - **State Management**: Zustand
-- **Real-time**: WebSockets + Server-Sent Events
+- **Real-time**: Firebase Realtime Database
 - **Testing**: Vitest + React Testing Library
-- **Deployment**: Docker + Docker Compose
+- **Deployment**: Vercel/Netlify + Firebase
 
 ### Project Structure
 
@@ -82,12 +82,11 @@ t66-clone/
 │   ├── 📄 vite.config.ts
 │   └── 📄 tailwind.config.js
 │
-├── 📁 backend/                     # PocketBase backend
-│   ├── 📁 pb_data/                 # PocketBase data directory
-│   ├── 📁 pb_migrations/           # Database migrations
-│   ├── 📁 pb_hooks/                # PocketBase hooks (Go)
-│   ├── 📁 pb_public/               # Static file serving
-│   └── 📄 main.go                  # Custom PocketBase server
+├── 📁 firebase/                    # Firebase configuration
+│   ├── 📁 functions/               # Cloud Functions
+│   ├── 📄 firebase.json
+│   ├── 📄 firestore.rules
+│   └── 📄 storage.rules
 │
 ├── 📁 docs/                        # Documentation
 │   ├── 📄 API.md                   # API documentation
@@ -97,7 +96,6 @@ t66-clone/
 │
 ├── 📁 docker/                      # Docker configuration
 │   ├── 📄 Dockerfile.frontend
-│   ├── 📄 Dockerfile.backend
 │   └── 📄 docker-compose.yml
 │
 ├── 📁 scripts/                     # Development scripts
@@ -115,7 +113,7 @@ t66-clone/
 
 ### Prerequisites
 - Node.js 18+ and npm/yarn
-- Go 1.21+ (for PocketBase customization)
+- Firebase CLI
 - Docker and Docker Compose (optional)
 
 ### Development Setup
@@ -131,42 +129,43 @@ t66-clone/
    # Frontend
    cd frontend
    npm install
-   
-   # Backend (if customizing PocketBase)
-   cd ../backend
-   go mod tidy
    ```
 
-3. **Environment setup**
+3. **Firebase setup**
+   ```bash
+   # Install Firebase CLI
+   npm install -g firebase-tools
+   
+   # Login to Firebase
+   firebase login
+   
+   # Initialize Firebase project
+   firebase init
+   ```
+
+4. **Environment setup**
    ```bash
    cp .env.example .env
    # Edit .env with your configuration
    ```
 
-4. **Start development servers**
+5. **Start development server**
    ```bash
-   # Terminal 1: Backend
-   cd backend
-   go run main.go serve --http=0.0.0.0:8090
-   
-   # Terminal 2: Frontend
    cd frontend
    npm run dev
    ```
 
-5. **Open your browser**
+6. **Open your browser**
    - Frontend: http://localhost:5173
-   - Backend Admin: http://localhost:8090/_/
 
-### Docker Setup (Recommended for Production)
+### Docker Setup (Optional)
 
 ```bash
-# Build and start all services
+# Build and start frontend service
 docker-compose up -d
 
 # Access the application
 # Frontend: http://localhost:3000
-# Backend: http://localhost:8090
 ```
 
 ## 🎨 Theming System
@@ -207,22 +206,7 @@ npm run test:e2e
 ## 📖 API Documentation
 
 ### Authentication
-- `POST /auth/login` - User login
-- `POST /auth/register` - User registration
-- `POST /auth/logout` - User logout
-
-### Chat Management
-- `GET /api/chats` - Get user's chats
-- `POST /api/chats` - Create new chat
-- `PUT /api/chats/:id` - Update chat
-- `DELETE /api/chats/:id` - Delete chat
-
-### AI Providers
-- `POST /api/chat/completions` - Chat completions
-- `POST /api/images/generate` - Image generation
-- `GET /api/models` - Available models
-
-[Full API Documentation](docs/API.md)
+- Firebase Authentication with multiple providers
 
 ## 🤝 Contributing
 
@@ -247,12 +231,13 @@ We welcome contributions! Please see our [Contributing Guide](docs/CONTRIBUTING.
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## �� Acknowledgments
 
-- T3 Stack team for inspiration
-- PocketBase for the amazing backend
-- shadcn/ui for beautiful components
-- All contributors and testers
+- React and the amazing React community
+- Firebase for the excellent backend services
+- shadcn/ui for the beautiful component library
+- All the AI providers making this possible
+- The open source community
 
 ## 📞 Support
 

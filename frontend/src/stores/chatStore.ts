@@ -1,0 +1,649 @@
+import { create } from 'zustand';
+import type { Chat, Message, ChatSettings, User } from '../types';
+import { 
+  createChat,
+  getUserChats,
+  updateChat,
+  deleteChat as deleteFirestoreChat,
+  addMessageToChat,
+  updateMessageInChat
+} from '../lib/firestore';
+import { 
+  createChatCompletion,
+  createStreamingChatCompletion,
+  estimateTokenCount,
+  type ChatMessage as OpenRouterMessage
+} from '../lib/openrouter';
+
+interface ChatState {
+  chats: Chat[];
+  activeChat: string | null;
+  currentMessage: string;
+  isLoading: boolean;
+  isStreaming: boolean;
+  error: string | null;
+  showContinuePrompt: boolean;
+  continueMessageId: string | null;
+  user: User | null;
+}
+
+interface ChatActions {
+  setChats: (chats: Chat[]) => void;
+  setActiveChat: (chatId: string | null) => void;
+  setCurrentMessage: (message: string) => void;
+  setLoading: (loading: boolean) => void;
+  setStreaming: (streaming: boolean) => void;
+  setError: (error: string | null) => void;
+  clearError: () => void;
+  setShowContinuePrompt: (show: boolean) => void;
+  setContinueMessageId: (messageId: string | null) => void;
+  setUser: (user: User | null) => void;
+  
+  // Chat management
+  loadUserChats: (userId: string) => Promise<void>;
+  createNewChat: (userId: string, title: string, settings: ChatSettings) => Promise<string>;
+  updateChatTitle: (chatId: string, title: string) => Promise<void>;
+  updateChatSettings: (chatId: string, settings: ChatSettings) => Promise<void>;
+  deleteChat: (chatId: string) => Promise<void>;
+  generateChatTitle: (userMessage: string, assistantMessage: string) => Promise<string>;
+  
+  // Message management
+  sendMessage: (userId: string, content: string, useStreaming?: boolean) => Promise<void>;
+  continueMessage: (userId: string) => Promise<void>;
+  addUserMessage: (chatId: string, content: string) => Promise<void>;
+  updateLastMessage: (chatId: string, content: string) => void;
+}
+
+type ChatStore = ChatState & ChatActions;
+
+export const useChatStore = create<ChatStore>()((set, get) => ({
+  // State
+  chats: [],
+  activeChat: null,
+  currentMessage: '',
+  isLoading: false,
+  isStreaming: false,
+  error: null,
+  showContinuePrompt: false,
+  continueMessageId: null,
+  user: null,
+
+  // Basic setters
+  setChats: (chats) => set({ chats }),
+  setActiveChat: (activeChat) => set({ activeChat }),
+  setCurrentMessage: (currentMessage) => set({ currentMessage }),
+  setLoading: (isLoading) => set({ isLoading }),
+  setStreaming: (isStreaming) => set({ isStreaming }),
+  setError: (error) => set({ error }),
+  clearError: () => set({ error: null }),
+  setShowContinuePrompt: (showContinuePrompt) => set({ showContinuePrompt }),
+  setContinueMessageId: (continueMessageId) => set({ continueMessageId }),
+  setUser: (user) => set({ user }),
+
+  // Load user chats from Firestore
+  loadUserChats: async (userId) => {
+    const { setLoading, setError, setChats } = get();
+    
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const chats = await getUserChats(userId);
+      setChats(chats);
+      
+      // Set active chat to first chat if none selected
+      const { activeChat } = get();
+      if (!activeChat && chats.length > 0) {
+        set({ activeChat: chats[0].id });
+      }
+    } catch (error) {
+      console.error('Error loading chats:', error);
+      setError('Failed to load chats');
+    } finally {
+      setLoading(false);
+    }
+  },
+
+  // Create new chat
+  createNewChat: async (userId, title, settings) => {
+    const { setLoading, setError, setChats, setActiveChat } = get();
+    
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const newChat = await createChat(userId, title, settings);
+      
+      const { chats } = get();
+      setChats([newChat, ...chats]);
+      setActiveChat(newChat.id);
+      
+      return newChat.id;
+    } catch (error) {
+      console.error('Error creating chat:', error);
+      setError('Failed to create chat');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  },
+
+  // Update chat title
+  updateChatTitle: async (chatId, title) => {
+    const { setError, setChats } = get();
+    
+    try {
+      setError(null);
+      
+      await updateChat(chatId, { title });
+      
+      const { chats } = get();
+      const updatedChats = chats.map(chat =>
+        chat.id === chatId ? { ...chat, title } : chat
+      );
+      setChats(updatedChats);
+    } catch (error) {
+      console.error('Error updating chat title:', error);
+      setError('Failed to update chat title');
+    }
+  },
+
+  // Update chat settings
+  updateChatSettings: async (chatId, settings) => {
+    const { setError, setChats } = get();
+    
+    try {
+      setError(null);
+      
+      await updateChat(chatId, { settings });
+      
+      const { chats } = get();
+      const updatedChats = chats.map(chat =>
+        chat.id === chatId ? { ...chat, settings } : chat
+      );
+      setChats(updatedChats);
+    } catch (error) {
+      console.error('Error updating chat settings:', error);
+      setError('Failed to update chat settings');
+    }
+  },
+
+  // Delete chat
+  deleteChat: async (chatId) => {
+    const { setError, setChats, setActiveChat, activeChat } = get();
+    
+    try {
+      setError(null);
+      
+      await deleteFirestoreChat(chatId);
+      
+      const { chats } = get();
+      const updatedChats = chats.filter(chat => chat.id !== chatId);
+      setChats(updatedChats);
+      
+      // If deleted chat was active, switch to another chat or clear active chat
+      if (activeChat === chatId) {
+        const newActiveChat = updatedChats.length > 0 ? updatedChats[0].id : null;
+        setActiveChat(newActiveChat);
+      }
+    } catch (error) {
+      console.error('Error deleting chat:', error);
+      setError('Failed to delete chat');
+    }
+  },
+
+  // Add user message to chat
+  addUserMessage: async (chatId, content) => {
+    const { setError, setChats, chats } = get();
+    
+    try {
+      setError(null);
+      
+      // Get current chat to access settings
+      const currentChat = chats.find(chat => chat.id === chatId);
+      
+      const message: Omit<Message, 'id'> = {
+        content,
+        role: 'user',
+        timestamp: new Date(),
+        metadata: {
+          model: currentChat?.settings.model || 'user-input'
+        }
+      };
+      
+      const newMessage = await addMessageToChat(chatId, message);
+      
+      const { chats: updatedChatsState } = get();
+      const updatedChats = updatedChatsState.map(chat =>
+        chat.id === chatId 
+          ? { ...chat, messages: [...chat.messages, newMessage] }
+          : chat
+      );
+      setChats(updatedChats);
+    } catch (error) {
+      console.error('Error adding user message:', error);
+      setError('Failed to send message');
+      throw error;
+    }
+  },
+
+  // Update last message content (for streaming)
+  updateLastMessage: (chatId, content) => {
+    const { chats, setChats } = get();
+    
+    const updatedChats = chats.map(chat => {
+      if (chat.id === chatId && chat.messages.length > 0) {
+        const messages = [...chat.messages];
+        const lastMessage = messages[messages.length - 1];
+        
+        if (lastMessage.role === 'assistant') {
+          messages[messages.length - 1] = {
+            ...lastMessage,
+            content
+          };
+        }
+        
+        return { ...chat, messages };
+      }
+      return chat;
+    });
+    
+    setChats(updatedChats);
+  },
+
+  // Generate chat title using AI
+  generateChatTitle: async (userMessage: string, assistantMessage: string) => {
+    try {
+      console.log('generateChatTitle: Starting title generation');
+      console.log('generateChatTitle: User message length:', userMessage.length);
+      console.log('generateChatTitle: Assistant message length:', assistantMessage.length);
+      
+      const titleMessages: OpenRouterMessage[] = [
+        {
+          role: 'system',
+          content: 'You are a helpful assistant that creates concise chat titles. Create a title that summarizes the conversation topic in 3-8 words. Be specific and descriptive. Return only the title, no quotes or extra text.'
+        },
+        {
+          role: 'user',
+          content: `User: ${userMessage}\n\nAssistant: ${assistantMessage}\n\nPlease create a short title (3-8 words) that summarizes this conversation:`
+        }
+      ];
+
+      console.log('generateChatTitle: Sending request to OpenRouter with model openai/gpt-4.1-nano');
+      
+      // Get user data to access API key
+      const { user } = get();
+      if (!user?.openRouterApiKey) {
+        console.error('generateChatTitle: No API key available');
+        return 'New Chat';
+      }
+
+      const response = await createChatCompletion(titleMessages, {
+        model: 'openai/gpt-4.1-nano',
+        temperature: 0.3,
+        max_tokens: 50,
+        apiKey: user.openRouterApiKey
+      });
+
+      console.log('generateChatTitle: Received response:', response);
+      console.log('generateChatTitle: Response choices:', response.choices);
+      
+      const rawTitle = response.choices[0]?.message?.content;
+      console.log('generateChatTitle: Raw title from API:', rawTitle);
+      
+      const title = rawTitle?.trim() || 'New Chat';
+      const cleanTitle = title.replace(/^["']|["']$/g, ''); // Remove quotes if present
+      
+      console.log('generateChatTitle: Final cleaned title:', cleanTitle);
+      return cleanTitle;
+    } catch (error) {
+      console.error('generateChatTitle: Error generating title:', error);
+      return 'New Chat';
+    }
+  },
+
+  // Continue message when token limit is reached
+  continueMessage: async (userId) => {
+    const { 
+      activeChat, 
+      chats, 
+      continueMessageId,
+      setStreaming,
+      setError,
+      setShowContinuePrompt,
+      setContinueMessageId,
+      updateLastMessage,
+      updateChatTitle,
+      generateChatTitle
+    } = get();
+    
+    if (!activeChat || !continueMessageId) {
+      setError('No message to continue');
+      return;
+    }
+
+    const currentChat = chats.find(chat => chat.id === activeChat);
+    if (!currentChat) {
+      setError('Chat not found');
+      return;
+    }
+
+    try {
+      setError(null);
+      setShowContinuePrompt(false);
+      setContinueMessageId(null);
+      setStreaming(true);
+
+      // Prepare messages for continuation
+      const openRouterMessages: OpenRouterMessage[] = [
+        ...(currentChat.settings.systemMessage ? [{
+          role: 'system' as const,
+          content: currentChat.settings.systemMessage
+        }] : []),
+        ...currentChat.messages.map(msg => ({
+          role: msg.role,
+          content: msg.content
+        })),
+        {
+          role: 'user' as const,
+          content: 'Please continue your previous response.'
+        }
+      ];
+
+      let accumulatedContent = '';
+      const currentMessage = currentChat.messages.find(msg => msg.id === continueMessageId);
+      if (currentMessage) {
+        accumulatedContent = currentMessage.content;
+      }
+
+             // Get user data to access API key
+       const { user } = get();
+       if (!user?.openRouterApiKey) {
+         setError('OpenRouter API key not configured. Please add your API key in Settings.');
+         setStreaming(false);
+         return;
+       }
+
+       await createStreamingChatCompletion(
+         openRouterMessages,
+         {
+           model: currentChat.settings.model,
+           temperature: currentChat.settings.temperature,
+           max_tokens: currentChat.settings.maxTokens,
+           apiKey: user.openRouterApiKey
+         },
+         (chunk) => {
+           accumulatedContent += chunk;
+           updateLastMessage(activeChat, accumulatedContent);
+         },
+         (reason) => {
+           // Handle finish reason for continuation
+           console.log('Continue streaming finish reason:', reason);
+         },
+         async () => {
+           setStreaming(false);
+           
+           // Update the message in Firestore with final content
+           try {
+             await updateMessageInChat(activeChat, continueMessageId, {
+               content: accumulatedContent,
+               metadata: {
+                 model: currentChat.settings.model,
+                 tokens: estimateTokenCount(accumulatedContent),
+                 processingTime: Date.now() - Date.now()
+               }
+             });
+           } catch (error) {
+             console.error('Error saving continued message to Firestore:', error);
+           }
+         },
+         (error) => {
+           setStreaming(false);
+           setError(`Failed to continue message: ${error.message}`);
+         }
+       );
+    } catch (error) {
+      console.error('Error continuing message:', error);
+      setError(`Failed to continue message: ${(error as Error).message}`);
+      setStreaming(false);
+    }
+  },
+
+  // Send message with AI response
+  sendMessage: async (userId, content, useStreaming = true) => {
+    const { 
+      activeChat, 
+      chats, 
+      addUserMessage,
+      setCurrentMessage,
+      setStreaming,
+      setError,
+      setChats,
+      updateLastMessage,
+      updateChatTitle,
+      generateChatTitle
+    } = get();
+    
+    // Create new chat if none exists
+    if (!activeChat) {
+      const { createNewChat } = get();
+      const defaultSettings: ChatSettings = {
+        model: 'openai/gpt-4o',
+        temperature: 0.7,
+        maxTokens: 4000,
+        provider: 'openrouter'
+      };
+      
+      const newChatId = await createNewChat(userId, 'New Chat', defaultSettings);
+      // Update activeChat after creating new chat
+      const { activeChat: updatedActiveChat } = get();
+      if (!updatedActiveChat) {
+        setError('Failed to create chat');
+        return;
+      }
+    }
+
+    const currentActiveChat = get().activeChat;
+    if (!currentActiveChat) {
+      setError('No active chat available');
+      return;
+    }
+
+    try {
+      setError(null);
+      setCurrentMessage('');
+      
+      // Add user message
+      await addUserMessage(currentActiveChat, content);
+      
+      // Get current chat and its settings
+      const currentChat = chats.find(chat => chat.id === currentActiveChat);
+      if (!currentChat) {
+        throw new Error('Chat not found');
+      }
+
+      // Check if this is the first message pair (user + assistant)
+      // We need to check before adding the user message, so subtract 1
+      const isFirstMessage = currentChat.messages.length <= 1; // 0 or 1 message (just the user message we added)
+      console.log('sendMessage: Current chat messages count:', currentChat.messages.length);
+      console.log('sendMessage: isFirstMessage:', isFirstMessage);
+
+      // Prepare messages for OpenRouter API
+      const openRouterMessages: OpenRouterMessage[] = [
+        ...(currentChat.settings.systemMessage ? [{
+          role: 'system' as const,
+          content: currentChat.settings.systemMessage
+        }] : []),
+        ...currentChat.messages.map(msg => ({
+          role: msg.role,
+          content: msg.content
+        })),
+        {
+          role: 'user' as const,
+          content
+        }
+      ];
+
+      if (useStreaming) {
+        setStreaming(true);
+        
+        // Create placeholder assistant message
+        const assistantMessage: Omit<Message, 'id'> = {
+          content: '',
+          role: 'assistant',
+          timestamp: new Date(),
+          metadata: {
+            model: currentChat.settings.model
+          }
+        };
+        
+        const newMessage = await addMessageToChat(currentActiveChat, assistantMessage);
+        
+        // Update local state
+        const { chats: currentChats } = get();
+        const updatedChats = currentChats.map(chat =>
+          chat.id === currentActiveChat 
+            ? { ...chat, messages: [...chat.messages, newMessage] }
+            : chat
+        );
+        setChats(updatedChats);
+
+        let accumulatedContent = '';
+        let finishReason = '';
+        
+        // Get user data to access API key
+        const { user } = get();
+        if (!user?.openRouterApiKey) {
+          setError('OpenRouter API key not configured. Please add your API key in Settings.');
+          setStreaming(false);
+          return;
+        }
+
+        await createStreamingChatCompletion(
+          openRouterMessages,
+          {
+            model: currentChat.settings.model,
+            temperature: currentChat.settings.temperature,
+            max_tokens: currentChat.settings.maxTokens,
+            apiKey: user.openRouterApiKey
+          },
+          (chunk) => {
+            console.log('Streaming chunk received:', chunk);
+            accumulatedContent += chunk;
+            updateLastMessage(currentActiveChat, accumulatedContent);
+          },
+          (reason) => {
+            finishReason = reason;
+          },
+          async () => {
+            console.log('Streaming completed. Final content length:', accumulatedContent.length);
+            console.log('Final content preview:', accumulatedContent.substring(0, 200) + '...');
+            console.log('Finish reason:', finishReason);
+            setStreaming(false);
+            
+            // Update the message in Firestore with final content
+            try {
+              console.log('Saving final message to Firestore...');
+              await updateMessageInChat(currentActiveChat, newMessage.id, {
+                content: accumulatedContent,
+                metadata: {
+                  model: currentChat.settings.model,
+                  tokens: estimateTokenCount(accumulatedContent),
+                  processingTime: Date.now() - Date.now() // This would need proper timing
+                }
+              });
+              console.log('Final message saved to Firestore successfully');
+
+              // Check if we hit token limit and show continue prompt
+              if (finishReason === 'length') {
+                console.log('Token limit reached, showing continue prompt');
+                const { setShowContinuePrompt, setContinueMessageId } = get();
+                setShowContinuePrompt(true);
+                setContinueMessageId(newMessage.id);
+              }
+
+              // Generate title for first message
+              if (isFirstMessage && accumulatedContent.trim()) {
+                console.log('Generating title for first message...');
+                console.log('User message:', content);
+                console.log('Assistant message preview:', accumulatedContent.substring(0, 100));
+                try {
+                  const generatedTitle = await generateChatTitle(content, accumulatedContent);
+                  console.log('Generated title:', generatedTitle);
+                  if (generatedTitle && generatedTitle !== 'New Chat') {
+                    console.log('Updating chat title to:', generatedTitle);
+                    await updateChatTitle(currentActiveChat, generatedTitle);
+                    console.log('Chat title updated successfully');
+                  } else {
+                    console.log('Generated title was empty or "New Chat", not updating');
+                  }
+                } catch (titleError) {
+                  console.error('Error generating title:', titleError);
+                }
+              } else {
+                console.log('Not generating title - isFirstMessage:', isFirstMessage, 'content length:', accumulatedContent.trim().length);
+              }
+            } catch (error) {
+              console.error('Error saving final message to Firestore:', error);
+            }
+          },
+          (error) => {
+            console.error('Streaming error occurred:', error);
+            setStreaming(false);
+            setError(`AI response failed: ${error.message}`);
+          }
+        );
+      } else {
+        setStreaming(true);
+        
+        const response = await createChatCompletion(openRouterMessages, {
+          model: currentChat.settings.model,
+          temperature: currentChat.settings.temperature,
+          max_tokens: currentChat.settings.maxTokens
+        });
+
+        const assistantContent = response.choices[0]?.message?.content || 'No response received';
+        
+        const assistantMessage: Omit<Message, 'id'> = {
+          content: assistantContent,
+          role: 'assistant',
+          timestamp: new Date(),
+          metadata: {
+            model: response.model || currentChat.settings.model,
+            tokens: response.usage?.total_tokens,
+            processingTime: Date.now() - Date.now() // This would need to be calculated properly
+          }
+        };
+        
+        const savedMessage = await addMessageToChat(currentActiveChat, assistantMessage);
+        
+        // Update local state
+        const { chats: currentChats } = get();
+        const updatedChats = currentChats.map(chat =>
+          chat.id === currentActiveChat 
+            ? { ...chat, messages: [...chat.messages, savedMessage] }
+            : chat
+        );
+        setChats(updatedChats);
+        
+        // Generate title for first message
+        if (isFirstMessage && assistantContent.trim()) {
+          try {
+            const generatedTitle = await generateChatTitle(content, assistantContent);
+            if (generatedTitle && generatedTitle !== 'New Chat') {
+              await updateChatTitle(currentActiveChat, generatedTitle);
+            }
+          } catch (titleError) {
+            console.error('Error generating title:', titleError);
+          }
+        }
+        
+        setStreaming(false);
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      setError(`Failed to send message: ${(error as Error).message}`);
+      setStreaming(false);
+    }
+  }
+})); 

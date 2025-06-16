@@ -31,7 +31,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
@@ -48,7 +48,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
             'w-full max-w-lg': size === 'lg',
             'w-full max-w-4xl': size === 'xl',
           },
-          'mx-4 max-h-[90vh] overflow-hidden'
+          'max-h-[90vh] overflow-hidden'
         )}
       >
         {/* Header */}
