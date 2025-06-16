@@ -40,7 +40,7 @@ export interface Chat {
   shareId?: string
   isSplit?: boolean
   splitFromChatId?: string // ID of the original chat this was split from
-  folderId?: string // ID of the folder this chat belongs to
+  folderId?: string | null // ID of the folder this chat belongs to
   collaborators?: string[] // Array of user IDs who can collaborate on this chat
   createdAt: Date
   updatedAt: Date

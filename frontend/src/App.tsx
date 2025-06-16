@@ -17,6 +17,7 @@ import { SharedChatView } from './components/chat/SharedChatView'
 import { useAuthStore } from './stores/authStore'
 import { useChatStore } from './stores/chatStore'
 import { useThemeStore } from './stores/themeStore'
+import systemPromptTemplate from './assets/system_prompt.txt?raw'
 
 // Utils
 import { estimateTokenCount } from './lib/openrouter'
@@ -32,6 +33,7 @@ function App() {
   const [renameValue, setRenameValue] = useState('')
   const [creatingFolder, setCreatingFolder] = useState(false)
   const [newFolderName, setNewFolderName] = useState('')
+  const [systemPrompt, setSystemPrompt] = useState('')
 
   // Auth store
   const { user, signOut: authSignOut, setUser: setAuthUser } = useAuthStore()
@@ -86,6 +88,18 @@ function App() {
     initializeTheme()
   }, [initializeTheme])
 
+  useEffect(() => {
+    const date = new Date().toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+    const newPrompt = systemPromptTemplate
+      .replace('{current_date}', date)
+      .replace('{selectedModel}', selectedModel)
+    setSystemPrompt(newPrompt)
+  }, [selectedModel])
+
   // Load user chats and folders when user changes and sync user to chat store and theme store
   useEffect(() => {
     setUser(user) // Sync user to chat store
@@ -109,7 +123,7 @@ function App() {
           temperature: 0.7,
           maxTokens: 4000,
           provider: 'openrouter',
-          systemMessage: `You are T66 AI, built by Koby Pierce and Aiden Hamade. You are running on the underlying LLM model ${selectedModel}.`
+          systemMessage: systemPrompt,
         }
         
         await createNewChat(user.id, 'New Chat', defaultSettings)
