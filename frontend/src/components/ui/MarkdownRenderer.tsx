@@ -1,4 +1,7 @@
 import ReactMarkdown from 'react-markdown'
+import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter'
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
+
 import remarkGfm from 'remark-gfm'
 import { cn, copyToClipboard } from '../../lib/utils'
 import { Copy, Check } from 'lucide-react'
@@ -25,32 +28,41 @@ function CodeBlock({ children, className, ...props }: any) {
     }
   }
 
-  return (
-    <div className="relative group">
-              <pre className="bg-theme-code rounded-lg p-4 overflow-x-auto">
-          <div className="flex items-center justify-between mb-2 text-xs text-theme-secondary">
-          <span>{language || 'code'}</span>
-          <button
-            onClick={handleCopy}
-            className="flex items-center gap-1 px-2 py-1 rounded hover:bg-theme-dropdown-hover transition-colors opacity-0 group-hover:opacity-100"
-          >
-            {copied ? (
-              <>
-                <Check size={12} />
-                Copied!
-              </>
-            ) : (
-              <>
-                <Copy size={12} />
-                Copy
-              </>
-            )}
-          </button>
-        </div>
-        <code className={className} {...props}>
-          {children}
-        </code>
-      </pre>
+return (
+    <div className="relative group my-4">
+      <div className="flex items-center justify-between text-xs text-muted-foreground mb-1 px-2">
+        <span>{language || 'code'}</span>
+        <button
+          onClick={handleCopy}
+          className="flex items-center gap-1 px-2 py-1 rounded hover:bg-background transition-colors opacity-0 group-hover:opacity-100"
+        >
+          {copied ? (
+            <>
+              <Check size={12} />
+              Copied!
+            </>
+          ) : (
+            <>
+              <Copy size={12} />
+              Copy
+            </>
+          )}
+        </button>
+      </div>
+
+      <SyntaxHighlighter
+        language={language}
+        style={oneDark}
+        PreTag="div"
+        customStyle={{
+          borderRadius: '0.5rem',
+          fontSize: '0.875rem',
+          overflowX: 'auto'
+        }}
+        {...props}
+      >
+        {code}
+      </SyntaxHighlighter>
     </div>
   )
 }
