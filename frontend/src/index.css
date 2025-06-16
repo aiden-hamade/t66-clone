@@ -25,6 +25,54 @@
   --input: 214.3 31.8% 91.4%;
   --ring: 221.2 83.2% 53.3%;
   --radius: 0.5rem;
+
+  /* Dynamic Theme Variables - Core */
+  --theme-background: #241f29;
+  --theme-text-primary: #ffffff;
+  --theme-text-secondary: #c9bcd7;
+  --theme-surface: linear-gradient(135deg, #1c141a, #0e090d);
+  --theme-border: rgba(157, 73, 212, 0.1);
+  --theme-accent: #571a5b;
+  --theme-muted: #94a3b8;
+  --theme-card-background: linear-gradient(135deg, #2a1f2e, #1f1823);
+  --theme-hover-surface: rgba(189, 17, 192, 0.05);
+  --theme-subtitle: linear-gradient(135deg, #d47de1, #e078d0);
+  
+  /* Dynamic Theme Variables - Chat Specific */
+  --theme-chat-user-bubble: linear-gradient(135deg, #571a5b, #7c2d91);
+  --theme-chat-assistant-bubble: linear-gradient(135deg, #2a1f2e, #1f1823);
+  --theme-chat-assistant-text: #ffffff;
+  --theme-chat-input-background: #2a1f2e;
+  --theme-chat-input-border: rgba(157, 73, 212, 0.2);
+  --theme-chat-header-background: linear-gradient(135deg, #2a1f2e, #1f1823);
+  --theme-sidebar-active-chat: linear-gradient(135deg, rgba(87, 26, 91, 0.3), rgba(87, 26, 91, 0.1));
+  --theme-sidebar-hover-chat: rgba(189, 17, 192, 0.1);
+  --theme-button-primary: linear-gradient(135deg, #571a5b, #7c2d91);
+  --theme-button-primary-text: #ffffff;
+  --theme-button-secondary: rgba(157, 73, 212, 0.1);
+  --theme-button-secondary-text: #c9bcd7;
+  
+  /* Dynamic Theme Variables - UI Elements */
+  --theme-modal-background: #241f29;
+  --theme-modal-border: rgba(255, 255, 255, 0.1);
+  --theme-dropdown-background: #241f29;
+  --theme-dropdown-hover: rgba(255, 255, 255, 0.1);
+  --theme-input-background: #2a1f2e;
+  --theme-input-border: rgba(255, 255, 255, 0.15);
+  --theme-input-text: #ffffff;
+  --theme-link-color: linear-gradient(135deg, #d47de1, #e078d0);
+  --theme-error-color: #ef4444;
+  --theme-success-color: #10b981;
+  --theme-warning-color: #f59e0b;
+  
+  /* Dynamic Theme Variables - Code Syntax */
+  --theme-code-background: #1a1420;
+  --theme-code-keyword: #d47de1;
+  --theme-code-string: #10b981;
+  --theme-code-number: #3b82f6;
+  --theme-code-comment: #94a3b8;
+  --theme-code-function: #f59e0b;
+  --theme-code-variable: #ef4444;
 }
 
 .dark {
@@ -88,46 +136,49 @@ body {
   animation: typing 1.5s infinite;
 }
 
-/* Code syntax highlighting */
+
+
+/* Theme-aware syntax highlighting */
 .prose pre {
-  @apply bg-muted rounded-lg p-4 overflow-x-auto;
+  @apply bg-theme-code rounded-lg p-4 overflow-x-auto;
 }
 
 .prose code {
-  @apply bg-muted px-1.5 py-0.5 rounded text-sm;
+  @apply bg-theme-code px-1.5 py-0.5 rounded text-sm;
 }
 
-/* Basic syntax highlighting */
 .prose pre code .hljs-keyword {
-  @apply text-purple-500 font-medium;
+  color: var(--theme-code-keyword);
+  font-weight: 500;
 }
 
 .prose pre code .hljs-string {
-  @apply text-green-500;
+  color: var(--theme-code-string);
 }
 
 .prose pre code .hljs-number {
-  @apply text-blue-500;
+  color: var(--theme-code-number);
 }
 
 .prose pre code .hljs-comment {
-  @apply text-gray-500 italic;
+  color: var(--theme-code-comment);
+  font-style: italic;
 }
 
 .prose pre code .hljs-function {
-  @apply text-yellow-500;
+  color: var(--theme-code-function);
 }
 
 .prose pre code .hljs-variable {
-  @apply text-red-500;
+  color: var(--theme-code-variable);
 }
 
 .prose pre code .hljs-type {
-  @apply text-cyan-500;
+  color: var(--theme-code-number);
 }
 
 .prose pre code .hljs-operator {
-  @apply text-orange-500;
+  color: var(--theme-code-function);
 }
 
 /* Focus styles */
@@ -142,4 +193,180 @@ body {
 
 .dark .glass {
   @apply bg-black/10 backdrop-blur-md border border-white/10;
+}
+
+/* Dynamic Theme Utility Classes - Core */
+.bg-theme-background {
+  background: var(--theme-background);
+}
+
+.bg-theme-surface {
+  background: var(--theme-surface);
+}
+
+.bg-theme-card-background {
+  background: var(--theme-card-background);
+}
+
+.hover\:bg-theme-hover:hover {
+  background: var(--theme-hover-surface);
+}
+
+.text-theme-primary {
+  color: var(--theme-text-primary);
+}
+
+.text-theme-secondary {
+  color: var(--theme-text-secondary);
+}
+
+.text-theme-accent {
+  color: var(--theme-accent);
+}
+
+.text-theme-muted {
+  color: var(--theme-muted);
+}
+
+.text-theme-subtitle {
+  background: var(--theme-subtitle);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: var(--theme-text-secondary); /* Fallback */
+}
+
+.border-theme {
+  border-color: var(--theme-border);
+}
+
+/* Dynamic Theme Utility Classes - Chat Specific */
+.bg-theme-chat-user {
+  background: var(--theme-chat-user-bubble);
+}
+
+.bg-theme-chat-assistant {
+  background: var(--theme-chat-assistant-bubble);
+}
+
+.text-theme-chat-assistant {
+  color: var(--theme-chat-assistant-text);
+}
+
+.bg-theme-chat-input {
+  background: var(--theme-chat-input-background);
+}
+
+.border-theme-chat-input {
+  border-color: var(--theme-chat-input-border);
+}
+
+.bg-theme-chat-header {
+  background: var(--theme-chat-header-background);
+}
+
+.bg-theme-sidebar-active {
+  background: var(--theme-sidebar-active-chat);
+}
+
+.hover\:bg-theme-sidebar-hover:hover {
+  background: var(--theme-sidebar-hover-chat);
+}
+
+.bg-theme-button-primary {
+  background: var(--theme-button-primary);
+}
+
+.text-theme-button-primary {
+  color: var(--theme-button-primary-text);
+}
+
+.bg-theme-button-secondary {
+  background: var(--theme-button-secondary);
+}
+
+.text-theme-button-secondary {
+  color: var(--theme-button-secondary-text);
+}
+
+/* Dynamic Theme Utility Classes - UI Elements */
+.bg-theme-modal {
+  background: var(--theme-modal-background);
+}
+
+.border-theme-modal {
+  border-color: var(--theme-modal-border);
+}
+
+.bg-theme-dropdown {
+  background: var(--theme-dropdown-background);
+}
+
+.hover\:bg-theme-dropdown-hover:hover {
+  background: var(--theme-dropdown-hover);
+}
+
+.bg-theme-input {
+  background: var(--theme-input-background);
+}
+
+.border-theme-input {
+  border-color: var(--theme-input-border);
+}
+
+.text-theme-input {
+  color: var(--theme-input-text);
+}
+
+.text-theme-link {
+  background: var(--theme-link-color);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: var(--theme-accent); /* Fallback */
+}
+
+.text-theme-error {
+  color: var(--theme-error-color);
+}
+
+.border-theme-error {
+  border-color: var(--theme-error-color);
+}
+
+.text-theme-success {
+  color: var(--theme-success-color);
+}
+
+.text-theme-warning {
+  color: var(--theme-warning-color);
+}
+
+/* Dynamic Theme Utility Classes - Code Syntax */
+.bg-theme-code {
+  background: var(--theme-code-background);
+}
+
+.text-theme-code-keyword {
+  color: var(--theme-code-keyword);
+}
+
+.text-theme-code-string {
+  color: var(--theme-code-string);
+}
+
+.text-theme-code-number {
+  color: var(--theme-code-number);
+}
+
+.text-theme-code-comment {
+  color: var(--theme-code-comment);
+}
+
+.text-theme-code-function {
+  color: var(--theme-code-function);
+}
+
+.text-theme-code-variable {
+  color: var(--theme-code-variable);
 }

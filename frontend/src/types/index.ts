@@ -7,6 +7,8 @@ export interface User {
   verified: boolean
   plan: 'free' | 'pro' | 'enterprise'
   openRouterApiKey?: string
+  selectedTheme?: string // Theme preset name (e.g., 'T3 Theme', 'Cyberpunk')
+  customTheme?: any // Custom theme properties if user has customized
   createdAt: Date
   updatedAt: Date
 }
@@ -36,6 +38,9 @@ export interface Chat {
   user: string
   shared?: boolean
   shareId?: string
+  isSplit?: boolean
+  splitFromChatId?: string // ID of the original chat this was split from
+  folderId?: string // ID of the folder this chat belongs to
   createdAt: Date
   updatedAt: Date
 }
@@ -85,7 +90,6 @@ export interface AIProviderConfig {
 
 // Settings Types
 export interface UserSettings {
-  theme: 'light' | 'dark' | 'system'
   defaultModel: string
   defaultProvider: AIProvider
   apiKeys: Record<AIProvider, string>
@@ -261,4 +265,14 @@ export interface ModalProps {
   title?: string
   children: React.ReactNode
   size?: 'sm' | 'md' | 'lg' | 'xl'
+}
+
+export interface ChatFolder {
+  id: string
+  name: string
+  color?: string
+  user: string
+  isExpanded?: boolean
+  createdAt: Date
+  updatedAt: Date
 } 
