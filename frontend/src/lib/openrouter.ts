@@ -4,7 +4,12 @@ const DEFAULT_MODEL = import.meta.env.VITE_DEFAULT_MODEL || 'openai/gpt-4o';
 
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
-  content: string;
+  content: string | Array<{
+    type: 'text' | 'image_url' | 'file';
+    text?: string;
+    image_url?: { url: string };
+    file?: { filename: string; file_data: string };
+  }>;
 }
 
 export interface ChatCompletionRequest {

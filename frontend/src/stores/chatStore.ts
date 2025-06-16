@@ -65,9 +65,9 @@ interface ChatActions {
   moveChatToFolderAction: (chatId: string, folderId: string | null) => Promise<void>;
   
   // Message management
-  sendMessage: (userId: string, content: string, useStreaming?: boolean) => Promise<void>;
+  sendMessage: (userId: string, content: string, useStreaming?: boolean, attachments?: any[]) => Promise<void>;
   continueMessage: (userId: string) => Promise<void>;
-  addUserMessage: (chatId: string, content: string) => Promise<void>;
+  addUserMessage: (chatId: string, content: string, attachments?: any[]) => Promise<void>;
   updateLastMessage: (chatId: string, content: string) => void;
   
   // Helper functions
@@ -284,7 +284,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
   },
 
   // Add user message to chat
-  addUserMessage: async (chatId, content) => {
+  addUserMessage: async (chatId, content, attachments = []) => {
     const { setError, setChats, chats } = get();
     
     try {
@@ -297,6 +297,14 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
         content,
         role: 'user',
         timestamp: new Date(),
+        attachments: attachments.length > 0 ? attachments.map(att => ({
+          id: att.id,
+          filename: att.filename,
+          size: att.size,
+          type: att.type,
+          url: att.url,
+          createdAt: att.createdAt.toISOString() // Convert Date to string
+        })) : undefined,
         metadata: {
           model: currentChat?.settings.model || 'user-input'
         }
@@ -501,7 +509,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
   },
 
   // Send message with AI response
-  sendMessage: async (userId, content, useStreaming = true) => {
+  sendMessage: async (userId, content, useStreaming = true, attachments = []) => {
     const { 
       activeChat, 
       chats, 
@@ -545,7 +553,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
       setCurrentMessage('');
       
       // Add user message
-      await addUserMessage(currentActiveChat, content);
+      await addUserMessage(currentActiveChat, content, attachments);
       
       // Get current chat and its settings
       const currentChat = chats.find(chat => chat.id === currentActiveChat);
@@ -571,7 +579,26 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
         })),
         {
           role: 'user' as const,
-          content
+          content: attachments.length > 0 ? [
+            { type: 'text' as const, text: content },
+            ...attachments.map(attachment => {
+              if (attachment.type.startsWith('image/')) {
+                return {
+                  type: 'image_url' as const,
+                  image_url: { url: attachment.url }
+                }
+              } else if (attachment.type === 'application/pdf') {
+                return {
+                  type: 'file' as const,
+                  file: {
+                    filename: attachment.filename,
+                    file_data: attachment.url
+                  }
+                }
+              }
+              return null
+            }).filter((item): item is NonNullable<typeof item> => item !== null)
+          ] : content
         }
       ];
 

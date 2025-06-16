@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { LogIn, Users, Copy, Check } from 'lucide-react'
+import { LogIn, Users, Copy, Check, ArrowLeft, FileText } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { MarkdownRenderer } from '../ui/MarkdownRenderer'
 import { useAuthStore } from '../../stores/authStore'
@@ -90,6 +90,7 @@ export const SharedChatView: React.FC<SharedChatViewProps> = () => {
   }
 
   const isCollaborator = user && chat && (chat.user === user.id || chat.collaborators?.includes(user.id))
+  const isOwner = user && chat && chat.user === user.id
   const canEdit = isCollaborator
 
   if (loading) {
@@ -113,7 +114,34 @@ export const SharedChatView: React.FC<SharedChatViewProps> = () => {
 
   return (
     <div className="min-h-screen bg-theme-background">
-      <div className="flex flex-col h-screen">
+      <div className="flex h-screen">
+        {/* Sidebar - only show for chat owner */}
+        {isOwner && (
+          <div className="w-80 bg-theme-sidebar border-r border-theme flex flex-col">
+            <div className="p-4 border-b border-theme">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-theme-primary">Your Chats</h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate('/')}
+                  className="text-theme-secondary hover:text-theme-primary"
+                >
+                  <ArrowLeft size={16} />
+                  Back to App
+                </Button>
+              </div>
+            </div>
+            <div className="flex-1 p-4">
+              <p className="text-sm text-theme-secondary">
+                You're viewing a shared version of your chat. Click "Back to App" to return to the full interface.
+              </p>
+            </div>
+          </div>
+        )}
+        
+        {/* Main Chat Area */}
+        <div className="flex-1 flex flex-col">
         {/* Header */}
         <div className="p-4 border-b border-theme bg-theme-chat-header">
           <div className="flex items-center justify-between">
@@ -191,11 +219,39 @@ export const SharedChatView: React.FC<SharedChatViewProps> = () => {
                 }`}
               >
                 {message.role === 'user' ? (
-                  <p className="text-sm">{message.content}</p>
+                  <div>
+                    {message.content && <p className="text-sm">{message.content}</p>}
+                    {/* Display attachments */}
+                    {message.attachments && message.attachments.length > 0 && (
+                      <div className="mt-2 space-y-2">
+                        {message.attachments.map((attachment, index) => (
+                          <div key={index} className="border border-theme-modal rounded-lg overflow-hidden">
+                            {attachment.type.startsWith('image/') ? (
+                              <img 
+                                src={attachment.url} 
+                                alt={attachment.filename}
+                                className="max-w-full h-auto max-h-64 object-contain"
+                              />
+                            ) : (
+                              <div className="p-3 flex items-center gap-2 bg-theme-surface">
+                                <FileText size={20} className="text-theme-secondary" />
+                                <div>
+                                  <p className="text-sm font-medium text-theme-primary">{attachment.filename}</p>
+                                  <p className="text-xs text-theme-secondary">
+                                    {(attachment.size / 1024 / 1024).toFixed(2)} MB
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <MarkdownRenderer content={message.content} />
                 )}
-                <p className="text-xs opacity-70 mt-2">
+                <p className="text-xs text-theme-secondary mt-2">
                   {message.timestamp instanceof Date 
                     ? message.timestamp.toLocaleTimeString() 
                     : new Date(message.timestamp).toLocaleTimeString()}
@@ -221,6 +277,7 @@ export const SharedChatView: React.FC<SharedChatViewProps> = () => {
               </Button>
             )}
           </div>
+        </div>
         </div>
       </div>
     </div>

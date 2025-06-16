@@ -60,7 +60,7 @@ export interface Attachment {
   size: number
   type: string
   url: string
-  createdAt: Date
+  createdAt: Date | string
 }
 
 // AI Provider Types

@@ -92,16 +92,20 @@ export const createChat = async (
   folderId?: string
 ): Promise<Chat> => {
   try {
-    const chatData = {
+    const chatData: any = {
       title,
       messages: [],
       settings,
       user: userId,
       shared: false,
-      folderId: folderId || undefined,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now()
     };
+
+    // Only include folderId if it's provided
+    if (folderId) {
+      chatData.folderId = folderId;
+    }
 
     const docRef = await addDoc(collection(db, 'chats'), chatData);
     const newChat: Chat = {

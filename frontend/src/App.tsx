@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { Send, MessageSquare, Settings, User, Moon, Sun, Plus, MoreVertical, Trash2, ChevronDown, Edit2, LogOut, Info, Copy, GitBranch, Folder, FolderPlus, ChevronRight, Share2 } from 'lucide-react'
+import { Send, MessageSquare, Settings, User, Moon, Sun, Plus, MoreVertical, Trash2, ChevronDown, Edit2, LogOut, Info, Copy, GitBranch, Folder, FolderPlus, ChevronRight, Share2, Paperclip, X, FileText, Image } from 'lucide-react'
 import './App.css'
 
 // Components
@@ -32,6 +32,7 @@ function App() {
   const [renameValue, setRenameValue] = useState('')
   const [creatingFolder, setCreatingFolder] = useState(false)
   const [newFolderName, setNewFolderName] = useState('')
+  const [attachments, setAttachments] = useState<File[]>([])
 
   // Auth store
   const { user, signOut: authSignOut, setUser: setAuthUser } = useAuthStore()
@@ -97,7 +98,7 @@ function App() {
   }, [user, setUser, setThemeUser, loadUserChats, loadUserFolders])
 
   const handleSendMessage = async () => {
-    if (!currentMessage.trim() || !user?.id || isStreaming) return
+    if ((!currentMessage.trim() && attachments.length === 0) || !user?.id || isStreaming) return
 
     try {
       clearError()
@@ -115,9 +116,28 @@ function App() {
         await createNewChat(user.id, 'New Chat', defaultSettings)
       }
       
-      await sendMessage(user.id, currentMessage, true)
+      // Convert attachments to base64
+      const processedAttachments = await Promise.all(
+        attachments.map(async (file) => {
+          const base64 = await convertFileToBase64(file)
+          return {
+            id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            filename: file.name,
+            size: file.size,
+            type: file.type,
+            url: base64,
+            createdAt: new Date()
+          }
+        })
+      )
+      
+      // Clear attachments before sending to prevent them from being sent again
+      setAttachments([])
+      
+      await sendMessage(user.id, currentMessage, true, processedAttachments)
     } catch (error) {
       console.error('Error sending message:', error)
+      // Don't clear attachments on error so user can retry
     }
   }
 
@@ -255,6 +275,60 @@ function App() {
       console.error('Error sharing chat:', error)
       alert('Failed to copy share link')
     }
+  }
+
+  const validateAndAddFiles = (files: File[]) => {
+    const validFiles = files.filter(file => {
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'application/pdf']
+      const maxSize = 10 * 1024 * 1024 // 10MB
+      return validTypes.includes(file.type) && file.size <= maxSize
+    })
+    
+    if (validFiles.length !== files.length) {
+      alert('Some files were skipped. Only images (JPG, PNG, GIF, WebP) and PDFs under 10MB are supported.')
+    }
+    
+    setAttachments(prev => [...prev, ...validFiles])
+    return validFiles
+  }
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || [])
+    validateAndAddFiles(files)
+    // Clear the input
+    event.target.value = ''
+  }
+
+  const handlePaste = (event: React.ClipboardEvent) => {
+    const items = Array.from(event.clipboardData.items)
+    const files: File[] = []
+    
+    items.forEach(item => {
+      if (item.kind === 'file') {
+        const file = item.getAsFile()
+        if (file) {
+          files.push(file)
+        }
+      }
+    })
+    
+    if (files.length > 0) {
+      event.preventDefault()
+      validateAndAddFiles(files)
+    }
+  }
+
+  const removeAttachment = (index: number) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
   }
 
   return (
@@ -667,8 +741,37 @@ function App() {
                           : 'bg-theme-chat-assistant border border-theme'
                       }`}
                     >
+                      {/* Message Content */}
                       {message.role === 'user' ? (
-                        <p className="text-sm">{message.content}</p>
+                        <div>
+                          {message.content && <p className="text-sm">{message.content}</p>}
+                          {/* Display attachments */}
+                          {message.attachments && message.attachments.length > 0 && (
+                            <div className="mt-2 space-y-2">
+                              {message.attachments.map((attachment, index) => (
+                                <div key={index} className="border border-theme-modal rounded-lg overflow-hidden">
+                                  {attachment.type.startsWith('image/') ? (
+                                    <img 
+                                      src={attachment.url} 
+                                      alt={attachment.filename}
+                                      className="max-w-full h-auto max-h-64 object-contain"
+                                    />
+                                  ) : (
+                                    <div className="p-3 flex items-center gap-2 bg-theme-surface">
+                                      <FileText size={20} className="text-theme-secondary" />
+                                      <div>
+                                        <p className="text-sm font-medium text-theme-primary">{attachment.filename}</p>
+                                        <p className="text-xs text-theme-secondary">
+                                          {(attachment.size / 1024 / 1024).toFixed(2)} MB
+                                        </p>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       ) : (
                         <MarkdownRenderer content={message.content} />
                       )}
@@ -725,6 +828,54 @@ function App() {
 
               {/* Message Input */}
               <div className="p-4 border-t border-theme bg-theme-chat-header">
+                {/* Attachment Preview */}
+                {attachments.length > 0 && (
+                  <div className="mb-3 flex flex-wrap gap-2">
+                    {attachments.map((file, index) => (
+                      <div key={index} className="relative bg-theme-surface border border-theme rounded-lg overflow-hidden">
+                        {file.type.startsWith('image/') ? (
+                          <div className="relative">
+                            <img 
+                              src={URL.createObjectURL(file)} 
+                              alt={file.name}
+                              className="w-20 h-20 object-cover"
+                            />
+                            <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <button
+                                onClick={() => removeAttachment(index)}
+                                className="text-white hover:text-red-400 transition-colors"
+                              >
+                                <X size={16} />
+                              </button>
+                            </div>
+                            <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white text-xs p-1 truncate">
+                              {file.name}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 p-2 w-32">
+                            <FileText size={16} className="text-theme-secondary" />
+                            <div className="flex-1 min-w-0">
+                              <span className="text-xs text-theme-primary truncate block">
+                                {file.name}
+                              </span>
+                              <span className="text-xs text-theme-secondary">
+                                {(file.size / 1024 / 1024).toFixed(1)}MB
+                              </span>
+                            </div>
+                            <button
+                              onClick={() => removeAttachment(index)}
+                              className="text-theme-secondary hover:text-theme-error transition-colors"
+                            >
+                              <X size={12} />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
                 <div className="flex gap-2">
                   <div className="flex items-center gap-2">
                     <div className="relative group">
@@ -760,6 +911,27 @@ function App() {
                         </div>
                       </div>
                     </div>
+                    
+                    {/* File Attachment Button */}
+                    <div className="relative">
+                      <input
+                        type="file"
+                        id="file-input"
+                        multiple
+                        accept="image/*,.pdf"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                      />
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-12 w-12"
+                        onClick={() => document.getElementById('file-input')?.click()}
+                        disabled={isStreaming}
+                      >
+                        <Paperclip size={18} />
+                      </Button>
+                    </div>
                   </div>
                   <textarea
                     value={currentMessage}
@@ -770,7 +942,8 @@ function App() {
                         handleSendMessage()
                       }
                     }}
-                    placeholder="Type your message..."
+                    onPaste={handlePaste}
+                    placeholder="Type your message or paste images/PDFs..."
                     className="flex-1 p-3 rounded-lg bg-theme-chat-input border border-theme-chat-input text-theme-input focus:outline-none focus:ring-2 focus:ring-theme-accent resize-none min-h-[48px] max-h-32"
                     disabled={isStreaming}
                     rows={1}
@@ -786,7 +959,7 @@ function App() {
                   />
                   <Button
                     onClick={handleSendMessage}
-                    disabled={!currentMessage.trim() || isStreaming}
+                    disabled={(!currentMessage.trim() && attachments.length === 0) || isStreaming}
                     size="icon"
                     className="h-12 w-12 bg-theme-button-primary text-theme-button-primary hover:opacity-90"
                   >
