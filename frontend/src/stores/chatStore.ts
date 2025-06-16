@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Chat, Message, ChatSettings, User } from '../types';
+import type { Chat, Message, ChatSettings, User, ChatFolder } from '../types';
 import { 
   createChat,
   getUserChats,
@@ -7,7 +7,12 @@ import {
   updateChat,
   deleteChat as deleteFirestoreChat,
   addMessageToChat,
-  updateMessageInChat
+  updateMessageInChat,
+  createFolder,
+  getUserFolders,
+  updateFolder,
+  deleteFolder,
+  moveChatToFolder
 } from '../lib/firestore';
 import { 
   createChatCompletion,
@@ -18,6 +23,7 @@ import {
 
 interface ChatState {
   chats: Chat[];
+  folders: ChatFolder[];
   activeChat: string | null;
   currentMessage: string;
   isLoading: boolean;
@@ -30,6 +36,7 @@ interface ChatState {
 
 interface ChatActions {
   setChats: (chats: Chat[]) => void;
+  setFolders: (folders: ChatFolder[]) => void;
   setActiveChat: (chatId: string | null) => void;
   setCurrentMessage: (message: string) => void;
   setLoading: (loading: boolean) => void;
@@ -42,18 +49,30 @@ interface ChatActions {
   
   // Chat management
   loadUserChats: (userId: string) => Promise<void>;
-  createNewChat: (userId: string, title: string, settings: ChatSettings) => Promise<string>;
+  loadUserFolders: (userId: string) => Promise<void>;
+  createNewChat: (userId: string, title: string, settings: ChatSettings, folderId?: string) => Promise<string>;
   splitChat: (userId: string, chatId: string) => Promise<string>;
   updateChatTitle: (chatId: string, title: string) => Promise<void>;
   updateChatSettings: (chatId: string, settings: ChatSettings) => Promise<void>;
   deleteChat: (chatId: string) => Promise<void>;
   generateChatTitle: (userMessage: string, assistantMessage: string) => Promise<string>;
   
+  // Folder management
+  createNewFolder: (userId: string, name: string, color?: string) => Promise<string>;
+  updateFolderName: (folderId: string, name: string) => Promise<void>;
+  deleteChatFolder: (folderId: string) => Promise<void>;
+  toggleFolderExpanded: (folderId: string) => Promise<void>;
+  moveChatToFolderAction: (chatId: string, folderId: string | null) => Promise<void>;
+  
   // Message management
   sendMessage: (userId: string, content: string, useStreaming?: boolean) => Promise<void>;
   continueMessage: (userId: string) => Promise<void>;
   addUserMessage: (chatId: string, content: string) => Promise<void>;
   updateLastMessage: (chatId: string, content: string) => void;
+  
+  // Helper functions
+  getChatById: (chatId: string) => Chat | undefined;
+  getOriginalChatTitle: (chatId: string) => string | undefined;
 }
 
 type ChatStore = ChatState & ChatActions;
@@ -61,6 +80,7 @@ type ChatStore = ChatState & ChatActions;
 export const useChatStore = create<ChatStore>()((set, get) => ({
   // State
   chats: [],
+  folders: [],
   activeChat: null,
   currentMessage: '',
   isLoading: false,
@@ -72,6 +92,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
 
   // Basic setters
   setChats: (chats) => set({ chats }),
+  setFolders: (folders) => set({ folders }),
   setActiveChat: (activeChat) => set({ activeChat }),
   setCurrentMessage: (currentMessage) => set({ currentMessage }),
   setLoading: (isLoading) => set({ isLoading }),
@@ -106,15 +127,31 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
     }
   },
 
+  // Load user folders from Firestore
+  loadUserFolders: async (userId) => {
+    const { setError, setFolders } = get();
+    
+    try {
+      setError(null);
+      
+      const folders = await getUserFolders(userId);
+      setFolders(folders);
+    } catch (error) {
+      console.error('Error loading folders:', error);
+      // Don't show error to user for folders - just set empty array
+      setFolders([]);
+    }
+  },
+
   // Create new chat
-  createNewChat: async (userId, title, settings) => {
+  createNewChat: async (userId, title, settings, folderId) => {
     const { setLoading, setError, setChats, setActiveChat } = get();
     
     try {
       setLoading(true);
       setError(null);
       
-      const newChat = await createChat(userId, title, settings);
+      const newChat = await createChat(userId, title, settings, folderId);
       
       const { chats } = get();
       setChats([newChat, ...chats]);
@@ -144,9 +181,8 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
         throw new Error('Original chat not found');
       }
       
-      // Create new chat with "Split - " prefix
-      const splitTitle = `Split - ${originalChat.title}`;
-      const newChat = await createChat(userId, splitTitle, originalChat.settings);
+      // Create new chat with same title but marked as split
+      const newChat = await createChat(userId, originalChat.title, originalChat.settings, originalChat.folderId);
       
       // Copy all messages to the new chat
       for (const message of originalChat.messages) {
@@ -159,6 +195,9 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
         
         await addMessageToChat(newChat.id, messageToAdd);
       }
+      
+      // Mark the new chat as split and update in Firestore
+      await updateChat(newChat.id, { isSplit: true, splitFromChatId: chatId });
       
       // Reload the new chat with messages
       const updatedNewChat = await getChat(newChat.id);
@@ -697,5 +736,116 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
       setError(`Failed to send message: ${(error as Error).message}`);
       setStreaming(false);
     }
+  },
+
+  // Create new folder
+  createNewFolder: async (userId, name, color) => {
+    const { setLoading, setError, setFolders } = get();
+    
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const newFolder = await createFolder(userId, name, color);
+      
+      const { folders } = get();
+      setFolders([newFolder, ...folders]);
+      
+      return newFolder.id;
+    } catch (error) {
+      console.error('Error creating folder:', error);
+      setError('Failed to create folder');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  },
+
+  // Update folder name
+  updateFolderName: async (folderId, name) => {
+    const { setError, setFolders } = get();
+    
+    try {
+      setError(null);
+      
+      await updateFolder(folderId, { name });
+      
+      const { folders } = get();
+      const updatedFolders = folders.map(folder =>
+        folder.id === folderId ? { ...folder, name } : folder
+      );
+      setFolders(updatedFolders);
+    } catch (error) {
+      console.error('Error updating folder name:', error);
+      setError('Failed to update folder name');
+    }
+  },
+
+  // Delete chat folder
+  deleteChatFolder: async (folderId) => {
+    const { setError, setChats, setFolders } = get();
+    
+    try {
+      setError(null);
+      
+      await deleteFolder(folderId);
+      
+      const { chats, folders } = get();
+      const updatedChats = chats.filter(chat => chat.folderId !== folderId);
+      const updatedFolders = folders.filter(folder => folder.id !== folderId);
+      setChats(updatedChats);
+      setFolders(updatedFolders);
+    } catch (error) {
+      console.error('Error deleting chat folder:', error);
+      setError('Failed to delete chat folder');
+    }
+  },
+
+  // Toggle folder expanded
+  toggleFolderExpanded: async (folderId) => {
+    const { setFolders } = get();
+    
+    const { folders } = get();
+    const updatedFolders = folders.map(folder =>
+      folder.id === folderId ? { ...folder, isExpanded: !folder.isExpanded } : folder
+    );
+    setFolders(updatedFolders);
+  },
+
+  // Move chat to folder
+  moveChatToFolderAction: async (chatId, folderId) => {
+    const { setError, setChats, setFolders } = get();
+    
+    try {
+      setError(null);
+      
+      await moveChatToFolder(chatId, folderId);
+      
+      const { chats, folders } = get();
+      const updatedChats = chats.map(chat =>
+        chat.id === chatId ? { ...chat, folderId: folderId || undefined } : chat
+      );
+      const updatedFolders = folders.map(folder =>
+        folder.id === folderId ? { ...folder, isExpanded: true } : folder
+      );
+      setChats(updatedChats);
+      setFolders(updatedFolders);
+    } catch (error) {
+      console.error('Error moving chat to folder:', error);
+      setError('Failed to move chat to folder');
+    }
+  },
+
+  // Get chat by ID
+  getChatById: (chatId) => {
+    const { chats } = get();
+    return chats.find(chat => chat.id === chatId);
+  },
+
+  // Get original chat title
+  getOriginalChatTitle: (chatId) => {
+    const { chats } = get();
+    const originalChat = chats.find(chat => chat.id === chatId && chat.isSplit);
+    return originalChat?.title;
   }
 })); 

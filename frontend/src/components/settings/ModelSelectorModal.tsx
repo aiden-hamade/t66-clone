@@ -77,12 +77,12 @@ export function ModelSelectorModal({ isOpen, onClose, selectedModel, onModelSele
             placeholder="Search models..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-1 p-2 border border-border rounded-md bg-background"
+            className="flex-1 p-2 border border-theme-input rounded-md bg-theme-input text-theme-input"
           />
           <select
             value={selectedProvider}
             onChange={(e) => setSelectedProvider(e.target.value)}
-            className="p-2 border border-border rounded-md bg-background"
+            className="p-2 border border-theme-input rounded-md bg-theme-input text-theme-input"
           >
             {providers.map(provider => (
               <option key={provider} value={provider}>
@@ -99,30 +99,30 @@ export function ModelSelectorModal({ isOpen, onClose, selectedModel, onModelSele
               key={model.id}
               className={`p-4 border rounded-lg cursor-pointer transition-colors ${
                 selectedModel === model.id
-                  ? 'border-primary bg-primary/5'
-                  : 'border-border hover:border-accent hover:bg-accent/50'
+                  ? 'border-theme-accent bg-theme-button-secondary'
+                  : 'border-theme-modal hover:border-theme-accent hover:bg-theme-dropdown-hover'
               }`}
               onClick={() => handleModelSelect(model.id)}
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-medium">{model.name}</h3>
+                    <h3 className="font-medium text-theme-primary">{model.name}</h3>
                     {model.recommended && (
-                      <span className="flex items-center gap-1 text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                      <span className="flex items-center gap-1 text-xs bg-theme-button-secondary text-theme-accent px-2 py-1 rounded-full">
                         <Star size={12} />
                         Recommended
                       </span>
                     )}
                     {model.popular && (
-                      <span className="flex items-center gap-1 text-xs bg-orange-500/10 text-orange-500 px-2 py-1 rounded-full">
+                      <span className="flex items-center gap-1 text-xs bg-theme-button-secondary text-theme-warning px-2 py-1 rounded-full">
                         <Zap size={12} />
                         Popular
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-muted-foreground mb-2">{model.description}</p>
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                  <p className="text-sm text-theme-secondary mb-2">{model.description}</p>
+                  <div className="flex items-center gap-4 text-xs text-theme-secondary">
                     <span>{model.provider}</span>
                     <span>{model.contextLength.toLocaleString()} tokens</span>
                     {model.pricing && (
@@ -131,14 +131,14 @@ export function ModelSelectorModal({ isOpen, onClose, selectedModel, onModelSele
                   </div>
                   <div className="flex gap-1 mt-2">
                     {model.capabilities.map(cap => (
-                      <span key={cap} className="text-xs bg-muted px-2 py-1 rounded-full">
+                      <span key={cap} className="text-xs bg-theme-button-secondary text-theme-secondary px-2 py-1 rounded-full">
                         {cap}
                       </span>
                     ))}
                   </div>
                 </div>
                 {selectedModel === model.id && (
-                  <Check size={20} className="text-primary flex-shrink-0" />
+                  <Check size={20} className="text-theme-accent flex-shrink-0" />
                 )}
               </div>
             </div>
@@ -146,7 +146,7 @@ export function ModelSelectorModal({ isOpen, onClose, selectedModel, onModelSele
         </div>
 
         {/* Action Buttons */}
-        <div className="flex justify-end gap-2 pt-4 border-t border-border mt-6">
+        <div className="flex justify-end gap-2 pt-4 border-t border-theme-modal mt-6">
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
