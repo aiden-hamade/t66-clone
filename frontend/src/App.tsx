@@ -114,7 +114,8 @@ function App() {
           model: selectedModel,
           temperature: 0.7,
           maxTokens: 4000,
-          provider: 'openrouter'
+          provider: 'openrouter',
+          systemMessage: `You are T66 AI, built by Koby Pierce and Aiden Hamade. You are running on the underlying LLM model ${selectedModel}.`
         }
         
         await createNewChat(user.id, 'New Chat', defaultSettings)
