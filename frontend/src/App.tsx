@@ -15,6 +15,7 @@ import { ProtectedRoute } from './components/auth/ProtectedRoute'
 // Stores
 import { useAuthStore } from './stores/authStore'
 import { useChatStore } from './stores/chatStore'
+import { useThemeStore } from './stores/themeStore'
 
 // Utils
 import { estimateTokenCount } from './lib/openrouter'
@@ -23,7 +24,6 @@ import { estimateTokenCount } from './lib/openrouter'
 import type { ChatSettings } from './types'
 
 function App() {
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('dark')
   const [selectedModel, setSelectedModel] = useState('openai/gpt-4o')
   const [showSettings, setShowSettings] = useState(false)
   const [showModelSelector, setShowModelSelector] = useState(false)
@@ -32,6 +32,9 @@ function App() {
 
   // Auth store
   const { user, signOut: authSignOut, setUser: setAuthUser } = useAuthStore()
+  
+  // Theme store
+  const { initializeTheme, setUser: setThemeUser } = useThemeStore()
 
   // Chat store
   const {
@@ -66,41 +69,19 @@ function App() {
     return total + estimateTokenCount(msg.content)
   }, 0) || 0
 
-  // Load user chats when user changes and sync user to chat store
+  // Initialize theme on app start
+  useEffect(() => {
+    initializeTheme()
+  }, [initializeTheme])
+
+  // Load user chats when user changes and sync user to chat store and theme store
   useEffect(() => {
     setUser(user) // Sync user to chat store
+    setThemeUser(user) // Sync user to theme store
     if (user?.id) {
       loadUserChats(user.id)
     }
-  }, [user, setUser, loadUserChats])
-
-  // Theme management
-  useEffect(() => {
-    const applyTheme = (newTheme: 'light' | 'dark' | 'system') => {
-      const root = document.documentElement
-      
-      if (newTheme === 'system') {
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-        root.classList.toggle('dark', prefersDark)
-      } else {
-        root.classList.toggle('dark', newTheme === 'dark')
-      }
-    }
-
-    applyTheme(theme)
-
-    // Listen for system theme changes if using system theme
-    if (theme === 'system') {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-      const handleChange = () => applyTheme('system')
-      mediaQuery.addEventListener('change', handleChange)
-      return () => mediaQuery.removeEventListener('change', handleChange)
-    }
-  }, [theme])
-
-  const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
-    setTheme(newTheme)
-  }
+  }, [user, setUser, setThemeUser, loadUserChats])
 
   const handleSendMessage = async () => {
     if (!currentMessage.trim() || !user?.id || isStreaming) return
@@ -194,24 +175,16 @@ function App() {
   return (
     <Router>
       <ProtectedRoute>
-        <div className="min-h-screen">
-          <div className="flex h-screen bg-background text-foreground">
-            {/* Sidebar */}
-            <div className="w-64 bg-card border-r border-border flex flex-col">
-              {/* Header */}
-              <div className="p-4 border-b border-border">
-                <div className="flex items-center justify-between">
-                  <h1 className="text-xl font-bold text-primary">T66</h1>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleThemeChange(theme === 'dark' ? 'light' : 'dark')}
-                    className="h-8 w-8"
-                  >
-                    {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-                  </Button>
-                </div>
-                <p className="text-sm text-muted-foreground mt-1">AI Chat Application</p>
+        <div className="min-h-screen bg-theme-background">
+          <div className="flex h-screen bg-theme-background text-theme-primary">
+                          {/* Sidebar */}
+              <div className="w-64 bg-theme-surface border-r border-theme flex flex-col">
+                              {/* Header */}
+                <div className="p-4 border-b border-theme">
+                  <div className="flex items-center justify-between">
+                    <h1 className="text-xl font-bold text-theme-accent">T66</h1>
+                  </div>
+                  <p className="text-sm text-theme-secondary mt-1">AI Chat Application</p>
               </div>
 
               {/* New Chat Button */}
@@ -232,8 +205,8 @@ function App() {
                     key={chat.id}
                     className={`group relative flex items-center p-3 rounded-lg transition-colors ${
                       activeChat === chat.id 
-                        ? 'bg-accent text-accent-foreground' 
-                        : 'hover:bg-accent/50'
+                        ? 'bg-theme-sidebar-active text-theme-primary' 
+                        : 'hover:bg-theme-sidebar-hover'
                     }`}
                   >
                     {renamingChat === chat.id ? (
@@ -251,7 +224,7 @@ function App() {
                             }
                           }}
                           onBlur={finishRenaming}
-                          className="flex-1 px-2 py-1 text-sm bg-background border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary"
+                          className="flex-1 px-2 py-1 text-sm bg-theme-input border border-theme-input text-theme-input rounded focus:outline-none focus:ring-1 focus:ring-theme-accent"
                           autoFocus
                         />
                       </div>
@@ -264,7 +237,7 @@ function App() {
                           <MessageSquare size={16} />
                           <span className="truncate">{chat.title}</span>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1">
+                        <p className="text-xs text-theme-secondary mt-1">
                           {chat.messages.length} messages
                         </p>
                       </button>
@@ -309,14 +282,14 @@ function App() {
               </div>
 
               {/* User Section */}
-              <div className="p-4 border-t border-border">
+              <div className="p-4 border-t border-theme">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                    <User size={16} className="text-primary-foreground" />
+                  <div className="w-8 h-8 bg-theme-button-primary rounded-full flex items-center justify-center">
+                    <User size={16} className="text-theme-button-primary" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium">{user?.name || 'User'}</p>
-                    <p className="text-xs text-muted-foreground">{user?.email || 'No email'}</p>
+                    <p className="text-sm font-medium text-theme-primary">{user?.name || 'User'}</p>
+                    <p className="text-xs text-theme-secondary">{user?.email || 'No email'}</p>
                   </div>
                   <Dropdown
                     trigger={
@@ -345,11 +318,11 @@ function App() {
             {/* Main Chat Area */}
             <div className="flex-1 flex flex-col">
               {/* Chat Header */}
-              <div className="p-4 border-b border-border bg-card">
+              <div className="p-4 border-b border-theme bg-theme-chat-header">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-lg font-semibold">{currentChatData?.title || 'New Chat'}</h2>
-                    <p className="text-sm text-muted-foreground">
+                    <h2 className="text-lg font-semibold text-theme-primary">{currentChatData?.title || 'New Chat'}</h2>
+                    <p className="text-sm text-theme-secondary">
                       {currentChatData?.messages.length || 0} messages
                     </p>
                   </div>
@@ -377,8 +350,8 @@ function App() {
                     <div
                       className={`max-w-[70%] p-4 rounded-lg message-enter ${
                         message.role === 'user'
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-card border border-border'
+                          ? 'bg-theme-chat-user text-theme-button-primary'
+                          : 'bg-theme-chat-assistant border border-theme'
                       }`}
                     >
                       {message.role === 'user' ? (
@@ -389,7 +362,7 @@ function App() {
                       <p className="text-xs opacity-70 mt-2 flex items-center gap-2">
                         <span>{message.timestamp instanceof Date ? message.timestamp.toLocaleTimeString() : new Date(message.timestamp).toLocaleTimeString()}</span>
                         {message.role === 'assistant' && message.metadata?.model && (
-                          <span className="text-muted-foreground">
+                          <span className="text-theme-secondary">
                             • Generated by {getModelName(message.metadata.model)}
                           </span>
                         )}
@@ -401,14 +374,14 @@ function App() {
                 {/* Show typing indicator when streaming */}
                 {isStreaming && (
                   <div className="flex justify-start">
-                    <div className="max-w-[70%] p-4 rounded-lg bg-card border border-border">
+                    <div className="max-w-[70%] p-4 rounded-lg bg-theme-chat-assistant border border-theme">
                       <div className="flex items-center gap-2">
                         <div className="flex space-x-1">
-                          <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
-                          <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                          <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                          <div className="w-2 h-2 bg-theme-accent rounded-full animate-bounce"></div>
+                          <div className="w-2 h-2 bg-theme-accent rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                          <div className="w-2 h-2 bg-theme-accent rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
                         </div>
-                        <span className="text-sm text-muted-foreground">AI is typing...</span>
+                        <span className="text-sm text-theme-secondary">AI is typing...</span>
                       </div>
                     </div>
                   </div>
@@ -416,11 +389,11 @@ function App() {
                 
                 {/* Show continue prompt if token limit reached */}
                 {showContinuePrompt && continueMessageId && (
-                  <div className="bg-primary/10 border border-primary/20 text-primary px-4 py-3 rounded-lg text-sm">
+                  <div className="bg-theme-button-secondary border border-theme text-theme-accent px-4 py-3 rounded-lg text-sm">
                     The {getModelName(currentChatData?.settings.model || 'AI')} reached its response token limit. Would you like to{' '}
                     <button
                       onClick={() => continueMessage(user?.id || '')}
-                      className="underline hover:no-underline font-medium"
+                      className="underline hover:no-underline font-medium text-theme-link"
                       disabled={isStreaming}
                     >
                       continue
@@ -431,22 +404,22 @@ function App() {
 
                 {/* Show error if any */}
                 {error && (
-                  <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-lg text-sm">
+                  <div className="bg-theme-button-secondary border border-theme text-theme-error px-4 py-3 rounded-lg text-sm">
                     {error}
                   </div>
                 )}
               </div>
 
               {/* Message Input */}
-              <div className="p-4 border-t border-border bg-card">
+              <div className="p-4 border-t border-theme bg-theme-chat-header">
                 <div className="flex gap-2">
                   <div className="flex items-center gap-2">
                     <div className="relative group">
                       <Button variant="ghost" size="icon" className="h-12 w-12">
                         <Info size={18} />
                       </Button>
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-card border border-border rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-                        <div className="text-xs">
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-theme-modal border border-theme-modal rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                        <div className="text-xs text-theme-primary">
                           <div>Total tokens used: {totalTokensUsed.toLocaleString()}</div>
                           <div>Current input: {currentMessageTokens} tokens</div>
                         </div>
@@ -459,19 +432,19 @@ function App() {
                     onChange={(e) => setCurrentMessage(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
                     placeholder="Type your message..."
-                    className="flex-1 p-3 rounded-lg bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="flex-1 p-3 rounded-lg bg-theme-chat-input border border-theme-chat-input text-theme-input focus:outline-none focus:ring-2 focus:ring-theme-accent"
                     disabled={isStreaming}
                   />
                   <Button
                     onClick={handleSendMessage}
                     disabled={!currentMessage.trim() || isStreaming}
                     size="icon"
-                    className="h-12 w-12"
+                    className="h-12 w-12 bg-theme-button-primary text-theme-button-primary hover:opacity-90"
                   >
                     <Send size={18} />
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2 text-center">
+                <p className="text-xs text-theme-secondary mt-2 text-center">
                   T66 can make mistakes. Consider checking important information.
                 </p>
               </div>
@@ -482,12 +455,11 @@ function App() {
           <SettingsModal
             isOpen={showSettings}
             onClose={() => setShowSettings(false)}
-            theme={theme}
-            onThemeChange={handleThemeChange}
             user={user}
             onUserUpdate={(updatedUser) => {
               setAuthUser(updatedUser)
               setUser(updatedUser)
+              setThemeUser(updatedUser)
             }}
           />
 

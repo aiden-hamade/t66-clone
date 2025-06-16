@@ -1,20 +1,21 @@
 import { Modal } from '../ui/Modal'
 import { Button } from '../ui/Button'
-import { Moon, Sun, Monitor, Eye, EyeOff, Upload, User as UserIcon } from 'lucide-react'
+import { Eye, EyeOff, Upload, User as UserIcon, Palette } from 'lucide-react'
 import { useState } from 'react'
 import { updateUserProfile } from '../../lib/auth'
+import { useThemeStore } from '../../stores/themeStore'
+import { ThemeModal } from './ThemeModal'
 import type { User } from '../../types'
 
 interface SettingsModalProps {
   isOpen: boolean
   onClose: () => void
-  theme: 'light' | 'dark' | 'system'
-  onThemeChange: (theme: 'light' | 'dark' | 'system') => void
   user: User | null
   onUserUpdate: (user: User) => void
 }
 
-export function SettingsModal({ isOpen, onClose, theme, onThemeChange, user, onUserUpdate }: SettingsModalProps) {
+export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsModalProps) {
+  const { isThemeModalOpen, setThemeModalOpen } = useThemeStore()
   const [showApiKey, setShowApiKey] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [editForm, setEditForm] = useState({
@@ -67,34 +68,21 @@ export function SettingsModal({ isOpen, onClose, theme, onThemeChange, user, onU
             <div>
               <h3 className="text-lg font-medium mb-3">Appearance</h3>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">Theme</label>
-                <div className="flex gap-2">
+                <label className="text-sm font-medium text-theme-secondary">Theme</label>
+                <p className="text-xs text-theme-secondary mb-3">
+                  Customize your chat interface with beautiful themes and colors
+                </p>
+                
+                {/* Theme Customization Button */}
+                <div>
                   <Button
-                    variant={theme === 'light' ? 'default' : 'outline'}
+                    variant="outline"
                     size="sm"
-                    onClick={() => onThemeChange('light')}
+                    onClick={() => setThemeModalOpen(true)}
                     className="flex items-center gap-1.5 text-xs"
                   >
-                    <Sun size={14} />
-                    Light
-                  </Button>
-                  <Button
-                    variant={theme === 'dark' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => onThemeChange('dark')}
-                    className="flex items-center gap-1.5 text-xs"
-                  >
-                    <Moon size={14} />
-                    Dark
-                  </Button>
-                  <Button
-                    variant={theme === 'system' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => onThemeChange('system')}
-                    className="flex items-center gap-1.5 text-xs"
-                  >
-                    <Monitor size={14} />
-                    System
+                    <Palette size={14} />
+                    Customize Theme
                   </Button>
                 </div>
               </div>
@@ -103,8 +91,8 @@ export function SettingsModal({ isOpen, onClose, theme, onThemeChange, user, onU
             {/* About Section */}
             <div>
               <h3 className="text-lg font-medium mb-3">About</h3>
-              <div className="text-sm text-muted-foreground space-y-1">
-                <p className="font-medium text-foreground">T66 - AI Chat Application</p>
+              <div className="text-sm text-theme-secondary space-y-1">
+                                  <p className="font-medium text-theme-primary">T66 - AI Chat Application</p>
                 <p>Built for the T3 Chat Cloneathon</p>
                 <p>Version 0.1.0</p>
               </div>
@@ -133,11 +121,11 @@ export function SettingsModal({ isOpen, onClose, theme, onThemeChange, user, onU
               <div className="space-y-3">
                 {/* Profile Picture */}
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
+                  <div className="w-12 h-12 bg-theme-button-primary rounded-full flex items-center justify-center">
                     {user?.avatar ? (
                       <img src={user.avatar} alt="Profile" className="w-12 h-12 rounded-full object-cover" />
                     ) : (
-                      <UserIcon size={20} className="text-primary-foreground" />
+                      <UserIcon size={20} className="text-theme-button-primary" />
                     )}
                   </div>
                   {isEditing && (
@@ -150,17 +138,17 @@ export function SettingsModal({ isOpen, onClose, theme, onThemeChange, user, onU
 
                 {/* Name */}
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Name</label>
+                  <label className="text-sm font-medium text-theme-secondary">Name</label>
                   {isEditing ? (
                     <input
                       type="text"
                       value={editForm.name}
                       onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
-                      className="w-full mt-1 p-2 text-sm rounded-md border border-border bg-background"
+                      className="w-full mt-1 p-2 text-sm rounded-md border border-theme-input bg-theme-input text-theme-input"
                       placeholder="Enter your name"
                     />
                   ) : (
-                    <p className="text-sm text-foreground mt-1">
+                    <p className="text-sm text-theme-primary mt-1">
                       {user?.name || 'No name set'}
                     </p>
                   )}
@@ -168,8 +156,8 @@ export function SettingsModal({ isOpen, onClose, theme, onThemeChange, user, onU
 
                 {/* Email (read-only) */}
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Email</label>
-                  <p className="text-sm text-foreground mt-1">
+                  <label className="text-sm font-medium text-theme-secondary">Email</label>
+                  <p className="text-sm text-theme-primary mt-1">
                     {user?.email || 'No email'}
                   </p>
                 </div>
@@ -180,10 +168,10 @@ export function SettingsModal({ isOpen, onClose, theme, onThemeChange, user, onU
             <div>
               <h3 className="text-lg font-medium mb-3">API Configuration</h3>
               <div>
-                <label className="text-sm font-medium text-muted-foreground">OpenRouter API Key</label>
-                <p className="text-xs text-muted-foreground mb-2">
+                <label className="text-sm font-medium text-theme-secondary">OpenRouter API Key</label>
+                <p className="text-xs text-theme-secondary mb-2">
                   Required for AI functionality. Get your key from{' '}
-                  <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                  <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-theme-link hover:underline">
                     openrouter.ai/keys
                   </a>
                 </p>
@@ -193,20 +181,20 @@ export function SettingsModal({ isOpen, onClose, theme, onThemeChange, user, onU
                       type={showApiKey ? 'text' : 'password'}
                       value={editForm.openRouterApiKey}
                       onChange={(e) => setEditForm(prev => ({ ...prev, openRouterApiKey: e.target.value }))}
-                      className="w-full p-2 pr-10 text-sm rounded-md border border-border bg-background"
+                      className="w-full p-2 pr-10 text-sm rounded-md border border-theme-input bg-theme-input text-theme-input"
                       placeholder="sk-or-v1-..."
                     />
                     <button
                       type="button"
                       onClick={() => setShowApiKey(!showApiKey)}
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-theme-secondary hover:text-theme-primary"
                     >
                       {showApiKey ? <EyeOff size={14} /> : <Eye size={14} />}
                     </button>
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-foreground font-mono">
+                    <span className="text-sm text-theme-primary font-mono">
                       {user?.openRouterApiKey ? 
                         (showApiKey ? user.openRouterApiKey : '••••••••••••••••••••••••••••••••••••••••••••••••••••') 
                         : 'Not configured'
@@ -215,7 +203,7 @@ export function SettingsModal({ isOpen, onClose, theme, onThemeChange, user, onU
                     {user?.openRouterApiKey && (
                       <button
                         onClick={() => setShowApiKey(!showApiKey)}
-                        className="text-muted-foreground hover:text-foreground"
+                        className="text-theme-secondary hover:text-theme-primary"
                       >
                         {showApiKey ? <EyeOff size={12} /> : <Eye size={12} />}
                       </button>
@@ -229,7 +217,7 @@ export function SettingsModal({ isOpen, onClose, theme, onThemeChange, user, onU
 
         {/* Edit Actions */}
         {isEditing && (
-          <div className="flex justify-end gap-2 pt-4 border-t border-border">
+          <div className="flex justify-end gap-2 pt-4 border-t border-theme-modal">
             <Button variant="outline" onClick={handleCancel} disabled={isSaving}>
               Cancel
             </Button>
@@ -241,13 +229,19 @@ export function SettingsModal({ isOpen, onClose, theme, onThemeChange, user, onU
 
         {/* Action Buttons */}
         {!isEditing && (
-          <div className="flex justify-end gap-2 pt-4 border-t border-border">
+          <div className="flex justify-end gap-2 pt-4 border-t border-theme-modal">
             <Button variant="outline" onClick={onClose}>
               Close
             </Button>
           </div>
         )}
       </div>
+      
+      {/* Theme Modal */}
+      <ThemeModal
+        isOpen={isThemeModalOpen}
+        onClose={() => setThemeModalOpen(false)}
+      />
     </Modal>
   )
 } 

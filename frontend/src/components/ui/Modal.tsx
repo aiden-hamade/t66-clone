@@ -41,7 +41,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
       {/* Modal */}
       <div
         className={cn(
-          'relative bg-card border border-border rounded-lg shadow-xl',
+          'relative bg-theme-modal border border-theme-modal rounded-lg shadow-xl',
           {
             'w-full max-w-sm': size === 'sm',
             'w-full max-w-md': size === 'md',
@@ -53,8 +53,8 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
       >
         {/* Header */}
         {title && (
-          <div className="flex items-center justify-between p-6 border-b border-border">
-            <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+          <div className="flex items-center justify-between p-6 border-b border-theme-modal">
+            <h2 className="text-lg font-semibold text-theme-primary">{title}</h2>
             <Button
               variant="ghost"
               size="icon"

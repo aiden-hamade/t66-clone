@@ -25,12 +25,12 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   // Show loading spinner while checking auth state
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <Loader2 className="animate-spin mx-auto mb-4 text-primary" size={48} />
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
+          <div className="min-h-screen flex items-center justify-center bg-theme-background">
+      <div className="text-center">
+        <Loader2 className="animate-spin mx-auto mb-4 text-theme-accent" size={48} />
+        <p className="text-theme-secondary">Loading...</p>
       </div>
+    </div>
     );
   }
 

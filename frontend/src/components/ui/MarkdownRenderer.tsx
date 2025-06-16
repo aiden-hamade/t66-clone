@@ -27,12 +27,12 @@ function CodeBlock({ children, className, ...props }: any) {
 
   return (
     <div className="relative group">
-      <pre className="bg-muted rounded-lg p-4 overflow-x-auto">
-        <div className="flex items-center justify-between mb-2 text-xs text-muted-foreground">
+              <pre className="bg-theme-code rounded-lg p-4 overflow-x-auto">
+          <div className="flex items-center justify-between mb-2 text-xs text-theme-secondary">
           <span>{language || 'code'}</span>
           <button
             onClick={handleCopy}
-            className="flex items-center gap-1 px-2 py-1 rounded hover:bg-background transition-colors opacity-0 group-hover:opacity-100"
+            className="flex items-center gap-1 px-2 py-1 rounded hover:bg-theme-dropdown-hover transition-colors opacity-0 group-hover:opacity-100"
           >
             {copied ? (
               <>
@@ -68,7 +68,7 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
                 {children}
               </CodeBlock>
             ) : (
-              <code className="bg-muted px-1.5 py-0.5 rounded text-sm" {...props}>
+              <code className="bg-theme-code px-1.5 py-0.5 rounded text-sm" {...props}>
                 {children}
               </code>
             )
@@ -76,30 +76,30 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
           // Custom table styling
           table: ({ children, ...props }) => (
             <div className="overflow-x-auto">
-              <table className="border-collapse border border-border w-full" {...props}>
+              <table className="border-collapse border border-theme w-full" {...props}>
                 {children}
               </table>
             </div>
           ),
           th: ({ children, ...props }) => (
-            <th className="border border-border px-3 py-2 bg-muted font-medium" {...props}>
+            <th className="border border-theme px-3 py-2 bg-theme-surface font-medium text-theme-primary" {...props}>
               {children}
             </th>
           ),
           td: ({ children, ...props }) => (
-            <td className="border border-border px-3 py-2" {...props}>
+            <td className="border border-theme px-3 py-2 text-theme-primary" {...props}>
               {children}
             </td>
           ),
           // Custom link styling
           a: ({ children, ...props }) => (
-            <a className="text-primary hover:underline" target="_blank" rel="noopener noreferrer" {...props}>
+            <a className="text-theme-link hover:underline" target="_blank" rel="noopener noreferrer" {...props}>
               {children}
             </a>
           ),
           // Custom blockquote styling
           blockquote: ({ children, ...props }) => (
-            <blockquote className="border-l-4 border-primary pl-4 italic" {...props}>
+            <blockquote className="border-l-4 border-theme pl-4 italic" {...props}>
               {children}
             </blockquote>
           ),

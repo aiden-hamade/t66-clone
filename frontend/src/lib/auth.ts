@@ -67,6 +67,8 @@ export const createUserProfile = async (user: FirebaseUser, additionalData?: any
     verified: userData.verified,
     plan: userData.plan,
     openRouterApiKey: userData.openRouterApiKey,
+    selectedTheme: userData.selectedTheme,
+    customTheme: userData.customTheme,
     createdAt: userData.createdAt.toDate(),
     updatedAt: userData.updatedAt.toDate()
   };
@@ -151,6 +153,8 @@ export const getCurrentUserProfile = async (): Promise<User | null> => {
         verified: userData.verified,
         plan: userData.plan,
         openRouterApiKey: userData.openRouterApiKey,
+        selectedTheme: userData.selectedTheme,
+        customTheme: userData.customTheme,
         createdAt: userData.createdAt.toDate(),
         updatedAt: userData.updatedAt.toDate()
       };
@@ -176,6 +180,8 @@ export const updateUserProfile = async (userId: string, updates: Partial<User>):
     if (updates.name !== undefined) firestoreUpdates.name = updates.name;
     if (updates.avatar !== undefined) firestoreUpdates.avatar = updates.avatar;
     if (updates.openRouterApiKey !== undefined) firestoreUpdates.openRouterApiKey = updates.openRouterApiKey;
+    if (updates.selectedTheme !== undefined) firestoreUpdates.selectedTheme = updates.selectedTheme;
+    if (updates.customTheme !== undefined) firestoreUpdates.customTheme = updates.customTheme;
     
     await updateDoc(userRef, firestoreUpdates);
   } catch (error) {

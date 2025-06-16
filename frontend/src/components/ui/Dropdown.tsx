@@ -64,7 +64,7 @@ export function Dropdown({ trigger, children, align = 'right' }: DropdownProps) 
       {isOpen && (
         <div
           className={cn(
-            'absolute min-w-[160px] bg-card border border-border rounded-md shadow-lg z-50',
+            'absolute min-w-[160px] bg-theme-dropdown border border-theme-modal rounded-md shadow-lg z-50',
             dropdownPosition === 'bottom' ? 'top-full mt-1' : 'bottom-full mb-1',
             align === 'right' ? 'right-0' : 'left-0'
           )}
@@ -82,10 +82,10 @@ export function DropdownItem({ children, onClick, variant = 'default', className
   return (
     <button
       className={cn(
-        'w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors',
+        'w-full text-left px-3 py-2 text-sm text-theme-primary hover:bg-theme-dropdown-hover transition-colors',
         {
-          'text-foreground': variant === 'default',
-          'text-destructive hover:bg-destructive/10': variant === 'destructive',
+          'text-theme-primary': variant === 'default',
+          'text-theme-error hover:bg-theme-button-secondary': variant === 'destructive',
         },
         className
       )}

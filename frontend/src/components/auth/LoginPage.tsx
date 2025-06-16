@@ -98,17 +98,17 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+    <div className="min-h-screen flex items-center justify-center bg-theme-background">
       <div className="max-w-md w-full mx-4">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-2xl font-bold text-primary-foreground">T66</span>
+          <div className="w-16 h-16 bg-theme-button-primary rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-2xl font-bold text-theme-button-primary">T66</span>
           </div>
-          <h1 className="text-3xl font-bold text-foreground">
+          <h1 className="text-3xl font-bold text-theme-primary">
             {isSignUp ? 'Create Account' : 'Welcome Back'}
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-theme-secondary mt-2">
             {isSignUp 
               ? 'Start your AI chat journey with T66' 
               : 'Sign in to continue your conversations'
@@ -117,72 +117,72 @@ export function LoginPage() {
         </div>
 
         {/* Form Card */}
-        <div className="bg-card border border-border rounded-lg shadow-lg p-6">
+        <div className="bg-theme-modal border border-theme-modal rounded-lg shadow-lg p-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Name field (Sign up only) */}
             {isSignUp && (
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-foreground mb-2">
+                <label htmlFor="name" className="block text-sm font-medium text-theme-primary mb-2">
                   Full Name
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-theme-secondary" size={18} />
                   <input
                     id="name"
                     type="text"
                     value={formData.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
-                    className={`w-full pl-10 pr-4 py-3 border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary transition-colors ${
-                      formErrors.name ? 'border-destructive' : 'border-border'
+                    className={`w-full pl-10 pr-4 py-3 border rounded-lg bg-theme-input text-theme-input focus:outline-none focus:ring-2 focus:ring-theme-accent transition-colors ${
+                      formErrors.name ? 'border-theme-error' : 'border-theme-input'
                     }`}
                     placeholder="Enter your full name"
                     disabled={isLoading}
                   />
                 </div>
                 {formErrors.name && (
-                  <p className="text-destructive text-sm mt-1">{formErrors.name}</p>
+                  <p className="text-theme-error text-sm mt-1">{formErrors.name}</p>
                 )}
               </div>
             )}
 
             {/* Email field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-theme-primary mb-2">
                 Email Address
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-theme-secondary" size={18} />
                 <input
                   id="email"
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary transition-colors ${
-                    formErrors.email ? 'border-destructive' : 'border-border'
+                  className={`w-full pl-10 pr-4 py-3 border rounded-lg bg-theme-input text-theme-input focus:outline-none focus:ring-2 focus:ring-theme-accent transition-colors ${
+                    formErrors.email ? 'border-theme-error' : 'border-theme-input'
                   }`}
                   placeholder="Enter your email"
                   disabled={isLoading}
                 />
               </div>
               {formErrors.email && (
-                <p className="text-destructive text-sm mt-1">{formErrors.email}</p>
+                <p className="text-theme-error text-sm mt-1">{formErrors.email}</p>
               )}
             </div>
 
             {/* Password field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-foreground mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-theme-primary mb-2">
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-theme-secondary" size={18} />
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   value={formData.password}
                   onChange={(e) => handleInputChange('password', e.target.value)}
-                  className={`w-full pl-10 pr-12 py-3 border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary transition-colors ${
-                    formErrors.password ? 'border-destructive' : 'border-border'
+                  className={`w-full pl-10 pr-12 py-3 border rounded-lg bg-theme-input text-theme-input focus:outline-none focus:ring-2 focus:ring-theme-accent transition-colors ${
+                    formErrors.password ? 'border-theme-error' : 'border-theme-input'
                   }`}
                   placeholder="Enter your password"
                   disabled={isLoading}
@@ -190,46 +190,46 @@ export function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-theme-secondary hover:text-theme-primary transition-colors"
                   disabled={isLoading}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
               {formErrors.password && (
-                <p className="text-destructive text-sm mt-1">{formErrors.password}</p>
+                <p className="text-theme-error text-sm mt-1">{formErrors.password}</p>
               )}
             </div>
 
             {/* Confirm Password field (Sign up only) */}
             {isSignUp && (
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground mb-2">
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-theme-primary mb-2">
                   Confirm Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-theme-secondary" size={18} />
                   <input
                     id="confirmPassword"
                     type={showPassword ? 'text' : 'password'}
                     value={formData.confirmPassword}
                     onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                    className={`w-full pl-10 pr-4 py-3 border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary transition-colors ${
-                      formErrors.confirmPassword ? 'border-destructive' : 'border-border'
+                    className={`w-full pl-10 pr-4 py-3 border rounded-lg bg-theme-input text-theme-input focus:outline-none focus:ring-2 focus:ring-theme-accent transition-colors ${
+                      formErrors.confirmPassword ? 'border-theme-error' : 'border-theme-input'
                     }`}
                     placeholder="Confirm your password"
                     disabled={isLoading}
                   />
                 </div>
                 {formErrors.confirmPassword && (
-                  <p className="text-destructive text-sm mt-1">{formErrors.confirmPassword}</p>
+                  <p className="text-theme-error text-sm mt-1">{formErrors.confirmPassword}</p>
                 )}
               </div>
             )}
 
             {/* Global Error */}
             {error && (
-              <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-lg text-sm">
+              <div className="bg-theme-button-secondary border border-theme-error text-theme-error px-4 py-3 rounded-lg text-sm">
                 {error}
               </div>
             )}
@@ -253,13 +253,13 @@ export function LoginPage() {
 
           {/* Form Toggle */}
           <div className="mt-6 text-center">
-            <p className="text-muted-foreground">
+            <p className="text-theme-secondary">
               {isSignUp ? 'Already have an account?' : "Don't have an account?"}
               {' '}
               <button
                 type="button"
                 onClick={toggleForm}
-                className="text-primary hover:underline font-medium"
+                className="text-theme-link hover:underline font-medium"
                 disabled={isLoading}
               >
                 {isSignUp ? 'Sign In' : 'Sign Up'}
@@ -269,7 +269,7 @@ export function LoginPage() {
         </div>
 
         {/* Footer */}
-        <div className="text-center mt-8 text-sm text-muted-foreground">
+        <div className="text-center mt-8 text-sm text-theme-secondary">
           <p>By continuing, you agree to our Terms of Service and Privacy Policy</p>
         </div>
       </div>
