@@ -29,10 +29,13 @@ interface ChatState {
   isLoading: boolean;
   isStreaming: boolean;
   isSearching: boolean;
+  isThinking: boolean;
+  thinkingSummary: string;
   error: string | null;
   showContinuePrompt: boolean;
   continueMessageId: string | null;
   user: User | null;
+  abortController: AbortController | null;
 }
 
 interface ChatActions {
@@ -43,11 +46,14 @@ interface ChatActions {
   setLoading: (loading: boolean) => void;
   setStreaming: (streaming: boolean) => void;
   setSearching: (searching: boolean) => void;
+  setThinking: (thinking: boolean) => void;
+  setThinkingSummary: (summary: string) => void;
   setError: (error: string | null) => void;
   clearError: () => void;
   setShowContinuePrompt: (show: boolean) => void;
   setContinueMessageId: (messageId: string | null) => void;
   setUser: (user: User | null) => void;
+  stopStreaming: () => void;
   
   // Chat management
   loadUserChats: (userId: string) => Promise<void>;
@@ -88,10 +94,13 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
   isLoading: false,
   isStreaming: false,
   isSearching: false,
+  isThinking: false,
+  thinkingSummary: '',
   error: null,
   showContinuePrompt: false,
   continueMessageId: null,
   user: null,
+  abortController: null,
 
   // Basic setters
   setChats: (chats) => set({ chats }),
@@ -101,11 +110,26 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
   setLoading: (isLoading) => set({ isLoading }),
   setStreaming: (isStreaming) => set({ isStreaming }),
   setSearching: (isSearching) => set({ isSearching }),
+  setThinking: (isThinking) => set({ isThinking }),
+  setThinkingSummary: (thinkingSummary) => set({ thinkingSummary }),
   setError: (error) => set({ error }),
   clearError: () => set({ error: null }),
   setShowContinuePrompt: (showContinuePrompt) => set({ showContinuePrompt }),
   setContinueMessageId: (continueMessageId) => set({ continueMessageId }),
   setUser: (user) => set({ user }),
+  stopStreaming: () => {
+    const { abortController, isStreaming } = get();
+    if (isStreaming && abortController) {
+      console.log('Chat Store: Aborting stream');
+      abortController.abort();
+      set({ 
+        abortController: null,
+        isStreaming: false,
+        isThinking: false,
+        isSearching: false 
+      });
+    }
+  },
 
   // Load user chats from Firestore
   loadUserChats: async (userId) => {
@@ -436,6 +460,8 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
     }
 
     try {
+      const controller = new AbortController();
+      set({ abortController: controller });
       setError(null);
       setShowContinuePrompt(false);
       setContinueMessageId(null);
@@ -476,7 +502,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
          {
            model: currentChat.settings.model,
            temperature: currentChat.settings.temperature,
-           max_tokens: currentChat.settings.maxTokens,
+           max_tokens: 10000,
            apiKey: user.openRouterApiKey
          },
          (chunk) => {
@@ -497,7 +523,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
                metadata: {
                  model: currentChat.settings.model,
                  tokens: estimateTokenCount(accumulatedContent),
-                 processingTime: Date.now() - Date.now()
+                 processingTime: 0
                }
              });
            } catch (error) {
@@ -505,9 +531,15 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
            }
          },
          (error) => {
-           setStreaming(false);
-           setError(`Failed to continue message: ${error.message}`);
-         }
+           if ((error as any).name === 'AbortError') {
+             console.log('Continue stream was aborted by user.');
+           } else {
+             setStreaming(false);
+             setError(`Failed to continue message: ${error.message}`);
+           }
+         },
+         undefined, // No thinking callback for continue
+         controller.signal
        );
     } catch (error) {
       console.error('Error continuing message:', error);
@@ -515,8 +547,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
       setStreaming(false);
     }
   },
-
-
 
   // Send message with AI response
   sendMessage: async (userId, content, useStreaming = true, attachments = [], webSearch = false, currentModel = 'openai/gpt-4o', systemMessage = '') => {
@@ -541,7 +571,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
       const defaultSettings: ChatSettings = {
         model: currentModel,
         temperature: 0.7,
-        maxTokens: 4000,
+        maxTokens: 10000,
         provider: 'openrouter',
         systemMessage: systemMessage
       };
@@ -643,7 +673,8 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
       ];
 
       if (useStreaming) {
-        setStreaming(true);
+        const controller = new AbortController();
+        set({ abortController: controller, isStreaming: true });
         
         // Create placeholder assistant message
         const assistantMessage: Omit<Message, 'id'> = {
@@ -657,6 +688,8 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
         };
         
         const newMessage = await addMessageToChat(currentActiveChat, assistantMessage);
+        console.log('Chat Store: Created new assistant message with ID:', newMessage.id);
+        console.log('Chat Store: New message content:', newMessage.content);
         
         // Update local state
         const { chats: currentChats } = get();
@@ -666,6 +699,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
             : chat
         );
         setChats(updatedChats);
+        console.log('Chat Store: Updated local state with new message');
 
         let accumulatedContent = '';
         let finishReason = '';
@@ -680,26 +714,63 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
           return;
         }
 
+        console.log('Chat Store: Starting streaming with model:', currentModel);
+        console.log('Chat Store: Web search enabled:', webSearch);
+        console.log('Chat Store: Message count:', openRouterMessages.length);
+        
         await createStreamingChatCompletion(
           openRouterMessages,
           {
             model: currentModel,
             temperature: currentChat.settings.temperature,
-            max_tokens: currentChat.settings.maxTokens,
+            max_tokens: 10000,
             apiKey: user.openRouterApiKey,
             webSearch: webSearch
           },
           (chunk) => {
-            console.log('Streaming chunk received:', chunk);
+            console.log('Chat Store: Streaming chunk received:', chunk);
+            console.log('Chat Store: Chunk length:', chunk.length);
             
             // Hide web search indicator when first content chunk arrives
             if (isFirstChunk) {
+              console.log('Chat Store: First chunk received, hiding search indicator');
               setSearching(false);
               isFirstChunk = false;
             }
             
             accumulatedContent += chunk;
+            console.log('Chat Store: Accumulated content length:', accumulatedContent.length);
+            console.log('Chat Store: Accumulated content preview:', accumulatedContent.substring(0, 100) + '...');
+            
             updateLastMessage(currentActiveChat, accumulatedContent);
+            
+            // Save content immediately on first chunk to ensure we don't lose it
+            if (accumulatedContent.length === chunk.length) {
+              console.log('Chat Store: Saving first chunk to Firestore immediately');
+              updateMessageInChat(currentActiveChat, newMessage.id, {
+                content: accumulatedContent,
+                metadata: {
+                  model: currentModel,
+                  webSearchUsed: webSearch
+                }
+              }).catch(error => {
+                console.error('Error saving first chunk to Firestore:', error);
+              });
+            }
+            
+            // Save content to Firestore periodically during streaming (every 500 characters)
+            if (accumulatedContent.length % 500 === 0 && accumulatedContent.length > 0) {
+              console.log('Chat Store: Saving periodic content to Firestore (length:', accumulatedContent.length, ')');
+              updateMessageInChat(currentActiveChat, newMessage.id, {
+                content: accumulatedContent,
+                metadata: {
+                  model: currentModel,
+                  webSearchUsed: webSearch
+                }
+              }).catch(error => {
+                console.error('Error saving streaming content to Firestore:', error);
+              });
+            }
           },
           (reason) => {
             finishReason = reason;
@@ -714,15 +785,29 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
             // Update the message in Firestore with final content
             try {
               console.log('Saving final message to Firestore...');
+              console.log('Final accumulated content length:', accumulatedContent.length);
+              console.log('Final accumulated content preview:', accumulatedContent.substring(0, 200));
+              
+              if (!accumulatedContent.trim()) {
+                console.error('WARNING: Final accumulated content is empty!');
+              }
+              
+              // Clean metadata to remove undefined values
+              const metadata: any = {
+                model: currentModel,
+                tokens: estimateTokenCount(accumulatedContent),
+                processingTime: 0, // TODO: Implement proper timing
+                webSearchUsed: webSearch
+              };
+              
+              // Only add webSearchResults if they exist
+              if (webSearchResults && webSearchResults.length > 0) {
+                metadata.webSearchResults = webSearchResults;
+              }
+              
               await updateMessageInChat(currentActiveChat, newMessage.id, {
                 content: accumulatedContent,
-                metadata: {
-                  model: currentModel,
-                  tokens: estimateTokenCount(accumulatedContent),
-                  processingTime: Date.now() - Date.now(), // This would need proper timing
-                  webSearchUsed: webSearch,
-                  webSearchResults: webSearchResults
-                }
+                metadata: metadata
               });
               console.log('Final message saved to Firestore successfully');
 
@@ -761,10 +846,40 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
           },
           (error) => {
             console.error('Streaming error occurred:', error);
-            setStreaming(false);
-            setSearching(false);
-            setError(`AI response failed: ${error.message}`);
-          }
+            if ((error as any).name === 'AbortError') {
+              console.log('Stream was aborted by user.');
+              // State is already reset by stopStreaming
+            } else {
+              setStreaming(false);
+              setSearching(false);
+              set({ isThinking: false });
+              
+              // Save any accumulated content before showing error
+              if (accumulatedContent.trim()) {
+                updateMessageInChat(currentActiveChat, newMessage.id, {
+                  content: accumulatedContent,
+                  metadata: {
+                    model: currentModel,
+                    tokens: estimateTokenCount(accumulatedContent),
+                    error: error.message,
+                    webSearchUsed: webSearch
+                  }
+                }).catch(saveError => {
+                  console.error('Error saving content after streaming error:', saveError);
+                });
+              }
+              
+              setError(`AI response failed: ${error.message}`);
+            }
+          },
+          // Thinking callback
+          (isThinking, summary) => {
+            set({ isThinking });
+            if (summary) {
+              set({ thinkingSummary: summary });
+            }
+          },
+          controller.signal
         );
       } else {
         if (webSearch) {
@@ -785,7 +900,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
         const response = await createChatCompletion(openRouterMessages, {
           model: currentModel,
           temperature: currentChat.settings.temperature,
-          max_tokens: currentChat.settings.maxTokens,
+          max_tokens: 10000,
           apiKey: user.openRouterApiKey,
           webSearch: webSearch
         });

@@ -20,6 +20,8 @@ export interface Message {
   timestamp: Date
   attachments?: Attachment[]
   metadata?: MessageMetadata
+  thinking?: string // Raw thinking content from reasoning models
+  thinkingSummary?: string // Processed summary of thinking
 }
 
 export interface MessageMetadata {
@@ -34,6 +36,8 @@ export interface MessageMetadata {
     title: string
     content?: string
   }>
+  isThinking?: boolean // Whether the model is currently thinking
+  thinkingTokens?: number // Number of tokens used for thinking
 }
 
 export interface Chat {
@@ -85,7 +89,7 @@ export interface AIModel {
   capabilities: ModelCapability[]
 }
 
-export type ModelCapability = 'text' | 'vision' | 'function_calling' | 'code' | 'reasoning'
+export type ModelCapability = 'text' | 'vision' | 'function_calling' | 'code' | 'reasoning' | 'thinking'
 
 export interface AIProviderConfig {
   provider: AIProvider

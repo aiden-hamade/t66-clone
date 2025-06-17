@@ -4,8 +4,9 @@ import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 
 import remarkGfm from 'remark-gfm'
 import { cn, copyToClipboard } from '../../lib/utils'
-import { Copy, Check } from 'lucide-react'
+import { Copy, Check, Play } from 'lucide-react'
 import { useState } from 'react'
+import { HtmlPreviewModal } from './HtmlPreviewModal'
 
 interface MarkdownRendererProps {
   content: string
@@ -14,9 +15,11 @@ interface MarkdownRendererProps {
 
 function CodeBlock({ children, className, ...props }: any) {
   const [copied, setCopied] = useState(false)
+  const [showHtmlPreview, setShowHtmlPreview] = useState(false)
   const match = /language-(\w+)/.exec(className || '')
   const language = match ? match[1] : ''
   const code = String(children).replace(/\n$/, '')
+  const isHtml = language === 'html' || language === 'htm'
 
   const handleCopy = async () => {
     try {
@@ -28,48 +31,75 @@ function CodeBlock({ children, className, ...props }: any) {
     }
   }
 
+  const handleTryHtml = () => {
+    setShowHtmlPreview(true)
+  }
+
 return (
-    <div className="relative group my-4">
-      <div className="flex items-center justify-between text-xs text-muted-foreground mb-1 px-2">
-        <span>{language || 'code'}</span>
-        <button
-          onClick={handleCopy}
-          className="flex items-center gap-1 px-2 py-1 rounded hover:bg-background transition-colors opacity-0 group-hover:opacity-100"
+    <>
+      <div className="relative group my-4">
+        <div className="flex items-center justify-between text-xs text-muted-foreground mb-1 px-2">
+          <span>{language || 'code'}</span>
+          <div className="flex items-center gap-2">
+            {isHtml && (
+              <button
+                onClick={handleTryHtml}
+                className="flex items-center gap-1 px-2 py-1 rounded hover:bg-background transition-colors opacity-0 group-hover:opacity-100"
+              >
+                <Play size={12} />
+                Try HTML
+              </button>
+            )}
+            <button
+              onClick={handleCopy}
+              className="flex items-center gap-1 px-2 py-1 rounded hover:bg-background transition-colors opacity-0 group-hover:opacity-100"
+            >
+              {copied ? (
+                <>
+                  <Check size={12} />
+                  Copied!
+                </>
+              ) : (
+                <>
+                  <Copy size={12} />
+                  Copy
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        <SyntaxHighlighter
+          language={language}
+          style={oneDark}
+          PreTag="div"
+          customStyle={{
+            borderRadius: '0.5rem',
+            fontSize: '0.875rem',
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-all',
+          }}
+          {...props}
         >
-          {copied ? (
-            <>
-              <Check size={12} />
-              Copied!
-            </>
-          ) : (
-            <>
-              <Copy size={12} />
-              Copy
-            </>
-          )}
-        </button>
+          {code}
+        </SyntaxHighlighter>
       </div>
 
-      <SyntaxHighlighter
-        language={language}
-        style={oneDark}
-        PreTag="div"
-        customStyle={{
-          borderRadius: '0.5rem',
-          fontSize: '0.875rem',
-          overflowX: 'auto'
-        }}
-        {...props}
-      >
-        {code}
-      </SyntaxHighlighter>
-    </div>
+      {/* HTML Preview Modal */}
+      {isHtml && (
+        <HtmlPreviewModal
+          isOpen={showHtmlPreview}
+          onClose={() => setShowHtmlPreview(false)}
+          initialCode={code}
+        />
+      )}
+    </>
   )
 }
 
 export function MarkdownRenderer({ content, className }: MarkdownRendererProps) {
   return (
-    <div className={cn('prose prose-sm dark:prose-invert max-w-none text-theme-chat-assistant', className)}>
+    <div className={cn('prose prose-sm dark:prose-invert max-w-4xl text-theme-chat-assistant', className)}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{

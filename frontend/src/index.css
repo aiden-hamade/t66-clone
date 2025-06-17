@@ -111,20 +111,61 @@ body {
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: hsl(var(--muted));
+  background: rgba(157, 73, 212, 0.05);
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground));
-  border-radius: 3px;
+  background: linear-gradient(135deg, #571a5b, #7c2d91);
+  border-radius: 4px;
+  border: 1px solid rgba(157, 73, 212, 0.1);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--accent-foreground));
+  background: linear-gradient(135deg, #7c2d91, #9d49d4);
+  box-shadow: 0 2px 4px rgba(157, 73, 212, 0.2);
+}
+
+::-webkit-scrollbar-corner {
+  background: rgba(157, 73, 212, 0.05);
+}
+
+/* Enhanced scrollbar for code blocks */
+.prose pre::-webkit-scrollbar,
+div[class*="language-"]::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.prose pre::-webkit-scrollbar-track,
+div[class*="language-"]::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.prose pre::-webkit-scrollbar-thumb,
+div[class*="language-"]::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, rgba(157, 73, 212, 0.6), rgba(124, 45, 145, 0.8));
+  border-radius: 3px;
+  border: 1px solid rgba(157, 73, 212, 0.2);
+}
+
+.prose pre::-webkit-scrollbar-thumb:hover,
+div[class*="language-"]::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, rgba(157, 73, 212, 0.8), rgba(124, 45, 145, 1));
+  box-shadow: 0 1px 2px rgba(157, 73, 212, 0.3);
+}
+
+/* Firefox scrollbar styling */
+.prose pre,
+div[class*="language-"] {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(157, 73, 212, 0.6) rgba(0, 0, 0, 0.2);
 }
 
 /* Chat message animations */
@@ -135,8 +176,6 @@ body {
 .typing-indicator {
   animation: typing 1.5s infinite;
 }
-
-
 
 /* Theme-aware syntax highlighting */
 .prose pre {

@@ -65,13 +65,28 @@ export const createChatCompletion = async (
     webSearch?: boolean;
   } = {}
 ): Promise<ChatCompletionResponse> => {
+  let modelToUse = options.model || DEFAULT_MODEL;
+  
+  // If web search is enabled, append :online to the model name
+  if (options.webSearch && !modelToUse.includes(':online')) {
+    modelToUse = `${modelToUse}:online`;
+  }
+
   const request: ChatCompletionRequest = {
-    model: options.model || DEFAULT_MODEL,
+    model: modelToUse,
     messages,
     temperature: options.temperature || 0.7,
-    max_tokens: options.max_tokens || 4000,
+    max_tokens: options.max_tokens || 10000,
     stream: options.stream || false
   };
+
+  // Add reasoning configuration for reasoning models
+  const isReasoningModel = isThinkingModel(modelToUse);
+  if (isReasoningModel) {
+    (request as any).reasoning = {
+      max_tokens: 8000  // Allow up to 8000 reasoning tokens
+    };
+  }
 
   // Add web search plugin if enabled
   if (options.webSearch) {
@@ -119,6 +134,16 @@ export const createChatCompletion = async (
   }
 };
 
+// Helper function to check if a model supports thinking
+const isThinkingModel = (model: string): boolean => {
+  const thinkingModels = [
+    'google/gemini-2.5-pro-preview',
+    'deepseek/deepseek-r1-0528',
+    'anthropic/claude-sonnet-4',
+  ];
+  return thinkingModels.some(thinkingModel => model.includes(thinkingModel));
+};
+
 // Create streaming chat completion
 export const createStreamingChatCompletion = async (
   messages: ChatMessage[],
@@ -132,7 +157,9 @@ export const createStreamingChatCompletion = async (
   onChunk: (chunk: string) => void,
   onFinishReason: (reason: string) => void,
   onComplete: (webSearchResults?: Array<{url: string, title: string, content?: string}>) => void,
-  onError: (error: Error) => void
+  onError: (error: Error) => void,
+  onThinking?: (isThinking: boolean, summary?: string) => void,
+  abortSignal?: AbortSignal
 ): Promise<void> => {
   let modelToUse = options.model || DEFAULT_MODEL;
   
@@ -145,9 +172,17 @@ export const createStreamingChatCompletion = async (
     model: modelToUse,
     messages,
     temperature: options.temperature || 0.7,
-    max_tokens: options.max_tokens || 4000,
+    max_tokens: options.max_tokens || 10000,
     stream: true
   };
+
+  // Add reasoning configuration for reasoning models
+  const isReasoningModel = isThinkingModel(modelToUse);
+  if (isReasoningModel) {
+    (request as any).reasoning = {
+      max_tokens: 8000  // Allow up to 8000 reasoning tokens
+    };
+  }
 
   if (!options.apiKey) {
     throw new Error('OpenRouter API key is required');
@@ -162,7 +197,8 @@ export const createStreamingChatCompletion = async (
         'HTTP-Referer': window.location.origin,
         'X-Title': 'T66 - AI Chat Application'
       },
-      body: JSON.stringify(request)
+      body: JSON.stringify(request),
+      signal: abortSignal
     });
 
     if (!response.ok) {
@@ -178,6 +214,9 @@ export const createStreamingChatCompletion = async (
     const decoder = new TextDecoder();
     let buffer = '';
     let webSearchResults: Array<{url: string, title: string, content?: string}> = [];
+    let isCurrentlyThinking = false;
+    let thinkingContent = '';
+    // Note: isReasoningModel is already declared above
 
     while (true) {
       const { done, value } = await reader.read();
@@ -206,15 +245,48 @@ export const createStreamingChatCompletion = async (
             const parsed = JSON.parse(data);
             console.log('OpenRouter streaming chunk:', parsed);
             
-            const content = parsed.choices?.[0]?.delta?.content;
+            const delta = parsed.choices?.[0]?.delta;
+            const content = delta?.content;
+            const reasoning = delta?.reasoning;
+            
+            // Handle reasoning tokens for reasoning models
+            if (reasoning && isReasoningModel && onThinking) {
+              if (!isCurrentlyThinking) {
+                isCurrentlyThinking = true;
+                onThinking(true, 'Analyzing the problem...');
+              }
+              
+              // Accumulate thinking content and extract meaningful parts
+              thinkingContent += reasoning;
+              
+              // Extract a summary from the reasoning content
+              const lines = thinkingContent.split('\n').filter(line => line.trim());
+              if (lines.length > 0) {
+                const lastLine = lines[lines.length - 1].trim();
+                if (lastLine.length > 10 && lastLine.length < 100) {
+                  onThinking(true, lastLine);
+                }
+              }
+            }
+            
             if (content) {
+              console.log('OpenRouter streaming: Content chunk received:', content);
+              // If we were thinking and now have content, stop thinking
+              if (isCurrentlyThinking && onThinking) {
+                isCurrentlyThinking = false;
+                onThinking(false);
+              }
               onChunk(content);
+            } else if (reasoning) {
+              console.log('OpenRouter streaming: Reasoning chunk received (length):', reasoning.length);
+            } else {
+              console.log('OpenRouter streaming: Chunk with no content or reasoning:', parsed);
             }
             
             // Look for annotations in both delta and message
-            const delta = parsed.choices?.[0]?.delta;
+            const deltaForAnnotations = parsed.choices?.[0]?.delta;
             const message = parsed.choices?.[0]?.message;
-            const annotations = delta?.annotations || message?.annotations;
+            const annotations = deltaForAnnotations?.annotations || message?.annotations;
             
             if (annotations && annotations.length > 0) {
               console.log('Found annotations in streaming response:', annotations);
@@ -252,8 +324,6 @@ export const createStreamingChatCompletion = async (
     onError(error as Error);
   }
 };
-
-
 
 // Get available models
 export const getAvailableModels = async (apiKey: string) => {
@@ -294,16 +364,20 @@ export const calculateCostEstimate = (
   outputTokens: number,
   model: string = DEFAULT_MODEL
 ): number => {
-  // Rough cost estimates per 1K tokens (these would need to be updated with actual pricing)
+  // Cost estimates per 1M tokens
   const pricing: Record<string, { input: number; output: number }> = {
-    'openai/gpt-4o': { input: 0.005, output: 0.015 },
-    'openai/gpt-4.1-nano': { input: 0.001, output: 0.003 },
+    'google/gemini-2.5-pro-preview': { input: 1.25, output: 10.0 },
+    'deepseek/deepseek-r1-0528': { input: 0.45, output: 2.15 },
+    'anthropic/claude-sonnet-4': { input: 3.0, output: 15.0 },
+    'anthropic/claude-3.5-sonnet': { input: 3.0, output: 15.0 },
+    'openai/gpt-4o': { input: 5.0, output: 15.0 },
+    'openai/gpt-4.1-nano': { input: 1.0, output: 3.0 },
   };
 
   const modelPricing = pricing[model] || pricing['openai/gpt-4o'];
   
   return (
-    (inputTokens / 1000) * modelPricing.input +
-    (outputTokens / 1000) * modelPricing.output
+    (inputTokens / 1000000) * modelPricing.input +
+    (outputTokens / 1000000) * modelPricing.output
   );
 }; 

@@ -26,6 +26,49 @@ interface ModelSelectorModalProps {
 }
 
 const MODELS: Model[] = [
+  // Google Models
+  {
+    id: 'google/gemini-2.5-pro-preview',
+    name: 'Gemini 2.5 Pro',
+    provider: 'Google',
+    description: 'State-of-the-art AI model with advanced reasoning and thinking capabilities',
+    contextLength: 1048576,
+    pricing: { input: 1.25, output: 10.0 },
+    capabilities: ['text', 'vision', 'reasoning', 'thinking'],
+    recommended: true,
+  },
+  // DeepSeek Models
+  {
+    id: 'deepseek/deepseek-r1-0528',
+    name: 'DeepSeek R1',
+    provider: 'DeepSeek',
+    description: 'Advanced reasoning model with chain-of-thought capabilities, performance on par with OpenAI o1',
+    contextLength: 128000,
+    pricing: { input: 0.45, output: 2.15 },
+    capabilities: ['text', 'reasoning', 'thinking', 'math', 'coding'],
+    popular: true,
+  },
+  // Anthropic Models
+  {
+    id: 'anthropic/claude-sonnet-4',
+    name: 'Claude Sonnet 4',
+    provider: 'Anthropic',
+    description: 'Latest Claude model with exceptional reasoning and coding capabilities',
+    contextLength: 200000,
+    pricing: { input: 3.0, output: 15.0 },
+    capabilities: ['text', 'vision', 'reasoning', 'coding'],
+    recommended: true,
+  },
+  {
+    id: 'anthropic/claude-3.5-sonnet',
+    name: 'Claude 3.5 Sonnet',
+    provider: 'Anthropic',
+    description: 'Excellent for coding, data science, and visual processing tasks',
+    contextLength: 200000,
+    pricing: { input: 3.0, output: 15.0 },
+    capabilities: ['text', 'vision', 'coding', 'data_science'],
+    popular: true,
+  },
   // OpenAI Models
   {
     id: 'openai/gpt-4o',
@@ -33,9 +76,8 @@ const MODELS: Model[] = [
     provider: 'OpenAI',
     description: 'Most advanced GPT-4 model with vision capabilities',
     contextLength: 128000,
-    pricing: { input: 0.005, output: 0.015 },
+    pricing: { input: 5.0, output: 15.0 },
     capabilities: ['text', 'vision', 'function_calling'],
-    recommended: true,
   },
   {
     id: 'openai/gpt-4.1-nano',
@@ -43,9 +85,8 @@ const MODELS: Model[] = [
     provider: 'OpenAI',
     description: 'Compact and efficient GPT-4.1 model',
     contextLength: 128000,
-    pricing: { input: 0.001, output: 0.003 },
+    pricing: { input: 1.0, output: 3.0 },
     capabilities: ['text', 'function_calling'],
-    popular: true,
   },
 ]
 
@@ -126,7 +167,7 @@ export function ModelSelectorModal({ isOpen, onClose, selectedModel, onModelSele
                     <span>{model.provider}</span>
                     <span>{model.contextLength.toLocaleString()} tokens</span>
                     {model.pricing && (
-                      <span>${model.pricing.input}/${model.pricing.output} per 1K tokens</span>
+                      <span>${model.pricing.input}/${model.pricing.output} per 1M tokens</span>
                     )}
                   </div>
                   <div className="flex gap-1 mt-2">

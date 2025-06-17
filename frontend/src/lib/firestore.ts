@@ -241,6 +241,8 @@ export const updateMessageInChat = async (
   updates: Partial<Message>
 ): Promise<void> => {
   try {
+    console.log('Firestore: updateMessageInChat called with:', { chatId, messageId, updates });
+    
     const chat = await getChat(chatId);
     if (!chat) {
       throw new Error('Chat not found');
@@ -248,8 +250,13 @@ export const updateMessageInChat = async (
 
     const messageIndex = chat.messages.findIndex(msg => msg.id === messageId);
     if (messageIndex === -1) {
+      console.error('Firestore: Message not found. Available message IDs:', chat.messages.map(m => m.id));
       throw new Error('Message not found');
     }
+    
+    console.log('Firestore: Found message at index:', messageIndex);
+    console.log('Firestore: Current message content:', chat.messages[messageIndex].content);
+    console.log('Firestore: Update content:', updates.content);
 
     const updatedMessages = chat.messages.map((msg, index) => {
       if (index === messageIndex) {
@@ -282,6 +289,8 @@ export const updateMessageInChat = async (
       messages: updatedMessages,
       updatedAt: Timestamp.now()
     });
+    
+    console.log('Firestore: Message updated successfully in Firestore');
   } catch (error) {
     console.error('Error updating message:', error);
     throw error;

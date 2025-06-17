@@ -5,7 +5,7 @@ import './App.css'
 
 // Components
 import { Button } from './components/ui/Button'
-
+import { ThinkingIndicator } from './components/ui/ThinkingIndicator'
 import { Dropdown, DropdownItem } from './components/ui/Dropdown'
 import { MarkdownRenderer } from './components/ui/MarkdownRenderer'
 import { SettingsModal } from './components/settings/SettingsModal'
@@ -26,7 +26,7 @@ import { estimateTokenCount } from './lib/openrouter'
 import type { ChatSettings } from './types'
 
 function App() {
-  const [selectedModel, setSelectedModel] = useState('openai/gpt-4o')
+  const [selectedModel, setSelectedModel] = useState('anthropic/claude-3.5-sonnet')
   const [showSettings, setShowSettings] = useState(false)
   const [showModelSelector, setShowModelSelector] = useState(false)
   const [renamingChat, setRenamingChat] = useState<string | null>(null)
@@ -52,6 +52,8 @@ function App() {
     isLoading,
     isStreaming,
     isSearching,
+    isThinking,
+    thinkingSummary,
     error,
     showContinuePrompt,
     continueMessageId,
@@ -75,7 +77,8 @@ function App() {
     setContinueMessageId,
     clearError,
     getChatById,
-    getOriginalChatTitle
+    getOriginalChatTitle,
+    stopStreaming
   } = useChatStore()
 
   const currentChatData = chats.find(chat => chat.id === activeChat)
@@ -270,6 +273,10 @@ function App() {
 
   const getModelName = (modelId: string) => {
     const modelNames: Record<string, string> = {
+      'google/gemini-2.5-pro-preview': 'Gemini 2.5 Pro',
+      'deepseek/deepseek-r1-0528': 'DeepSeek R1',
+      'anthropic/claude-sonnet-4': 'Claude Sonnet 4',
+      'anthropic/claude-3.5-sonnet': 'Claude 3.5 Sonnet',
       'openai/gpt-4o': 'GPT-4o',
       'openai/gpt-4.1-nano': 'GPT-4.1 Nano',
     }
@@ -771,6 +778,12 @@ function App() {
 
               {/* Messages */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {/* Thinking Indicator */}
+                <ThinkingIndicator 
+                  isThinking={isThinking} 
+                  thinkingSummary={thinkingSummary}
+                />
+                
                 {currentChatData?.messages.map(message => (
                   <div
                     key={message.id}
@@ -1055,6 +1068,19 @@ function App() {
                     <Send size={18} />
                   </Button>
                 </div>
+                {isStreaming && (
+                  <div className="mt-2 text-center">
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={stopStreaming}
+                      className="gap-2"
+                    >
+                      <div className="w-4 h-4 border-2 rounded-sm border-current"></div>
+                      Stop Generating
+                    </Button>
+                  </div>
+                )}
                 <p className="text-xs text-theme-secondary mt-2 text-center">
                   T66 can make mistakes. Consider checking important information.
                 </p>
