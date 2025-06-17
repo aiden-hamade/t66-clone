@@ -28,6 +28,7 @@ interface ChatState {
   currentMessage: string;
   isLoading: boolean;
   isStreaming: boolean;
+  isSearching: boolean;
   error: string | null;
   showContinuePrompt: boolean;
   continueMessageId: string | null;
@@ -41,6 +42,7 @@ interface ChatActions {
   setCurrentMessage: (message: string) => void;
   setLoading: (loading: boolean) => void;
   setStreaming: (streaming: boolean) => void;
+  setSearching: (searching: boolean) => void;
   setError: (error: string | null) => void;
   clearError: () => void;
   setShowContinuePrompt: (show: boolean) => void;
@@ -65,7 +67,7 @@ interface ChatActions {
   moveChatToFolderAction: (chatId: string, folderId: string | null) => Promise<void>;
   
   // Message management
-  sendMessage: (userId: string, content: string, useStreaming?: boolean, attachments?: any[]) => Promise<void>;
+  sendMessage: (userId: string, content: string, useStreaming?: boolean, attachments?: any[], webSearch?: boolean, currentModel?: string, systemMessage?: string) => Promise<void>;
   continueMessage: (userId: string) => Promise<void>;
   addUserMessage: (chatId: string, content: string, attachments?: any[]) => Promise<void>;
   updateLastMessage: (chatId: string, content: string) => void;
@@ -85,6 +87,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
   currentMessage: '',
   isLoading: false,
   isStreaming: false,
+  isSearching: false,
   error: null,
   showContinuePrompt: false,
   continueMessageId: null,
@@ -97,6 +100,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
   setCurrentMessage: (currentMessage) => set({ currentMessage }),
   setLoading: (isLoading) => set({ isLoading }),
   setStreaming: (isStreaming) => set({ isStreaming }),
+  setSearching: (isSearching) => set({ isSearching }),
   setError: (error) => set({ error }),
   clearError: () => set({ error: null }),
   setShowContinuePrompt: (showContinuePrompt) => set({ showContinuePrompt }),
@@ -513,13 +517,14 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
   },
 
   // Send message with AI response
-  sendMessage: async (userId, content, useStreaming = true, attachments = []) => {
+  sendMessage: async (userId, content, useStreaming = true, attachments = [], webSearch = false, currentModel = 'openai/gpt-4o', systemMessage = '') => {
     const { 
       activeChat, 
       chats, 
       addUserMessage,
       setCurrentMessage,
       setStreaming,
+      setSearching,
       setError,
       setChats,
       updateLastMessage,
@@ -531,10 +536,11 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
     if (!activeChat) {
       const { createNewChat } = get();
       const defaultSettings: ChatSettings = {
-        model: 'openai/gpt-4o',
+        model: currentModel,
         temperature: 0.7,
         maxTokens: 4000,
-        provider: 'openrouter'
+        provider: 'openrouter',
+        systemMessage: systemMessage
       };
       
       const newChatId = await createNewChat(userId, 'New Chat', defaultSettings);
@@ -555,6 +561,11 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
     try {
       setError(null);
       setCurrentMessage('');
+      
+      // Show web search indicator if web search is enabled
+      if (webSearch) {
+        setSearching(true);
+      }
       
       // Add user message
       await addUserMessage(currentActiveChat, content, attachments);
@@ -632,12 +643,14 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
 
         let accumulatedContent = '';
         let finishReason = '';
+        let isFirstChunk = true;
         
         // Get user data to access API key
         const { user } = get();
         if (!user?.openRouterApiKey) {
           setError('OpenRouter API key not configured. Please add your API key in Settings.');
           setStreaming(false);
+          setSearching(false);
           return;
         }
 
@@ -647,10 +660,18 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
             model: currentChat.settings.model,
             temperature: currentChat.settings.temperature,
             max_tokens: currentChat.settings.maxTokens,
-            apiKey: user.openRouterApiKey
+            apiKey: user.openRouterApiKey,
+            webSearch: webSearch
           },
           (chunk) => {
             console.log('Streaming chunk received:', chunk);
+            
+            // Hide web search indicator when first content chunk arrives
+            if (isFirstChunk) {
+              setSearching(false);
+              isFirstChunk = false;
+            }
+            
             accumulatedContent += chunk;
             updateLastMessage(currentActiveChat, accumulatedContent);
           },
@@ -712,16 +733,29 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
           (error) => {
             console.error('Streaming error occurred:', error);
             setStreaming(false);
+            setSearching(false);
             setError(`AI response failed: ${error.message}`);
           }
         );
       } else {
+        setSearching(false); // Hide web search indicator for non-streaming
         setStreaming(true);
+        
+        // Get user data to access API key
+        const { user } = get();
+        if (!user?.openRouterApiKey) {
+          setError('OpenRouter API key not configured. Please add your API key in Settings.');
+          setStreaming(false);
+          setSearching(false);
+          return;
+        }
         
         const response = await createChatCompletion(openRouterMessages, {
           model: currentChat.settings.model,
           temperature: currentChat.settings.temperature,
-          max_tokens: currentChat.settings.maxTokens
+          max_tokens: currentChat.settings.maxTokens,
+          apiKey: user.openRouterApiKey,
+          webSearch: webSearch
         });
 
         const assistantContent = response.choices[0]?.message?.content || 'No response received';
@@ -766,6 +800,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
       console.error('Error sending message:', error);
       setError(`Failed to send message: ${(error as Error).message}`);
       setStreaming(false);
+      setSearching(false);
     }
   },
 

@@ -18,6 +18,11 @@ export interface ChatCompletionRequest {
   temperature?: number;
   max_tokens?: number;
   stream?: boolean;
+  plugins?: Array<{
+    id: string;
+    max_results?: number;
+    search_prompt?: string;
+  }>;
 }
 
 export interface ChatCompletionResponse {
@@ -49,6 +54,7 @@ export const createChatCompletion = async (
     max_tokens?: number;
     stream?: boolean;
     apiKey?: string;
+    webSearch?: boolean;
   } = {}
 ): Promise<ChatCompletionResponse> => {
   const request: ChatCompletionRequest = {
@@ -58,6 +64,15 @@ export const createChatCompletion = async (
     max_tokens: options.max_tokens || 4000,
     stream: options.stream || false
   };
+
+  // Add web search plugin if enabled
+  if (options.webSearch) {
+    request.plugins = [{
+      id: 'web',
+      max_results: 5,
+      search_prompt: 'A web search was conducted. Incorporate the following web search results into your response. IMPORTANT: Cite them using markdown links named using the domain of the source.'
+    }];
+  }
 
   if (!options.apiKey) {
     throw new Error('OpenRouter API key is required');
@@ -104,6 +119,7 @@ export const createStreamingChatCompletion = async (
     temperature?: number;
     max_tokens?: number;
     apiKey?: string;
+    webSearch?: boolean;
   } = {},
   onChunk: (chunk: string) => void,
   onFinishReason: (reason: string) => void,
@@ -117,6 +133,15 @@ export const createStreamingChatCompletion = async (
     max_tokens: options.max_tokens || 4000,
     stream: true
   };
+
+  // Add web search plugin if enabled
+  if (options.webSearch) {
+    request.plugins = [{
+      id: 'web',
+      max_results: 5,
+      search_prompt: 'A web search was conducted. Incorporate the following web search results into your response. IMPORTANT: Cite them using markdown links named using the domain of the source.'
+    }];
+  }
 
   if (!options.apiKey) {
     throw new Error('OpenRouter API key is required');

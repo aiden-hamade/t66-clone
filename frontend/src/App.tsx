@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { Send, MessageSquare, Settings, User, Moon, Sun, Plus, MoreVertical, Trash2, ChevronDown, Edit2, LogOut, Info, Copy, GitBranch, Folder, FolderPlus, ChevronRight, Share2, Paperclip, X, FileText, Image } from 'lucide-react'
+import { Send, MessageSquare, Settings, User, Moon, Sun, Plus, MoreVertical, Trash2, ChevronDown, Edit2, LogOut, Info, Copy, GitBranch, Folder, FolderPlus, ChevronRight, Share2, Paperclip, X, FileText, Image, Globe, Search } from 'lucide-react'
 import './App.css'
 
 // Components
@@ -35,6 +35,7 @@ function App() {
   const [newFolderName, setNewFolderName] = useState('')
   const [attachments, setAttachments] = useState<File[]>([])
   const [systemPrompt, setSystemPrompt] = useState('')
+  const [webSearchEnabled, setWebSearchEnabled] = useState(false)
 
   // Auth store
   const { user, signOut: authSignOut, setUser: setAuthUser } = useAuthStore()
@@ -50,6 +51,7 @@ function App() {
     currentMessage,
     isLoading,
     isStreaming,
+    isSearching,
     error,
     showContinuePrompt,
     continueMessageId,
@@ -148,7 +150,7 @@ function App() {
       // Clear attachments before sending to prevent them from being sent again
       setAttachments([])
       
-      await sendMessage(user.id, currentMessage, true, processedAttachments)
+      await sendMessage(user.id, currentMessage, true, processedAttachments, webSearchEnabled, selectedModel, systemPrompt)
     } catch (error) {
       console.error('Error sending message:', error)
       // Don't clear attachments on error so user can retry
@@ -741,6 +743,32 @@ function App() {
                 </div>
               </div>
 
+              {/* Web Search Indicator - Above Chat */}
+              {isSearching && (
+                <div className="bg-theme-surface/95 backdrop-blur-sm border-b border-theme py-3 px-4">
+                  <div className="flex items-center justify-center">
+                    <div className="flex items-center gap-3">
+                      <div className="relative">
+                        {/* Outer rotating ring */}
+                        <div className="w-6 h-6 border-2 border-theme-accent/30 border-t-theme-accent rounded-full animate-spin"></div>
+                        {/* Inner pulsing globe */}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <Globe size={12} className="text-theme-accent animate-pulse" />
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-theme-accent">Searching Web</span>
+                        <div className="flex space-x-1">
+                          <div className="w-1 h-1 bg-theme-accent rounded-full animate-bounce"></div>
+                          <div className="w-1 h-1 bg-theme-accent rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                          <div className="w-1 h-1 bg-theme-accent rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Messages */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {currentChatData?.messages.map(message => (
@@ -801,21 +829,7 @@ function App() {
                   </div>
                 ))}
                 
-                {/* Show typing indicator when streaming */}
-                {isStreaming && (
-                  <div className="flex justify-start">
-                    <div className="max-w-[70%] p-4 rounded-lg bg-theme-chat-assistant border border-theme">
-                      <div className="flex items-center gap-2">
-                        <div className="flex space-x-1">
-                          <div className="w-2 h-2 bg-theme-accent rounded-full animate-bounce"></div>
-                          <div className="w-2 h-2 bg-theme-accent rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                          <div className="w-2 h-2 bg-theme-accent rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                        </div>
-                        <span className="text-sm text-theme-secondary">AI is typing...</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
+
                 
                 {/* Show continue prompt if token limit reached */}
                 {showContinuePrompt && continueMessageId && (
@@ -945,6 +959,31 @@ function App() {
                       >
                         <Paperclip size={18} />
                       </Button>
+                    </div>
+                    
+                    {/* Web Search Toggle Button */}
+                    <div className="relative group">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className={`h-12 w-12 transition-colors ${
+                          webSearchEnabled 
+                            ? 'bg-theme-accent text-theme-button-primary' 
+                            : 'text-theme-secondary hover:text-theme-primary'
+                        }`}
+                        onClick={() => setWebSearchEnabled(!webSearchEnabled)}
+                        disabled={isStreaming}
+                      >
+                        <Globe size={18} />
+                      </Button>
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-theme-modal border border-theme-modal rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap z-50">
+                        <div className="text-xs text-theme-primary">
+                          {webSearchEnabled ? '🌐 Web search enabled' : '🌐 Enable web search'}
+                        </div>
+                        <div className="text-theme-secondary text-xs mt-1">
+                          {webSearchEnabled ? 'AI will search the web for current information' : 'Click to enable real-time web search'}
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <textarea
