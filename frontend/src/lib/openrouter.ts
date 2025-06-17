@@ -35,6 +35,14 @@ export interface ChatCompletionResponse {
     message: {
       role: string;
       content: string;
+      annotations?: Array<{
+        type: string;
+        url_citation?: {
+          url: string;
+          title: string;
+          content?: string;
+        };
+      }>;
     };
     finish_reason: string;
   }[];
@@ -123,25 +131,23 @@ export const createStreamingChatCompletion = async (
   } = {},
   onChunk: (chunk: string) => void,
   onFinishReason: (reason: string) => void,
-  onComplete: () => void,
+  onComplete: (webSearchResults?: Array<{url: string, title: string, content?: string}>) => void,
   onError: (error: Error) => void
 ): Promise<void> => {
+  let modelToUse = options.model || DEFAULT_MODEL;
+  
+  // If web search is enabled, append :online to the model name
+  if (options.webSearch && !modelToUse.includes(':online')) {
+    modelToUse = `${modelToUse}:online`;
+  }
+
   const request: ChatCompletionRequest = {
-    model: options.model || DEFAULT_MODEL,
+    model: modelToUse,
     messages,
     temperature: options.temperature || 0.7,
     max_tokens: options.max_tokens || 4000,
     stream: true
   };
-
-  // Add web search plugin if enabled
-  if (options.webSearch) {
-    request.plugins = [{
-      id: 'web',
-      max_results: 5,
-      search_prompt: 'A web search was conducted. Incorporate the following web search results into your response. IMPORTANT: Cite them using markdown links named using the domain of the source.'
-    }];
-  }
 
   if (!options.apiKey) {
     throw new Error('OpenRouter API key is required');
@@ -171,13 +177,14 @@ export const createStreamingChatCompletion = async (
 
     const decoder = new TextDecoder();
     let buffer = '';
+    let webSearchResults: Array<{url: string, title: string, content?: string}> = [];
 
     while (true) {
       const { done, value } = await reader.read();
       
       if (done) {
         console.log('OpenRouter streaming: Stream ended naturally (done=true)');
-        onComplete();
+        onComplete(webSearchResults.length > 0 ? webSearchResults : undefined);
         break;
       }
 
@@ -191,15 +198,40 @@ export const createStreamingChatCompletion = async (
           
           if (data === '[DONE]') {
             console.log('OpenRouter streaming: Received [DONE] signal');
-            onComplete();
+            onComplete(webSearchResults.length > 0 ? webSearchResults : undefined);
             return;
           }
 
           try {
             const parsed = JSON.parse(data);
+            console.log('OpenRouter streaming chunk:', parsed);
+            
             const content = parsed.choices?.[0]?.delta?.content;
             if (content) {
               onChunk(content);
+            }
+            
+            // Look for annotations in both delta and message
+            const delta = parsed.choices?.[0]?.delta;
+            const message = parsed.choices?.[0]?.message;
+            const annotations = delta?.annotations || message?.annotations;
+            
+            if (annotations && annotations.length > 0) {
+              console.log('Found annotations in streaming response:', annotations);
+              for (const annotation of annotations) {
+                if (annotation.type === 'url_citation' && annotation.url_citation) {
+                  const result = {
+                    url: annotation.url_citation.url,
+                    title: annotation.url_citation.title || new URL(annotation.url_citation.url).hostname,
+                    content: annotation.url_citation.content
+                  };
+                  // Avoid duplicates
+                  if (!webSearchResults.some(r => r.url === result.url)) {
+                    webSearchResults.push(result);
+                    console.log('Added web search result:', result);
+                  }
+                }
+              }
             }
             
             // Check for finish_reason
@@ -220,6 +252,8 @@ export const createStreamingChatCompletion = async (
     onError(error as Error);
   }
 };
+
+
 
 // Get available models
 export const getAvailableModels = async (apiKey: string) => {

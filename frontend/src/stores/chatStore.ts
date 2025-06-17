@@ -516,6 +516,8 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
     }
   },
 
+
+
   // Send message with AI response
   sendMessage: async (userId, content, useStreaming = true, attachments = [], webSearch = false, currentModel = 'openai/gpt-4o', systemMessage = '') => {
     const { 
@@ -529,7 +531,8 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
       setChats,
       updateLastMessage,
       updateChatTitle,
-      generateChatTitle
+      generateChatTitle,
+      updateChatSettings
     } = get();
     
     // Create new chat if none exists
@@ -562,6 +565,34 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
       setError(null);
       setCurrentMessage('');
       
+      // Get current chat and its settings
+      let currentChat = chats.find(chat => chat.id === currentActiveChat);
+      if (!currentChat) {
+        throw new Error('Chat not found');
+      }
+
+      // Update chat settings if model has changed
+      if (currentChat.settings.model !== currentModel) {
+        console.log(`Updating chat model from ${currentChat.settings.model} to ${currentModel}`);
+        await updateChatSettings(currentActiveChat, {
+          ...currentChat.settings,
+          model: currentModel,
+          systemMessage: systemMessage
+        });
+        
+        // Refresh chat data after update
+        currentChat = { ...currentChat, settings: { ...currentChat.settings, model: currentModel, systemMessage: systemMessage } };
+        
+        // Update local state
+        const { chats: currentChats } = get();
+        const updatedChats = currentChats.map(chat =>
+          chat.id === currentActiveChat 
+            ? currentChat!
+            : chat
+        );
+        setChats(updatedChats);
+      }
+      
       // Show web search indicator if web search is enabled
       if (webSearch) {
         setSearching(true);
@@ -569,12 +600,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
       
       // Add user message
       await addUserMessage(currentActiveChat, content, attachments);
-      
-      // Get current chat and its settings
-      const currentChat = chats.find(chat => chat.id === currentActiveChat);
-      if (!currentChat) {
-        throw new Error('Chat not found');
-      }
 
       // Check if this is the first message pair (user + assistant)
       // We need to check before adding the user message, so subtract 1
@@ -626,7 +651,8 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
           role: 'assistant',
           timestamp: new Date(),
           metadata: {
-            model: currentChat.settings.model
+            model: currentModel,
+            webSearchUsed: webSearch
           }
         };
         
@@ -657,7 +683,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
         await createStreamingChatCompletion(
           openRouterMessages,
           {
-            model: currentChat.settings.model,
+            model: currentModel,
             temperature: currentChat.settings.temperature,
             max_tokens: currentChat.settings.maxTokens,
             apiKey: user.openRouterApiKey,
@@ -678,10 +704,11 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
           (reason) => {
             finishReason = reason;
           },
-          async () => {
+          async (webSearchResults) => {
             console.log('Streaming completed. Final content length:', accumulatedContent.length);
             console.log('Final content preview:', accumulatedContent.substring(0, 200) + '...');
             console.log('Finish reason:', finishReason);
+            console.log('Web search results:', webSearchResults);
             setStreaming(false);
             
             // Update the message in Firestore with final content
@@ -690,9 +717,11 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
               await updateMessageInChat(currentActiveChat, newMessage.id, {
                 content: accumulatedContent,
                 metadata: {
-                  model: currentChat.settings.model,
+                  model: currentModel,
                   tokens: estimateTokenCount(accumulatedContent),
-                  processingTime: Date.now() - Date.now() // This would need proper timing
+                  processingTime: Date.now() - Date.now(), // This would need proper timing
+                  webSearchUsed: webSearch,
+                  webSearchResults: webSearchResults
                 }
               });
               console.log('Final message saved to Firestore successfully');
@@ -738,7 +767,10 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
           }
         );
       } else {
-        setSearching(false); // Hide web search indicator for non-streaming
+        if (webSearch) {
+          setSearching(true);
+        }
+        
         setStreaming(true);
         
         // Get user data to access API key
@@ -751,7 +783,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
         }
         
         const response = await createChatCompletion(openRouterMessages, {
-          model: currentChat.settings.model,
+          model: currentModel,
           temperature: currentChat.settings.temperature,
           max_tokens: currentChat.settings.maxTokens,
           apiKey: user.openRouterApiKey,
@@ -760,14 +792,35 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
 
         const assistantContent = response.choices[0]?.message?.content || 'No response received';
         
+        // Extract web search results from annotations
+        const webSearchResults: Array<{url: string, title: string, content?: string}> = [];
+        const annotations = response.choices[0]?.message?.annotations;
+        console.log('Non-streaming response annotations:', annotations);
+        if (annotations) {
+          for (const annotation of annotations) {
+            if (annotation.type === 'url_citation' && annotation.url_citation) {
+              const result = {
+                url: annotation.url_citation.url,
+                title: annotation.url_citation.title || '',
+                content: annotation.url_citation.content
+              };
+              webSearchResults.push(result);
+              console.log('Added non-streaming web search result:', result);
+            }
+          }
+        }
+        console.log('Final web search results for non-streaming:', webSearchResults);
+        
         const assistantMessage: Omit<Message, 'id'> = {
           content: assistantContent,
           role: 'assistant',
           timestamp: new Date(),
           metadata: {
-            model: response.model || currentChat.settings.model,
+            model: response.model || currentModel,
             tokens: response.usage?.total_tokens,
-            processingTime: Date.now() - Date.now() // This would need to be calculated properly
+            processingTime: Date.now() - Date.now(), // This would need to be calculated properly
+            webSearchUsed: webSearch,
+            webSearchResults: webSearchResults.length > 0 ? webSearchResults : undefined
           }
         };
         
@@ -795,6 +848,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
         }
         
         setStreaming(false);
+        setSearching(false);
       }
     } catch (error) {
       console.error('Error sending message:', error);

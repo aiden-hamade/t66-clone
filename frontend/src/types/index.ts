@@ -28,6 +28,12 @@ export interface MessageMetadata {
   cost?: number
   processingTime?: number
   error?: string
+  webSearchUsed?: boolean
+  webSearchResults?: Array<{
+    url: string
+    title: string
+    content?: string
+  }>
 }
 
 export interface Chat {
