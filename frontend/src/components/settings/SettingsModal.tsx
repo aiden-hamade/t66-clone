@@ -16,7 +16,8 @@ interface SettingsModalProps {
 
 export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsModalProps) {
   const { isThemeModalOpen, setThemeModalOpen } = useThemeStore()
-  const [showApiKey, setShowApiKey] = useState(false)
+  const [showOpenRouterApiKey, setShowOpenRouterApiKey] = useState(false)
+  const [showOpenAIApiKey, setShowOpenAIApiKey] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [editForm, setEditForm] = useState({
     name: user?.name || '',
@@ -121,12 +122,6 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                       <h4 className="font-medium text-theme-primary">{user?.name || 'Anonymous User'}</h4>
                       <p className="text-sm text-theme-secondary">{user?.email || 'No email provided'}</p>
                     </div>
-                  {isEditing && (
-                      <Button variant="outline" size="sm" className="flex items-center gap-2">
-                        <Upload size={14} />
-                        Change Photo
-                    </Button>
-                  )}
                 </div>
 
                   {/* Name Field */}
@@ -216,7 +211,7 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                 {isEditing ? (
                   <div className="relative">
                     <input
-                      type={showApiKey ? 'text' : 'password'}
+                      type={showOpenRouterApiKey ? 'text' : 'password'}
                       value={editForm.openRouterApiKey}
                       onChange={(e) => setEditForm(prev => ({ ...prev, openRouterApiKey: e.target.value }))}
                           className="w-full p-3 pr-12 text-sm rounded-lg border border-theme-input bg-theme-input text-theme-input focus:ring-2 focus:ring-theme-accent focus:border-transparent font-mono"
@@ -224,10 +219,10 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                     />
                     <button
                       type="button"
-                      onClick={() => setShowApiKey(!showApiKey)}
+                      onClick={() => setShowOpenRouterApiKey(!showOpenRouterApiKey)}
                           className="absolute right-3 top-1/2 transform -translate-y-1/2 text-theme-secondary hover:text-theme-primary transition-colors"
                     >
-                          {showApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                          {showOpenRouterApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
                 ) : (
@@ -236,17 +231,17 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                           <div className="flex-1 min-w-0">
                             <span className="text-sm text-theme-primary font-mono break-all">
                       {user?.openRouterApiKey ? 
-                        (showApiKey ? user.openRouterApiKey : '••••••••••••••••••••••••••••••••••••••••••••••••••••') 
+                        (showOpenRouterApiKey ? user.openRouterApiKey : '••••••••••••••••••••••••••••••••••••••••••••••••••••') 
                         : 'Not configured'
                       }
                     </span>
                           </div>
                     {user?.openRouterApiKey && (
                       <button
-                        onClick={() => setShowApiKey(!showApiKey)}
+                        onClick={() => setShowOpenRouterApiKey(!showOpenRouterApiKey)}
                               className="text-theme-secondary hover:text-theme-primary transition-colors flex-shrink-0"
                       >
-                              {showApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                              {showOpenRouterApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
                           )}
                         </div>
@@ -280,7 +275,7 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                     {isEditing ? (
                       <div className="relative">
                         <input
-                          type={showApiKey ? 'text' : 'password'}
+                          type={showOpenAIApiKey ? 'text' : 'password'}
                           value={editForm.openaiApiKey}
                           onChange={(e) => setEditForm(prev => ({ ...prev, openaiApiKey: e.target.value }))}
                           className="w-full p-3 pr-12 text-sm rounded-lg border border-theme-input bg-theme-input text-theme-input focus:ring-2 focus:ring-theme-accent focus:border-transparent font-mono"
@@ -288,10 +283,10 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                         />
                         <button
                           type="button"
-                          onClick={() => setShowApiKey(!showApiKey)}
+                          onClick={() => setShowOpenAIApiKey(!showOpenAIApiKey)}
                           className="absolute right-3 top-1/2 transform -translate-y-1/2 text-theme-secondary hover:text-theme-primary transition-colors"
                         >
-                          {showApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                          {showOpenAIApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
                       </div>
                     ) : (
@@ -300,17 +295,17 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                           <div className="flex-1 min-w-0">
                             <span className="text-sm text-theme-primary font-mono break-all">
                               {user?.openaiApiKey ? 
-                                (showApiKey ? user.openaiApiKey : '••••••••••••••••••••••••••••••••••••••••••••••••••••') 
+                                (showOpenAIApiKey ? user.openaiApiKey : '••••••••••••••••••••••••••••••••••••••••••••••••••••') 
                                 : 'Not configured'
                               }
                             </span>
                           </div>
                           {user?.openaiApiKey && (
                             <button
-                              onClick={() => setShowApiKey(!showApiKey)}
+                              onClick={() => setShowOpenAIApiKey(!showOpenAIApiKey)}
                               className="text-theme-secondary hover:text-theme-primary transition-colors flex-shrink-0"
                             >
-                              {showApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                              {showOpenAIApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
                             </button>
                           )}
                         </div>
