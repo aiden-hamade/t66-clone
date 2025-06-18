@@ -539,7 +539,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
              // Get user data to access API key
        const { user } = get();
        if (!user?.openRouterApiKey) {
-         setError('OpenRouter API key not configured. Please add your API key in Settings.');
+         setError('OpenRouter API key not configured. Visit openrouter.ai/keys to get your API key. Please add your API key in Settings.');
          setStreaming(false);
          return;
        }
@@ -755,7 +755,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
         // Get user data to access API key
         const { user } = get();
         if (!user?.openRouterApiKey) {
-          setError('OpenRouter API key not configured. Please add your API key in Settings.');
+          setError('OpenRouter API key not configured. Visit openrouter.ai/keys to get your API key. Please add your API key in Settings.');
           setStreaming(false);
           setSearching(false);
           return;
@@ -938,7 +938,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
         // Get user data to access API key
         const { user } = get();
         if (!user?.openRouterApiKey) {
-          setError('OpenRouter API key not configured. Please add your API key in Settings.');
+          setError('OpenRouter API key not configured. Visit openrouter.ai/keys to get your API key. Please add your API key in Settings.');
           setStreaming(false);
           setSearching(false);
           return;
@@ -1232,7 +1232,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
         console.log('Auto-sending transcribed message:', transcription.text.trim());
         
         // Get current selected model and system prompt from state
-        const { sendMessage, synthesizeAndPlayResponse, autoPlayResponses } = get();
+        const { sendMessage, synthesizeAndPlayResponse } = get();
         
         // Send the message (this will create a new chat if needed)
         await sendMessage(
@@ -1404,7 +1404,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
 
   // Regenerate response from a message
   regenerateFromMessage: async (messageId: string, newContent: string, newModel?: string) => {
-    const { chats, activeChat, user, setChats, setError, setStreaming, setThinking, setSearching } = get();
+    const { chats, activeChat, user, setChats, setError, setThinking } = get();
     
     if (!activeChat || !user) {
       setError('No active chat or user');

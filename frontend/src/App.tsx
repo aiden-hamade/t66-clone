@@ -1134,7 +1134,10 @@ function App() {
                       </Button>
                       {/* Larger invisible hover area */}
                       <div className="absolute bottom-0 left-0 w-full h-full -mb-4 -ml-2 -mr-2 group-hover:pointer-events-auto pointer-events-none"></div>
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-theme-modal border border-theme-modal rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none group-hover:pointer-events-auto whitespace-nowrap z-50">
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 
+                bg-black border border-theme-border rounded-lg shadow-lg shadow-black/20 
+                hidden group-hover:block transition-all duration-200 pointer-events-none 
+                whitespace-nowrap z-[999]">
                         <div className="text-xs text-theme-primary">
                           <div className="font-medium mb-1">📊 Token Usage</div>
                           <div className="text-theme-secondary mb-1">Total tokens used: <span className="text-theme-primary font-medium">{totalTokensUsed.toLocaleString()}</span></div>
@@ -1198,7 +1201,10 @@ function App() {
                       >
                         <Globe size={18} />
                       </Button>
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-theme-modal border border-theme-modal rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap z-50">
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 
+                bg-black border border-theme-border rounded-lg shadow-lg shadow-black/20 
+                hidden group-hover:block transition-all duration-200 pointer-events-none 
+                whitespace-nowrap z-[999]">
                         <div className="text-xs text-theme-primary">
                           {webSearchEnabled ? '🌐 Web search enabled' : '🌐 Enable web search'}
                         </div>
