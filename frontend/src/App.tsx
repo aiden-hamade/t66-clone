@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import t66_logo from './assets/t66-chat-logo.svg'
 import { MessageSquare, Settings, User, Plus, MoreVertical, Trash2, ChevronDown, Edit2, LogOut, Info, Copy, GitBranch, Folder, FolderPlus, ChevronRight, Share2, Paperclip, X, FileText, Globe, Mic, Volume2, Edit3 } from 'lucide-react'
 import './App.css'
 
@@ -482,9 +483,8 @@ function App() {
                               {/* Header */}
               <div className="p-3 border-b border-theme">
                 <div className="flex flex-col items-center">
-                  <img 
-                    src="/src/t66-chat-logo.svg" 
-                    alt="T66 Logo" 
+                  <img
+                    src={t66_logo}
                     className="h-8 w-auto mb-1"
                   />
                   <p className="text-xs text-theme-secondary text-center">A T3 Chat Clone</p>
