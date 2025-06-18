@@ -30,9 +30,11 @@ export function VoiceModeButton({
   const handleTextModeClick = () => {
     if (mode !== 'text') {
       onModeChange('text')
-    } else if (mode === 'text' && canSendMessage) {
+    } else if (canSendMessage) {
+      // We're already in text mode and have a message to send - send it!
       onSend()
     }
+    // If no message to send, do nothing (but allow hover effects)
   }
 
   const handleVoiceModeClick = () => {
@@ -113,12 +115,22 @@ export function VoiceModeButton({
       {/* Main Button - with extended hover area */}
       <div className="relative">
         <Button
-          onClick={mode === 'text' ? handleTextModeClick : handleVoiceModeClick}
-          disabled={isDisabled || (mode === 'text' && !canSendMessage)}
+          onClick={() => {
+            if (mode === 'text' && canSendMessage) {
+              onSend()
+            } else if (mode === 'text' && !canSendMessage) {
+              // Do nothing if no message to send
+            } else {
+              handleVoiceModeClick()
+            }
+          }}
+          disabled={isDisabled}
           size="icon"
           className={`h-12 w-12 transition-all duration-200 ${
             mode === 'text'
-              ? 'bg-theme-button-primary text-theme-button-primary hover:opacity-90'
+              ? !canSendMessage
+                ? 'bg-theme-button-secondary text-theme-secondary cursor-not-allowed opacity-50'
+                : 'bg-theme-button-primary text-theme-button-primary hover:opacity-90'
               : isRecording
               ? 'bg-red-500 text-white hover:bg-red-600 animate-pulse'
               : 'bg-theme-accent text-theme-button-primary hover:opacity-90'
@@ -139,6 +151,17 @@ export function VoiceModeButton({
             className="absolute inset-0 -m-2 pointer-events-auto"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
+            onClick={(e) => {
+              // Forward clicks on the overlay to the main button logic so they aren't swallowed
+              e.stopPropagation()
+              if (mode === 'text') {
+                if (canSendMessage) {
+                  onSend()
+                }
+              } else {
+                handleVoiceModeClick()
+              }
+            }}
           />
         )}
       </div>

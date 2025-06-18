@@ -187,10 +187,30 @@ export async function playAudioBlob(audioBlob: Blob): Promise<void> {
 export function isVoiceModeSupported(modelId: string): boolean {
   // Reasoning models that should NOT be available in voice mode
   const reasoningModels = [
-    'google/gemini-2.5-pro-preview',
-    'deepseek/deepseek-r1-0528',
+    // OpenAI Reasoning Models
+    'openai/o3',
+    'openai/o3-pro', 
+    'openai/o4-mini',
+    
+    // Anthropic Reasoning Models
+    'anthropic/claude-3.7-sonnet:thinking',
     'anthropic/claude-sonnet-4',
-    // Add other reasoning models as needed
+    
+    // DeepSeek Reasoning Models
+    'deepseek/deepseek-r1',
+    'deepseek/deepseek-r1-0528',
+    'deepseek/deepseek-r1-distill-qwen-7b',
+    'deepseek/deepseek-r1-distill-llama-8b',
+    
+    // Qwen Reasoning Models
+    'qwen/qwq-32b',
+    
+    // Google Reasoning Models
+    'google/gemini-2.5-pro-preview',
+    'google/gemini-2.5-flash-preview-05-20:thinking',
+    
+    // Any model with ":thinking" suffix
+    ':thinking'
   ]
   
   return !reasoningModels.some(reasoningModel => modelId.includes(reasoningModel))

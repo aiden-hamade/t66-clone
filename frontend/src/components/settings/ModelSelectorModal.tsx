@@ -131,13 +131,30 @@ const getCapabilityTitle = (capability: string): string => {
     case '🌐':
       return 'Web Search';
     case '👁️':
-      return 'Image Upload';
+      return 'Vision Supported';
     case '📄':
       return 'PDF Upload';
     case '🎤':
       return 'Voice';
     default:
       return 'Capability';
+  }
+};
+
+// Helper function to determine if a capability should be shown as a text badge
+const shouldShowAsTextBadge = (capability: string): boolean => {
+  return capability === '🧠' || capability === '👁️';
+};
+
+// Helper function to get text badge content
+const getTextBadgeContent = (capability: string): string => {
+  switch (capability) {
+    case '🧠':
+      return 'Reasoning';
+    case '👁️':
+      return 'Vision Supported';
+    default:
+      return capability;
   }
 };
 
@@ -643,11 +660,27 @@ function ModelCard({ model, isSelected, onSelect }: ModelCardProps) {
 
           {/* Capabilities */}
           <div className="flex flex-wrap gap-2">
-            {model.capabilities.slice(0, 6).map(cap => (
-              <div key={cap} title={getCapabilityTitle(cap)} className="flex items-center gap-1 text-xs bg-theme-button-secondary text-theme-secondary px-2 py-1 rounded-full">
-                {cap}
-              </div>
-            ))}
+            {model.capabilities.slice(0, 6).map(cap => {
+              if (shouldShowAsTextBadge(cap)) {
+                return (
+                  <span 
+                    key={cap}
+                    className={`inline-flex items-center text-xs px-2 py-1 rounded-full font-medium ${
+                      cap === '🧠' 
+                        ? 'bg-purple-100 text-purple-800' 
+                        : 'bg-green-100 text-green-800'
+                    }`}
+                  >
+                    {getTextBadgeContent(cap)}
+                  </span>
+                );
+              }
+              return (
+                <div key={cap} title={getCapabilityTitle(cap)} className="flex items-center gap-1 text-xs bg-theme-button-secondary text-theme-secondary px-2 py-1 rounded-full">
+                  {cap}
+                </div>
+              );
+            })}
             {model.capabilities.length > 6 && (
               <span className="text-xs text-theme-secondary px-2 py-1">
                 +{model.capabilities.length - 6} more

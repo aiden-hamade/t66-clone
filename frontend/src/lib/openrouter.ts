@@ -135,11 +135,32 @@ export const createChatCompletion = async (
 };
 
 // Helper function to check if a model supports thinking
-const isThinkingModel = (model: string): boolean => {
+export const isThinkingModel = (model: string): boolean => {
   const thinkingModels = [
-    'google/gemini-2.5-pro-preview',
-    'deepseek/deepseek-r1-0528',
+    // OpenAI Reasoning Models
+    'openai/o3',
+    'openai/o3-pro', 
+    'openai/o4-mini',
+    
+    // Anthropic Reasoning Models
+    'anthropic/claude-3.7-sonnet:thinking',
     'anthropic/claude-sonnet-4',
+    
+    // DeepSeek Reasoning Models
+    'deepseek/deepseek-r1',
+    'deepseek/deepseek-r1-0528',
+    'deepseek/deepseek-r1-distill-qwen-7b',
+    'deepseek/deepseek-r1-distill-llama-8b',
+    
+    // Qwen Reasoning Models
+    'qwen/qwq-32b',
+    
+    // Google Reasoning Models
+    'google/gemini-2.5-pro-preview',
+    'google/gemini-2.5-flash-preview-05-20:thinking',
+    
+    // Any model with ":thinking" suffix
+    ':thinking'
   ];
   return thinkingModels.some(thinkingModel => model.includes(thinkingModel));
 };

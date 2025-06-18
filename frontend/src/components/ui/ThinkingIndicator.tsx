@@ -55,7 +55,7 @@ export function ThinkingIndicator({ isThinking, thinkingSummary, className = '' 
   if (!isThinking) return null
 
   return (
-    <div className={`bg-theme-surface/95 backdrop-blur-sm border border-theme rounded-lg p-4 mx-4 mb-4 ${className}`}>
+    <div className={`bg-theme-chat-assistant border border-theme rounded-lg p-4 ${className}`}>
       <div className="flex items-center gap-3">
         {/* Animated thinking icon */}
         <div className="relative">

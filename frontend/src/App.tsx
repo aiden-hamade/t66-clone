@@ -936,12 +936,6 @@ function App() {
 
               {/* Messages */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {/* Thinking Indicator */}
-                <ThinkingIndicator 
-                  isThinking={isThinking} 
-                  thinkingSummary={thinkingSummary}
-                />
-                
                 {currentChatData?.messages.map(message => (
                   <div
                     key={message.id}
@@ -1051,8 +1045,19 @@ function App() {
                   </div>
                 ))}
                 
+                {/* Thinking Indicator as a message */}
+                {isThinking && (
+                  <div className="flex justify-start">
+                    <div className="max-w-[70%]">
+                      <ThinkingIndicator 
+                        isThinking={isThinking} 
+                        thinkingSummary={thinkingSummary}
+                        className="mb-0"
+                      />
+                    </div>
+                  </div>
+                )}
 
-                
                 {/* Show continue prompt if token limit reached */}
                 {showContinuePrompt && continueMessageId && (
                   <div className="bg-theme-button-secondary border border-theme text-theme-accent px-4 py-3 rounded-lg text-sm">

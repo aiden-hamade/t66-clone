@@ -18,6 +18,7 @@ import {
   createChatCompletion,
   createStreamingChatCompletion,
   estimateTokenCount,
+  isThinkingModel,
   type ChatMessage as OpenRouterMessage
 } from '../lib/openrouter';
 import { transcribeAudio, synthesizeSpeech, playAudioBlob } from '../lib/openai';
@@ -166,6 +167,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
         abortController: null,
         isStreaming: false,
         isThinking: false,
+        thinkingSummary: '',
         isSearching: false 
       });
     }
@@ -723,6 +725,12 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
         const controller = new AbortController();
         set({ abortController: controller, isStreaming: true });
         
+        // Check if this is a reasoning model and immediately show thinking indicator
+        if (isThinkingModel(currentModel)) {
+          console.log('Chat Store: Reasoning model detected, showing thinking indicator immediately');
+          set({ isThinking: true, thinkingSummary: 'Preparing to analyze your request...' });
+        }
+        
         // Create placeholder assistant message
         const assistantMessage: Omit<Message, 'id'> = {
           content: '',
@@ -828,6 +836,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
             console.log('Finish reason:', finishReason);
             console.log('Web search results:', webSearchResults);
             setStreaming(false);
+            set({ isThinking: false, thinkingSummary: '' });
             
             // Update the message in Firestore with final content
             try {
@@ -899,7 +908,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
             } else {
               setStreaming(false);
               setSearching(false);
-              set({ isThinking: false });
+              set({ isThinking: false, thinkingSummary: '' });
               
               // Save any accumulated content before showing error
               if (accumulatedContent.trim()) {
