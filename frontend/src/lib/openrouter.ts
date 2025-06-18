@@ -157,7 +157,13 @@ export const isThinkingModel = (model: string): boolean => {
     
     // Google Reasoning Models
     'google/gemini-2.5-pro-preview',
+    'google/gemini-2.5-pro',
+    'google/gemini-2.5-flash',
     'google/gemini-2.5-flash-preview-05-20:thinking',
+    
+    // Grok Reasoning Models
+    'x-ai/grok-3-beta',
+    'x-ai/grok-3-mini-beta',
     
     // Any model with ":thinking" suffix
     ':thinking'
