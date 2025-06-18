@@ -56,7 +56,7 @@ const getProviderConfig = (providerName: string): Provider => {
     },
     'Anthropic': {
       name: 'Anthropic',
-      color: '#D4A574',
+      color: '#FFFFFF',
       textColor: 'var(--color-text-primary)',
       logo: (
         <img src={anthropicLogo} alt="Anthropic Logo" className="w-5 h-5" />
@@ -72,7 +72,7 @@ const getProviderConfig = (providerName: string): Provider => {
     },
     'DeepSeek': {
       name: 'DeepSeek',
-      color: '#1E40AF',
+      color: '#FFFFFF',
       textColor: 'var(--color-text-primary)',
       logo: (
         <img src={deepseekLogo} alt="DeepSeek Logo" className="w-5 h-5" />
@@ -96,7 +96,7 @@ const getProviderConfig = (providerName: string): Provider => {
     },
     'Qwen': {
       name: 'Qwen',
-      color: '#FF6B35',
+      color: '#FFFFFF',
       textColor: 'var(--color-text-primary)',
       logo: (
         <img src={qwenLogo} alt="Qwen Logo" className="w-5 h-5" />

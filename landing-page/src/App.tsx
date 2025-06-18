@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { flushSync } from 'react-dom'
-import wip from './assets/wip.webp'
+import t66_logo from './assets/t66-chat-logo.svg'
 import koby_pfp from './assets/koby_pfp.png'
 import aiden_pfp from './assets/2024-P13259.jpg'
 import './App.css'
@@ -474,10 +474,8 @@ function App() {
           {/* Hero Section */}
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 bg-dynamic-surface text-dynamic-secondary px-4 py-2 rounded-full text-sm font-medium mb-6">
-              <img src={wip} alt="Work in Progress" className="w-12 h-10" />
-              Work in Progress
+              <img src={t66_logo} className="w-64 h-32" />
             </div>
-            <h1 className="text-6xl md:text-7xl font-bold text-dynamic-primary mb-4 tracking-tight">T66-Chat</h1>
             <h2 className="text-3xl md:text-4xl font-bold text-dynamic-subtitle mb-6 tracking-tight">A T3 Chat Clone</h2>
             <p className="text-dynamic-primary">
               Welcome to T66-Chat, an LLM chat interface to be entered into the T3 Chat Cloneathon.<br />
