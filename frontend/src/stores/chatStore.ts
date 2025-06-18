@@ -539,7 +539,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
              // Get user data to access API key
        const { user } = get();
        if (!user?.openRouterApiKey) {
-         setError('OpenRouter API key not configured. Please add your API key in Settings.');
+         setError('OpenRouter API key not configured. Visit openrouter.ai/keys to get your API key. Please add your API key in Settings.');
          setStreaming(false);
          return;
        }
@@ -755,7 +755,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
         // Get user data to access API key
         const { user } = get();
         if (!user?.openRouterApiKey) {
-          setError('OpenRouter API key not configured. Please add your API key in Settings.');
+          setError('OpenRouter API key not configured. Visit openrouter.ai/keys to get your API key. Please add your API key in Settings.');
           setStreaming(false);
           setSearching(false);
           return;
@@ -938,7 +938,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
         // Get user data to access API key
         const { user } = get();
         if (!user?.openRouterApiKey) {
-          setError('OpenRouter API key not configured. Please add your API key in Settings.');
+          setError('OpenRouter API key not configured. Visit openrouter.ai/keys to get your API key. Please add your API key in Settings.');
           setStreaming(false);
           setSearching(false);
           return;
