@@ -132,7 +132,7 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                       type="text"
                       value={editForm.name}
                       onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
-                        className="w-full p-3 text-sm rounded-lg border border-theme-input bg-theme-input text-theme-input focus:ring-2 focus:ring-theme-accent focus:border-transparent"
+                        className="w-full p-3 rounded-lg border border-theme-input bg-theme-input text-theme-input focus:ring-2 focus:ring-theme-accent focus:border-transparent"
                         placeholder="Enter your display name"
                     />
                   ) : (
@@ -220,18 +220,18 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                     <button
                       type="button"
                       onClick={() => setShowOpenRouterApiKey(!showOpenRouterApiKey)}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-theme-secondary hover:text-theme-primary transition-colors"
+                          className="absolute h-full flex items-center right-3 top-1/2 transform -translate-y-1/2 text-theme-secondary hover:text-theme-primary transition-colors"
                     >
                           {showOpenRouterApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
                 ) : (
-                      <div className="bg-theme-input rounded-lg border border-theme-input p-3">
+                      <div className="bg-theme-input rounded-lg border border-theme-input p-3 min-h-[3rem]">
                         <div className="flex items-center justify-between gap-3">
-                          <div className="flex-1 min-w-0">
+                          <div className="flex-1 min-w-0 flex items-center">
                             <span className="text-sm text-theme-primary font-mono break-all">
                       {user?.openRouterApiKey ? 
-                        (showOpenRouterApiKey ? user.openRouterApiKey : '••••••••••••••••••••••••••••••••••••••••••••••••••••') 
+                        (showOpenRouterApiKey ? user.openRouterApiKey : '••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••') 
                         : 'Not configured'
                       }
                     </span>
@@ -239,7 +239,7 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                     {user?.openRouterApiKey && (
                       <button
                         onClick={() => setShowOpenRouterApiKey(!showOpenRouterApiKey)}
-                              className="text-theme-secondary hover:text-theme-primary transition-colors flex-shrink-0"
+                              className="flex items-center justify-center h-6 w-6 text-theme-secondary hover:text-theme-primary transition-colors"
                       >
                               {showOpenRouterApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
@@ -278,7 +278,7 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                           type={showOpenAIApiKey ? 'text' : 'password'}
                           value={editForm.openaiApiKey}
                           onChange={(e) => setEditForm(prev => ({ ...prev, openaiApiKey: e.target.value }))}
-                          className="w-full p-3 pr-12 text-sm rounded-lg border border-theme-input bg-theme-input text-theme-input focus:ring-2 focus:ring-theme-accent focus:border-transparent font-mono"
+                          className="w-full h-12 p-3 pr-12 text-sm rounded-lg border border-theme-input bg-theme-input text-theme-input focus:ring-2 focus:ring-theme-accent focus:border-transparent font-mono"
                           placeholder="sk-..."
                         />
                         <button
@@ -290,12 +290,12 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                         </button>
                       </div>
                     ) : (
-                      <div className="bg-theme-input rounded-lg border border-theme-input p-3">
+                      <div className="bg-theme-input rounded-lg border border-theme-input p-3 min-h-[3rem]">
                         <div className="flex items-center justify-between gap-3">
-                          <div className="flex-1 min-w-0">
+                          <div className="flex-1 min-w-0 flex items-center">
                             <span className="text-sm text-theme-primary font-mono break-all">
                               {user?.openaiApiKey ? 
-                                (showOpenAIApiKey ? user.openaiApiKey : '••••••••••••••••••••••••••••••••••••••••••••••••••••') 
+                                (showOpenAIApiKey ? user.openaiApiKey : '••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••') 
                                 : 'Not configured'
                               }
                             </span>
@@ -303,7 +303,7 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                           {user?.openaiApiKey && (
                             <button
                               onClick={() => setShowOpenAIApiKey(!showOpenAIApiKey)}
-                              className="text-theme-secondary hover:text-theme-primary transition-colors flex-shrink-0"
+                              className="flex items-center justify-center h-6 w-6 text-theme-secondary hover:text-theme-primary transition-colors"
                             >
                               {showOpenAIApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
                             </button>
