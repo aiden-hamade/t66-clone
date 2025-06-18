@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Modal } from '../ui/Modal'
 import { Button } from '../ui/Button'
-import { Check, Zap, Star, Search, Brain, Code, Eye, Calculator, DollarSign, Layers } from 'lucide-react'
+import { Check, Zap, Star, Search, Brain, DollarSign, Layers } from 'lucide-react'
 
 interface Model {
   id: string
@@ -121,40 +121,6 @@ const getProviderConfig = (providerName: string): Provider => {
     },
     count: 0
   };
-};
-
-// Helper function to check if a model is a reasoning model that should show thinking UI
-const isReasoningModel = (modelId: string): boolean => {
-  const reasoningModels = [
-    'openai/o3',
-    'openai/o3-pro',
-    'openai/o4-mini',
-    'anthropic/claude-3.7-sonnet:thinking',
-    'deepseek/deepseek-r1',
-    'deepseek/deepseek-r1-0528',
-    'deepseek/deepseek-r1-distill-qwen-7b',
-    'deepseek/deepseek-r1-distill-llama-8b',
-    'qwen/qwq-32b',
-    'google/gemini-2.5-flash-preview-05-20:thinking'
-  ];
-  
-  return reasoningModels.includes(modelId);
-};
-
-// Helper function to get badge styles
-const getBadgeStyles = (badge: string): string => {
-  switch (badge) {
-    case 'Free':
-      return 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300';
-    case 'Popular':
-      return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300';
-    case 'Recommended':
-      return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300';
-    case 'Reasoning':
-      return 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300';
-    default:
-      return 'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-300';
-  }
 };
 
 // Helper function to get capability titles
