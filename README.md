@@ -24,7 +24,7 @@
 - **🔄 Resumable Streams** - Continue conversations after page refresh
 - **🌳 Chat Branching** - Explore alternative conversation paths
 - **📤 Chat Sharing** - Share conversations with public links
-- **🔍 Web Search** - Real-time web search integration
+- **🔍 Web Search** - Real-time web search integration with source citations
 - **🔑 Bring Your Own Key** - Use your own API keys for all providers
 - **📱 Mobile App (PWA)** - Native-like mobile experience
 - **🎤 Voice Mode** - Speech-to-text and text-to-speech
@@ -32,16 +32,9 @@
 - **🎨 Discord-like Themes** - Fully customizable color schemes with CSS variables
 
 ### 🚀 Advanced Features
-- **🧠 Memory System** - ChatGPT-like conversation memory
-- **🔬 Deep Research** - Multi-step research with source citations
 - **💾 Local Cache** - Offline-first with intelligent caching
-- **⚡ Functions & Tools** - Extensible function calling system
 - **📊 Token Counting** - Real-time usage tracking and cost estimation
-- **📹 YouTube Integration** - Upload and analyze YouTube videos
-- **🐳 Code Execution** - Safe code execution in Docker containers
-- **🎛️ Advanced Controls** - Temperature, system messages, safety filters
-- **🔎 File Search & Grep** - Cursor-like code analysis and search
-- **🖥️ Computer Use** - Advanced automation capabilities (experimental)
+- **🐳 Code Execution** - Ask any model to generate a frontend (one file) and see it within the app
 
 ## 🏗️ Architecture
 
@@ -52,7 +45,7 @@
 - **State Management**: Zustand
 - **Real-time**: Firebase Realtime Database
 - **Testing**: Vitest + React Testing Library
-- **Deployment**: Vercel/Netlify + Firebase
+- **Deployment**: Firebase
 
 ### Project Structure
 
@@ -168,64 +161,10 @@ docker-compose up -d
 # Frontend: http://localhost:3000
 ```
 
-## 🎨 Theming System
-
-T66 features a powerful theming system inspired by Discord:
-
-```css
-/* All colors are CSS custom properties */
-:root {
-  --primary: 220 14.3% 95.9%;
-  --primary-foreground: 220.9 39.3% 11%;
-  --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
-  /* ... more theme variables */
-}
-
-/* Dark theme */
-[data-theme="dark"] {
-  --background: 222.2 84% 4.9%;
-  --foreground: 210 40% 98%;
-  /* ... dark theme overrides */
-}
-```
-
-## 🧪 Testing
-
-```bash
-# Run all tests
-npm run test
-
-# Run tests with coverage
-npm run test:coverage
-
-# Run E2E tests
-npm run test:e2e
-```
-
 ## 📖 API Documentation
 
 ### Authentication
 - Firebase Authentication with multiple providers
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guide](docs/CONTRIBUTING.md) for details.
-
-### Development Workflow
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Submit a pull request
-
-## 📋 Roadmap
-
-- [ ] **Phase 1**: Core chat functionality
-- [ ] **Phase 2**: Multi-model support
-- [ ] **Phase 3**: Advanced features (attachments, image gen)
-- [ ] **Phase 4**: Voice and mobile optimization
-- [ ] **Phase 5**: Advanced AI features (memory, research)
 
 ## 📄 License
 
