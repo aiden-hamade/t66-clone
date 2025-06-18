@@ -7,10 +7,10 @@ import App from './App.tsx'
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
-      .then((registration) => {
+      .then(() => {
         // Service worker registered successfully
       })
-      .catch((registrationError) => {
+      .catch(() => {
         // Service worker registration failed
       });
   });
