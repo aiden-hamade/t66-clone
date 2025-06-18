@@ -113,9 +113,9 @@ t66-clone/
 │   ├── 📁 src/
 │   │   ├── 📄 App.tsx              # Theme customization demo
 │   │   └── 📁 assets/
-│   │       ├── t66.png
-│   │       ├── t66.svg
-│   │       └── wip.webp
+│   │       ├── 2024-P13259.jpg
+│   │       ├── koby_pfp.png
+│   │       └── t66-chat-logo.svg
 │   ├── 📄 package.json
 │   └── 📄 vite.config.ts
 │
@@ -295,7 +295,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Firebase Team** - For excellent backend services
 - **OpenRouter** - For providing access to multiple AI models
 - **Tailwind CSS** - For the utility-first CSS framework
-- **Vercel** - For hosting and deployment
+- **Cloudflare** - For hosting and deployment
 - **Open Source Community** - For all the incredible libraries and tools
 
 ## 🔗 Links

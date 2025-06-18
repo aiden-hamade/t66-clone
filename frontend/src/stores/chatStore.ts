@@ -539,9 +539,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
            accumulatedContent += chunk;
            updateLastMessage(activeChat, accumulatedContent);
          },
-         (reason) => {
-           // Handle finish reason for continuation
-         },
+         () => {},
          async () => {
            setStreaming(false);
            
@@ -558,7 +556,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
            } catch (error) {
            }
          },
-         (error) => {
+         (error: Error) => {
            if ((error as any).name === 'AbortError') {
            } else {
              setStreaming(false);
@@ -769,7 +767,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
                   model: currentModel,
                   webSearchUsed: webSearch
                 }
-              }).catch(error => {
+              }).catch(_error => {
               });
             }
             
@@ -781,7 +779,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
                   model: currentModel,
                   webSearchUsed: webSearch
                 }
-              }).catch(error => {
+              }).catch(_error => {
               });
             }
           },
@@ -831,11 +829,11 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
                     await updateChatTitle(currentActiveChat, generatedTitle);
                   } else {
                   }
-                } catch (titleError) {
+                } catch (_titleError) {
                 }
               } else {
               }
-            } catch (error) {
+            } catch (_error) {
             }
           },
           (error) => {
@@ -856,7 +854,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
                     error: error.message,
                     webSearchUsed: webSearch
                   }
-                }).catch(saveError => {
                 });
               }
               
@@ -1455,7 +1452,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
             }
           }
         },
-        (reason: string) => {
+        (_reason: string) => {
         },
         async (searchResults) => {
           webSearchResults = searchResults;
