@@ -20,7 +20,6 @@ export function ShareModal({ isOpen, onClose, shareUrl, title = "Share Chat", de
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch (err) {
-      console.error('Failed to copy:', err)
     }
   }
 

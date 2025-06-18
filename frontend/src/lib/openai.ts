@@ -56,7 +56,6 @@ export async function transcribeAudio(
   // Validate file type
   const supportedTypes = ['audio/mp3', 'audio/mp4', 'audio/mpeg', 'audio/mpga', 'audio/m4a', 'audio/wav', 'audio/webm']
   if (!supportedTypes.some(type => audioFile.type.includes(type.split('/')[1]))) {
-    console.warn('File type might not be supported:', audioFile.type)
   }
 
   const formData = new FormData()
@@ -69,7 +68,6 @@ export async function transcribeAudio(
   if (options.temperature !== undefined) formData.append('temperature', options.temperature.toString())
 
   try {
-    console.log('Sending transcription request with file:', audioFile.name, audioFile.size, 'bytes')
     
     const response = await fetch(`${OPENAI_BASE_URL}/audio/transcriptions`, {
       method: 'POST',
@@ -80,11 +78,9 @@ export async function transcribeAudio(
       body: formData
     })
 
-    console.log('Transcription response status:', response.status)
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      console.error('Transcription error response:', errorData)
       throw new Error(errorData.error?.message || `Transcription failed: ${response.status}`)
     }
 
@@ -92,12 +88,10 @@ export async function transcribeAudio(
     if (options.responseFormat === 'text') {
       // For text format, response is plain text, not JSON
       const text = await response.text()
-      console.log('Transcription response text:', text)
       return { text: text.trim() }
     } else {
       // For JSON formats, parse as JSON
       const data = await response.json()
-      console.log('Transcription response data:', data)
       
       if (typeof data === 'string') {
         return { text: data }
@@ -108,7 +102,6 @@ export async function transcribeAudio(
       }
     }
   } catch (error) {
-    console.error('OpenAI Transcription error:', error)
     throw error
   }
 }
@@ -154,7 +147,6 @@ export async function synthesizeSpeech(
     const audioBlob = await response.blob()
     return audioBlob
   } catch (error) {
-    console.error('OpenAI TTS error:', error)
     throw error
   }
 }

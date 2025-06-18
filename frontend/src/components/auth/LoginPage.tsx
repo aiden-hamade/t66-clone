@@ -78,7 +78,6 @@ export function LoginPage() {
       }
     } catch (error) {
       // Error is handled by the store
-      console.error('Auth error:', error);
     }
   };
 

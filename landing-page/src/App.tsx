@@ -236,7 +236,6 @@ function App() {
 
   /* CSS Variable Management */
   const updateCSSVariable = (property: string, value: string) => {
-    console.log('Setting CSS variable:', property, 'to:', value);
     document.documentElement.style.setProperty(property, value);
     
     // Fix iOS over-scroll background by updating html and body background
@@ -281,7 +280,6 @@ function App() {
     } else {
       result = `linear-gradient(${direction}, ${colors.join(', ')})`;
     }
-    console.log('Building gradient CSS:', result, 'from:', gradient);
     return result;
   };
 

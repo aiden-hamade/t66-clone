@@ -115,7 +115,6 @@ export const createChat = async (
 
     return newChat;
   } catch (error) {
-    console.error('Error creating chat:', error);
     throw error;
   }
 };
@@ -145,7 +144,6 @@ export const getUserChats = async (
 
     return chats;
   } catch (error) {
-    console.error('Error getting user chats:', error);
     throw error;
   }
 };
@@ -157,7 +155,6 @@ export const getChat = async (chatId: string): Promise<Chat | null> => {
     const docSnap = await getDoc(docRef);
     return convertChatDoc(docSnap);
   } catch (error) {
-    console.error('Error getting chat:', error);
     throw error;
   }
 };
@@ -176,7 +173,6 @@ export const updateChat = async (
 
     await updateDoc(chatRef, updateData);
   } catch (error) {
-    console.error('Error updating chat:', error);
     throw error;
   }
 };
@@ -187,7 +183,6 @@ export const deleteChat = async (chatId: string): Promise<void> => {
     const chatRef = doc(db, 'chats', chatId);
     await deleteDoc(chatRef);
   } catch (error) {
-    console.error('Error deleting chat:', error);
     throw error;
   }
 };
@@ -227,7 +222,6 @@ export const addMessageToChat = async (
 
     return newMessage;
   } catch (error) {
-    console.error('Error adding message to chat:', error);
     throw error;
   }
 };
@@ -239,7 +233,6 @@ export const updateMessageInChat = async (
   updates: Partial<Message>
 ): Promise<void> => {
   try {
-    console.log('Firestore: updateMessageInChat called with:', { chatId, messageId, updates });
     
     const chat = await getChat(chatId);
     if (!chat) {
@@ -248,13 +241,9 @@ export const updateMessageInChat = async (
 
     const messageIndex = chat.messages.findIndex(msg => msg.id === messageId);
     if (messageIndex === -1) {
-      console.error('Firestore: Message not found. Available message IDs:', chat.messages.map(m => m.id));
       throw new Error('Message not found');
     }
     
-    console.log('Firestore: Found message at index:', messageIndex);
-    console.log('Firestore: Current message content:', chat.messages[messageIndex].content);
-    console.log('Firestore: Update content:', updates.content);
 
     const updatedMessages = chat.messages.map((msg, index) => {
       if (index === messageIndex) {
@@ -288,9 +277,7 @@ export const updateMessageInChat = async (
       updatedAt: Timestamp.now()
     });
     
-    console.log('Firestore: Message updated successfully in Firestore');
   } catch (error) {
-    console.error('Error updating message:', error);
     throw error;
   }
 };
@@ -314,7 +301,6 @@ export const deleteMessageFromChat = async (
       updatedAt: Timestamp.now()
     });
   } catch (error) {
-    console.error('Error deleting message:', error);
     throw error;
   }
 };
@@ -333,7 +319,6 @@ export const shareChat = async (chatId: string): Promise<string> => {
 
     return shareId;
   } catch (error) {
-    console.error('Error sharing chat:', error);
     throw error;
   }
 };
@@ -356,7 +341,6 @@ export const getSharedChat = async (shareId: string): Promise<Chat | null> => {
     const doc = querySnapshot.docs[0];
     return convertChatDoc(doc);
   } catch (error) {
-    console.error('Error getting shared chat:', error);
     return null;
   }
 };
@@ -371,7 +355,6 @@ export const unshareChat = async (chatId: string): Promise<void> => {
       updatedAt: Timestamp.now()
     });
   } catch (error) {
-    console.error('Error unsharing chat:', error);
     throw error;
   }
 };
@@ -400,7 +383,6 @@ export const createUser = async (userId: string, userData: Partial<User>): Promi
     
     await setDoc(userRef, cleanUserData);
   } catch (error) {
-    console.error('Error creating user:', error);
     throw error;
   }
 };
@@ -427,7 +409,6 @@ export const getUser = async (userId: string): Promise<User | null> => {
       updatedAt: timestampToDate(data.updatedAt)
     };
   } catch (error) {
-    console.error('Error getting user:', error);
     throw error;
   }
 };
@@ -446,7 +427,6 @@ export const updateUser = async (userId: string, updates: Partial<User>): Promis
     
     await updateDoc(userRef, cleanUpdates);
   } catch (error) {
-    console.error('Error updating user:', error);
     throw error;
   }
 }; 
@@ -477,7 +457,6 @@ export const createFolder = async (
 
     return newFolder;
   } catch (error) {
-    console.error('Error creating folder:', error);
     throw error;
   }
 };
@@ -502,7 +481,6 @@ export const getUserFolders = async (userId: string): Promise<ChatFolder[]> => {
 
     return folders;
   } catch (error) {
-    console.error('Error getting user folders:', error);
     throw error;
   }
 };
@@ -520,7 +498,6 @@ export const updateFolder = async (
 
     await updateDoc(folderRef, updateData);
   } catch (error) {
-    console.error('Error updating folder:', error);
     throw error;
   }
 };
@@ -546,7 +523,6 @@ export const deleteFolder = async (folderId: string): Promise<void> => {
     
     await batch.commit();
   } catch (error) {
-    console.error('Error deleting folder:', error);
     throw error;
   }
 };
@@ -562,7 +538,6 @@ export const moveChatToFolder = async (
       updatedAt: Timestamp.now()
     });
   } catch (error) {
-    console.error('Error moving chat to folder:', error);
     throw error;
   }
 };
@@ -602,7 +577,6 @@ export const addCollaboratorToChat = async (
       });
     }
   } catch (error) {
-    console.error('Error adding collaborator to chat:', error);
     throw error;
   }
 };
@@ -627,7 +601,6 @@ export const removeCollaboratorFromChat = async (
       updatedAt: Timestamp.now()
     });
   } catch (error) {
-    console.error('Error removing collaborator from chat:', error);
     throw error;
   }
 };

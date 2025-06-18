@@ -102,8 +102,6 @@ export const createChatCompletion = async (
   }
 
   try {
-    console.log('OpenRouter API: Sending request to', `${OPENROUTER_BASE_URL}/chat/completions`);
-    console.log('OpenRouter API: Request payload:', JSON.stringify(request, null, 2));
     
     const response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
       method: 'POST',
@@ -116,20 +114,15 @@ export const createChatCompletion = async (
       body: JSON.stringify(request)
     });
 
-    console.log('OpenRouter API: Response status:', response.status);
-    console.log('OpenRouter API: Response headers:', Object.fromEntries(response.headers.entries()));
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error('OpenRouter API: Error response:', errorData);
       throw new Error(errorData.error?.message || `API request failed: ${response.status}`);
     }
 
     const data = await response.json();
-    console.log('OpenRouter API: Success response:', data);
     return data;
   } catch (error) {
-    console.error('OpenRouter API error:', error);
     throw error;
   }
 };
@@ -249,7 +242,6 @@ export const createStreamingChatCompletion = async (
       const { done, value } = await reader.read();
       
       if (done) {
-        console.log('OpenRouter streaming: Stream ended naturally (done=true)');
         onComplete(webSearchResults.length > 0 ? webSearchResults : undefined);
         break;
       }
@@ -263,14 +255,12 @@ export const createStreamingChatCompletion = async (
           const data = line.slice(6);
           
           if (data === '[DONE]') {
-            console.log('OpenRouter streaming: Received [DONE] signal');
             onComplete(webSearchResults.length > 0 ? webSearchResults : undefined);
             return;
           }
 
           try {
             const parsed = JSON.parse(data);
-            console.log('OpenRouter streaming chunk:', parsed);
             
             const delta = parsed.choices?.[0]?.delta;
             const content = delta?.content;
@@ -297,7 +287,6 @@ export const createStreamingChatCompletion = async (
             }
             
             if (content) {
-              console.log('OpenRouter streaming: Content chunk received:', content);
               // If we were thinking and now have content, stop thinking
               if (isCurrentlyThinking && onThinking) {
                 isCurrentlyThinking = false;
@@ -305,9 +294,7 @@ export const createStreamingChatCompletion = async (
               }
               onChunk(content);
             } else if (reasoning) {
-              console.log('OpenRouter streaming: Reasoning chunk received (length):', reasoning.length);
             } else {
-              console.log('OpenRouter streaming: Chunk with no content or reasoning:', parsed);
             }
             
             // Look for annotations in both delta and message
@@ -316,7 +303,6 @@ export const createStreamingChatCompletion = async (
             const annotations = deltaForAnnotations?.annotations || message?.annotations;
             
             if (annotations && annotations.length > 0) {
-              console.log('Found annotations in streaming response:', annotations);
               for (const annotation of annotations) {
                 if (annotation.type === 'url_citation' && annotation.url_citation) {
                   const result = {
@@ -327,7 +313,6 @@ export const createStreamingChatCompletion = async (
                   // Avoid duplicates
                   if (!webSearchResults.some(r => r.url === result.url)) {
                     webSearchResults.push(result);
-                    console.log('Added web search result:', result);
                   }
                 }
               }
@@ -336,18 +321,15 @@ export const createStreamingChatCompletion = async (
             // Check for finish_reason
             const finishReason = parsed.choices?.[0]?.finish_reason;
             if (finishReason) {
-              console.log('OpenRouter streaming: Finish reason:', finishReason);
               onFinishReason(finishReason);
             }
           } catch (error) {
-            console.log('OpenRouter streaming: Skipping invalid JSON chunk:', data);
             continue;
           }
         }
       }
     }
   } catch (error) {
-    console.error('OpenRouter streaming error:', error);
     onError(error as Error);
   }
 };
@@ -374,7 +356,6 @@ export const getAvailableModels = async (apiKey: string) => {
     const data = await response.json();
     return data.data;
   } catch (error) {
-    console.error('Error fetching models:', error);
     return [];
   }
 };

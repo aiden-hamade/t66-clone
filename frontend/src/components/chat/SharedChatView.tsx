@@ -19,11 +19,6 @@ export const SharedChatView: React.FC<SharedChatViewProps> = () => {
   const shareId = rawSearch.replace(/['"`]/g, '') // Remove any quotes that might be in the URL
   
   // Debug logging
-  console.log('SharedChatView Debug:')
-  console.log('- Full URL:', window.location.href)
-  console.log('- Search params:', window.location.search)
-  console.log('- Raw search (no ?):', rawSearch)
-  console.log('- Cleaned shareId:', shareId)
   
   const [chat, setChat] = useState<Chat | null>(null)
   const [loading, setLoading] = useState(true)
@@ -39,20 +34,15 @@ export const SharedChatView: React.FC<SharedChatViewProps> = () => {
 
       try {
         setLoading(true)
-        console.log('Attempting to load shared chat with shareId:', shareId)
         const sharedChat = await getSharedChat(shareId)
-        console.log('getSharedChat result:', sharedChat)
         
         if (!sharedChat) {
-          console.log('No shared chat found for shareId:', shareId)
           setError('Chat not found or no longer shared')
           return
         }
         
-        console.log('Successfully loaded shared chat:', sharedChat.title)
         setChat(sharedChat)
       } catch (err) {
-        console.error('Error loading shared chat:', err)
         setError('Failed to load shared chat')
       } finally {
         setLoading(false)
@@ -73,7 +63,6 @@ export const SharedChatView: React.FC<SharedChatViewProps> = () => {
       const updatedChat = await getSharedChat(shareId!)
       if (updatedChat) setChat(updatedChat)
     } catch (err) {
-      console.error('Error inviting collaborator:', err)
     }
   }
 

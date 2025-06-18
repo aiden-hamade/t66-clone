@@ -95,7 +95,6 @@ export const updateTypingIndicator = async (
       })
     }
   } catch (error) {
-    console.error('Error updating typing indicator:', error)
   }
 }
 

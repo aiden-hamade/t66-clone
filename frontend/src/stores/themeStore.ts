@@ -120,7 +120,6 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
     
     // Save to storage (async) - don't await to keep store method synchronous
     saveThemeToStorage(newTheme, currentUser?.id, 'Custom').catch(error => {
-      console.error('Failed to save theme:', error)
     })
   },
 
@@ -141,7 +140,6 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
     
     // Save to storage (async) - don't await to keep store method synchronous
     saveThemeToStorage(theme.properties, currentUser?.id, theme.name).catch(error => {
-      console.error('Failed to save theme:', error)
     })
   },
 
@@ -162,7 +160,6 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
     
     // Save to storage (async) - don't await to keep store method synchronous
     saveThemeToStorage(defaultTheme, currentUser?.id, 'T3 Theme').catch(error => {
-      console.error('Failed to save theme:', error)
     })
   },
 
@@ -204,15 +201,12 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
   },
 
   setUser: (user) => {
-    console.log('Theme store: Setting user', user?.id, user?.name)
     set({ currentUser: user })
     
     // Load user's theme if available
     if (user) {
-      console.log('Theme store: Loading theme for user', user.id)
       const userTheme = loadThemeFromUser(user)
       if (userTheme) {
-        console.log('Theme store: Found user theme, applying it')
         set({ currentTheme: userTheme })
         
         // Apply theme to CSS
@@ -226,10 +220,8 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
           }
         })
       } else {
-        console.log('Theme store: No user theme found')
       }
     } else {
-      console.log('Theme store: No user provided')
     }
   },
 

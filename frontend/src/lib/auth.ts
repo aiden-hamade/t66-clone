@@ -54,7 +54,6 @@ export const createUserProfile = async (user: FirebaseUser, additionalData?: any
 
       return userData;
     } catch (error) {
-      console.error('Error creating user profile:', error);
       throw error;
     }
   }
@@ -94,7 +93,6 @@ export const signUpWithEmailAndPassword = async (
     const userProfile = await createUserProfile(user, { name });
     return userProfile;
   } catch (error) {
-    console.error('Error signing up:', error);
     throw error;
   }
 };
@@ -112,7 +110,6 @@ export const signInEmailPassword = async (
     const userProfile = await createUserProfile(user);
     return userProfile;
   } catch (error) {
-    console.error('Error signing in:', error);
     throw error;
   }
 };
@@ -122,7 +119,6 @@ export const signOutUser = async (): Promise<void> => {
   try {
     await signOut(auth);
   } catch (error) {
-    console.error('Error signing out:', error);
     throw error;
   }
 };
@@ -132,7 +128,6 @@ export const sendPasswordReset = async (email: string): Promise<void> => {
   try {
     await sendPasswordResetEmail(auth, email);
   } catch (error) {
-    console.error('Error sending password reset:', error);
     throw error;
   }
 };
@@ -166,7 +161,6 @@ export const getCurrentUserProfile = async (): Promise<User | null> => {
     
     return null;
   } catch (error) {
-    console.error('Error getting user profile:', error);
     return null;
   }
 };
@@ -190,7 +184,6 @@ export const updateUserProfile = async (userId: string, updates: Partial<User>):
     
     await updateDoc(userRef, firestoreUpdates);
   } catch (error) {
-    console.error('Error updating user profile:', error);
     throw error;
   }
 };

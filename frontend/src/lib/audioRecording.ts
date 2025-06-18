@@ -73,7 +73,6 @@ export class AudioRecorder {
       source.connect(this.analyser)
 
     } catch (error) {
-      console.error('Error initializing audio recorder:', error)
       throw new Error('Failed to access microphone. Please check your permissions.')
     }
   }
@@ -113,15 +112,12 @@ export class AudioRecorder {
       
       // Only log audio level occasionally to reduce spam
       if (Math.random() < 0.01) { // Log ~1% of the time
-        console.log('🎙️ Audio level:', volume.toFixed(3), 'Threshold:', this.options.silenceThreshold)
       }
 
       if (volume < (this.options.silenceThreshold || 0.02)) {
         // Silence detected (fallback only - user should use End Message button)
         if (!this.silenceTimer) {
-          console.log('🔇 Extended silence detected (30s fallback), starting timer...', 'Volume:', volume.toFixed(3))
           this.silenceTimer = window.setTimeout(() => {
-            console.log('⏰ Extended silence timeout reached (30s) - auto-stopping recording')
             if (this.onSilenceDetected) {
               this.onSilenceDetected()
             }
@@ -130,7 +126,6 @@ export class AudioRecorder {
       } else {
         // Sound detected, reset silence timer
         if (this.silenceTimer) {
-          console.log('🎵 Sound detected, resetting extended silence timer', 'Volume:', volume.toFixed(3))
           clearTimeout(this.silenceTimer)
           this.silenceTimer = null
         }
@@ -290,7 +285,6 @@ export async function requestMicrophonePermission(): Promise<boolean> {
     stream.getTracks().forEach(track => track.stop())
     return true
   } catch (error) {
-    console.error('Microphone permission denied:', error)
     return false
   }
 }

@@ -47,7 +47,6 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
       onUserUpdate(updatedUser)
       setIsEditing(false)
     } catch (error) {
-      console.error('Error updating profile:', error)
       alert('Failed to update profile. Please try again.')
     } finally {
       setIsSaving(false)

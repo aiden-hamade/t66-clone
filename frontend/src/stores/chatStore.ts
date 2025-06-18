@@ -161,7 +161,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
   stopStreaming: () => {
     const { abortController, isStreaming } = get();
     if (isStreaming && abortController) {
-      console.log('Chat Store: Aborting stream');
       abortController.abort();
       set({ 
         abortController: null,
@@ -199,7 +198,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
         set({ activeChat: chats[0].id });
       }
     } catch (error) {
-      console.error('Error loading chats:', error);
       setError('Failed to load chats');
     } finally {
       setLoading(false);
@@ -216,7 +214,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
       const folders = await getUserFolders(userId);
       setFolders(folders);
     } catch (error) {
-      console.error('Error loading folders:', error);
       // Don't show error to user for folders - just set empty array
       setFolders([]);
     }
@@ -238,7 +235,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
       
       return newChat.id;
     } catch (error) {
-      console.error('Error creating chat:', error);
       setError('Failed to create chat');
       throw error;
     } finally {
@@ -290,7 +286,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
       
       return updatedNewChat.id;
     } catch (error) {
-      console.error('Error splitting chat:', error);
       setError('Failed to split chat');
       throw error;
     } finally {
@@ -313,7 +308,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
       );
       setChats(updatedChats);
     } catch (error) {
-      console.error('Error updating chat title:', error);
       setError('Failed to update chat title');
     }
   },
@@ -333,7 +327,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
       );
       setChats(updatedChats);
     } catch (error) {
-      console.error('Error updating chat settings:', error);
       setError('Failed to update chat settings');
     }
   },
@@ -357,7 +350,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
         setActiveChat(newActiveChat);
       }
     } catch (error) {
-      console.error('Error deleting chat:', error);
       setError('Failed to delete chat');
     }
   },
@@ -403,7 +395,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
       );
       setChats(updatedChats);
     } catch (error) {
-      console.error('Error adding user message:', error);
       setError('Failed to send message');
       throw error;
     }
@@ -436,9 +427,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
   // Generate chat title using AI
   generateChatTitle: async (userMessage: string, assistantMessage: string) => {
     try {
-      console.log('generateChatTitle: Starting title generation');
-      console.log('generateChatTitle: User message length:', userMessage.length);
-      console.log('generateChatTitle: Assistant message length:', assistantMessage.length);
       
       const titleMessages: OpenRouterMessage[] = [
         {
@@ -451,12 +439,10 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
         }
       ];
 
-      console.log('generateChatTitle: Sending request to OpenRouter with model openai/gpt-4.1-nano');
       
       // Get user data to access API key
       const { user } = get();
       if (!user?.openRouterApiKey) {
-        console.error('generateChatTitle: No API key available');
         return 'New Chat';
       }
 
@@ -467,19 +453,14 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
         apiKey: user.openRouterApiKey
       });
 
-      console.log('generateChatTitle: Received response:', response);
-      console.log('generateChatTitle: Response choices:', response.choices);
       
       const rawTitle = response.choices[0]?.message?.content;
-      console.log('generateChatTitle: Raw title from API:', rawTitle);
       
       const title = rawTitle?.trim() || 'New Chat';
       const cleanTitle = title.replace(/^["']|["']$/g, ''); // Remove quotes if present
       
-      console.log('generateChatTitle: Final cleaned title:', cleanTitle);
       return cleanTitle;
     } catch (error) {
-      console.error('generateChatTitle: Error generating title:', error);
       return 'New Chat';
     }
   },
@@ -560,7 +541,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
          },
          (reason) => {
            // Handle finish reason for continuation
-           console.log('Continue streaming finish reason:', reason);
          },
          async () => {
            setStreaming(false);
@@ -576,12 +556,10 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
                }
              });
            } catch (error) {
-             console.error('Error saving continued message to Firestore:', error);
            }
          },
          (error) => {
            if ((error as any).name === 'AbortError') {
-             console.log('Continue stream was aborted by user.');
            } else {
              setStreaming(false);
              setError(`Failed to continue message: ${error.message}`);
@@ -591,7 +569,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
          controller.signal
        );
     } catch (error) {
-      console.error('Error continuing message:', error);
       setError(`Failed to continue message: ${(error as Error).message}`);
       setStreaming(false);
     }
@@ -652,7 +629,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
 
       // Update chat settings if model has changed
       if (currentChat.settings.model !== currentModel) {
-        console.log(`Updating chat model from ${currentChat.settings.model} to ${currentModel}`);
         await updateChatSettings(currentActiveChat, {
           ...currentChat.settings,
           model: currentModel,
@@ -683,8 +659,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
       // Check if this is the first message pair (user + assistant)
       // We need to check before adding the user message, so subtract 1
       const isFirstMessage = currentChat.messages.length <= 1; // 0 or 1 message (just the user message we added)
-      console.log('sendMessage: Current chat messages count:', currentChat.messages.length);
-      console.log('sendMessage: isFirstMessage:', isFirstMessage);
 
       // Prepare messages for OpenRouter API
       const openRouterMessages: OpenRouterMessage[] = [
@@ -727,7 +701,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
         
         // Check if this is a reasoning model and immediately show thinking indicator
         if (isThinkingModel(currentModel)) {
-          console.log('Chat Store: Reasoning model detected, showing thinking indicator immediately');
           set({ isThinking: true, thinkingSummary: 'Preparing to analyze your request...' });
         }
         
@@ -743,8 +716,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
         };
         
         const newMessage = await addMessageToChat(currentActiveChat, assistantMessage);
-        console.log('Chat Store: Created new assistant message with ID:', newMessage.id);
-        console.log('Chat Store: New message content:', newMessage.content);
         
         // Update local state
         const { chats: currentChats } = get();
@@ -754,7 +725,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
             : chat
         );
         setChats(updatedChats);
-        console.log('Chat Store: Updated local state with new message');
 
         let accumulatedContent = '';
         let finishReason = '';
@@ -769,9 +739,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
           return;
         }
 
-        console.log('Chat Store: Starting streaming with model:', currentModel);
-        console.log('Chat Store: Web search enabled:', webSearch);
-        console.log('Chat Store: Message count:', openRouterMessages.length);
         
         await createStreamingChatCompletion(
           openRouterMessages,
@@ -783,25 +750,19 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
             webSearch: webSearch
           },
           (chunk) => {
-            console.log('Chat Store: Streaming chunk received:', chunk);
-            console.log('Chat Store: Chunk length:', chunk.length);
             
             // Hide web search indicator when first content chunk arrives
             if (isFirstChunk) {
-              console.log('Chat Store: First chunk received, hiding search indicator');
               setSearching(false);
               isFirstChunk = false;
             }
             
             accumulatedContent += chunk;
-            console.log('Chat Store: Accumulated content length:', accumulatedContent.length);
-            console.log('Chat Store: Accumulated content preview:', accumulatedContent.substring(0, 100) + '...');
             
             updateLastMessage(currentActiveChat, accumulatedContent);
             
             // Save content immediately on first chunk to ensure we don't lose it
             if (accumulatedContent.length === chunk.length) {
-              console.log('Chat Store: Saving first chunk to Firestore immediately');
               updateMessageInChat(currentActiveChat, newMessage.id, {
                 content: accumulatedContent,
                 metadata: {
@@ -809,13 +770,11 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
                   webSearchUsed: webSearch
                 }
               }).catch(error => {
-                console.error('Error saving first chunk to Firestore:', error);
               });
             }
             
             // Save content to Firestore periodically during streaming (every 500 characters)
             if (accumulatedContent.length % 500 === 0 && accumulatedContent.length > 0) {
-              console.log('Chat Store: Saving periodic content to Firestore (length:', accumulatedContent.length, ')');
               updateMessageInChat(currentActiveChat, newMessage.id, {
                 content: accumulatedContent,
                 metadata: {
@@ -823,7 +782,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
                   webSearchUsed: webSearch
                 }
               }).catch(error => {
-                console.error('Error saving streaming content to Firestore:', error);
               });
             }
           },
@@ -831,21 +789,13 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
             finishReason = reason;
           },
           async (webSearchResults) => {
-            console.log('Streaming completed. Final content length:', accumulatedContent.length);
-            console.log('Final content preview:', accumulatedContent.substring(0, 200) + '...');
-            console.log('Finish reason:', finishReason);
-            console.log('Web search results:', webSearchResults);
             setStreaming(false);
             set({ isThinking: false, thinkingSummary: '' });
             
             // Update the message in Firestore with final content
             try {
-              console.log('Saving final message to Firestore...');
-              console.log('Final accumulated content length:', accumulatedContent.length);
-              console.log('Final accumulated content preview:', accumulatedContent.substring(0, 200));
               
               if (!accumulatedContent.trim()) {
-                console.error('WARNING: Final accumulated content is empty!');
               }
               
               // Clean metadata to remove undefined values
@@ -865,11 +815,9 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
                 content: accumulatedContent,
                 metadata: metadata
               });
-              console.log('Final message saved to Firestore successfully');
 
               // Check if we hit token limit and show continue prompt
               if (finishReason === 'length') {
-                console.log('Token limit reached, showing continue prompt');
                 const { setShowContinuePrompt, setContinueMessageId } = get();
                 setShowContinuePrompt(true);
                 setContinueMessageId(newMessage.id);
@@ -877,33 +825,21 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
 
               // Generate title for first message
               if (isFirstMessage && accumulatedContent.trim()) {
-                console.log('Generating title for first message...');
-                console.log('User message:', content);
-                console.log('Assistant message preview:', accumulatedContent.substring(0, 100));
                 try {
                   const generatedTitle = await generateChatTitle(content, accumulatedContent);
-                  console.log('Generated title:', generatedTitle);
                   if (generatedTitle && generatedTitle !== 'New Chat') {
-                    console.log('Updating chat title to:', generatedTitle);
                     await updateChatTitle(currentActiveChat, generatedTitle);
-                    console.log('Chat title updated successfully');
                   } else {
-                    console.log('Generated title was empty or "New Chat", not updating');
                   }
                 } catch (titleError) {
-                  console.error('Error generating title:', titleError);
                 }
               } else {
-                console.log('Not generating title - isFirstMessage:', isFirstMessage, 'content length:', accumulatedContent.trim().length);
               }
             } catch (error) {
-              console.error('Error saving final message to Firestore:', error);
             }
           },
           (error) => {
-            console.error('Streaming error occurred:', error);
             if ((error as any).name === 'AbortError') {
-              console.log('Stream was aborted by user.');
               // State is already reset by stopStreaming
             } else {
               setStreaming(false);
@@ -921,7 +857,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
                     webSearchUsed: webSearch
                   }
                 }).catch(saveError => {
-                  console.error('Error saving content after streaming error:', saveError);
                 });
               }
               
@@ -966,7 +901,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
         // Extract web search results from annotations
         const webSearchResults: Array<{url: string, title: string, content?: string}> = [];
         const annotations = response.choices[0]?.message?.annotations;
-        console.log('Non-streaming response annotations:', annotations);
         if (annotations) {
           for (const annotation of annotations) {
             if (annotation.type === 'url_citation' && annotation.url_citation) {
@@ -976,11 +910,9 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
                 content: annotation.url_citation.content
               };
               webSearchResults.push(result);
-              console.log('Added non-streaming web search result:', result);
             }
           }
         }
-        console.log('Final web search results for non-streaming:', webSearchResults);
         
         const assistantMessage: Omit<Message, 'id'> = {
           content: assistantContent,
@@ -1014,7 +946,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
               await updateChatTitle(currentActiveChat, generatedTitle);
             }
           } catch (titleError) {
-            console.error('Error generating title:', titleError);
           }
         }
         
@@ -1022,7 +953,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
         setSearching(false);
       }
     } catch (error) {
-      console.error('Error sending message:', error);
       setError(`Failed to send message: ${(error as Error).message}`);
       setStreaming(false);
       setSearching(false);
@@ -1044,7 +974,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
       
       return newFolder.id;
     } catch (error) {
-      console.error('Error creating folder:', error);
       setError('Failed to create folder');
       throw error;
     } finally {
@@ -1067,7 +996,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
       );
       setFolders(updatedFolders);
     } catch (error) {
-      console.error('Error updating folder name:', error);
       setError('Failed to update folder name');
     }
   },
@@ -1087,7 +1015,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
       setChats(updatedChats);
       setFolders(updatedFolders);
     } catch (error) {
-      console.error('Error deleting chat folder:', error);
       setError('Failed to delete chat folder');
     }
   },
@@ -1122,7 +1049,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
       setChats(updatedChats);
       setFolders(updatedFolders);
     } catch (error) {
-      console.error('Error moving chat to folder:', error);
       setError('Failed to move chat to folder');
     }
   },
@@ -1155,9 +1081,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
       
       await recorder.initialize();
       set({ audioRecorder: recorder });
-      console.log('Audio recorder initialized successfully with silence detection');
     } catch (error) {
-      console.error('Error initializing audio recorder:', error);
       setError('Failed to access microphone. Please check permissions.');
     }
   },
@@ -1182,17 +1106,14 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
         throw new Error('Audio recorder not available');
       }
       
-      console.log('Starting recording with silence detection');
       
       // Start recording with silence detection callback
       await recorder.startRecording(() => {
-        console.log('Silence detected, stopping recording and transcribing');
         stopRecordingAndTranscribe();
       });
       
       setIsRecording(true);
     } catch (error) {
-      console.error('Error starting recording:', error);
       setError(`Failed to start recording: ${(error as Error).message}`);
     }
   },
@@ -1238,7 +1159,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
       
       // Auto-send the transcribed message and get voice response
       if (transcription.text.trim() && user?.id) {
-        console.log('Auto-sending transcribed message:', transcription.text.trim());
         
         // Get current selected model and system prompt from state
         const { sendMessage, synthesizeAndPlayResponse } = get();
@@ -1264,7 +1184,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
             
             // If the last message is from assistant and has content, synthesize it
             if (lastMessage.role === 'assistant' && lastMessage.content) {
-              console.log('🔊 Auto-playing voice response for voice message');
               await synthesizeAndPlayResponse(lastMessage.content);
             }
           }
@@ -1272,7 +1191,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
       }
       
     } catch (error) {
-      console.error('Error during transcription:', error);
       setError(`Transcription failed: ${(error as Error).message}`);
       setIsTranscribing(false);
     }
@@ -1293,7 +1211,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
     }
     
     if (!text.trim()) {
-      console.log('No text to synthesize');
       return;
     }
     
@@ -1301,8 +1218,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
       setError(null);
       setIsSynthesizing(true);
       
-      console.log('Synthesizing speech for text:', text.substring(0, 100) + '...');
-      console.log('Using voice:', selectedVoice);
       
       // Synthesize speech
       const audioBlob = await synthesizeSpeech(text, user.openaiApiKey, {
@@ -1311,7 +1226,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
         responseFormat: 'mp3'
       });
       
-      console.log('Speech synthesis completed, audio size:', audioBlob.size, 'bytes');
       setIsSynthesizing(false);
       setIsPlayingAudio(true);
       
@@ -1319,19 +1233,16 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
       await playAudioBlob(audioBlob);
       
       setIsPlayingAudio(false);
-      console.log('Audio playback completed');
       
       // Auto-start recording again for the next user input (if still in voice mode)
       const { inputMode, startRecording } = get();
       if (inputMode === 'voice') {
-        console.log('🎤 Auto-starting recording after AI response');
         setTimeout(() => {
           startRecording();
         }, 500); // Small delay to ensure audio cleanup
       }
       
     } catch (error) {
-      console.error('Error during speech synthesis:', error);
       setError(`Speech synthesis failed: ${(error as Error).message}`);
       setIsSynthesizing(false);
       setIsPlayingAudio(false);
@@ -1350,7 +1261,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
         isSynthesizing: false,
         isPlayingAudio: false
       });
-      console.log('Audio recorder cleaned up');
     }
   },
 
@@ -1406,7 +1316,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
       await updateMessageInChat(activeChat, messageId, updatedMessage);
       
     } catch (error) {
-      console.error('Error editing message:', error);
       setError('Failed to edit message');
     }
   },
@@ -1547,7 +1456,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
           }
         },
         (reason: string) => {
-          console.log('Streaming finished:', reason);
         },
         async (searchResults) => {
           webSearchResults = searchResults;
@@ -1577,7 +1485,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
           });
         },
         (error: Error) => {
-          console.error('Streaming error:', error);
           setError(`Failed to generate response: ${error.message}`);
           set({ 
             isStreaming: false, 
@@ -1596,7 +1503,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
       );
       
     } catch (error) {
-      console.error('Error regenerating from message:', error);
       setError('Failed to regenerate response');
       set({ 
         isStreaming: false, 

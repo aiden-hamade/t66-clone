@@ -143,7 +143,6 @@ function App() {
   // Auto-switch to text mode if current model doesn't support voice mode
   useEffect(() => {
     if (inputMode === 'voice' && !isVoiceModeSupported(selectedModel)) {
-      console.log(`Model ${selectedModel} does not support voice mode, switching to text mode`)
       setInputMode('text')
     }
   }, [selectedModel, inputMode, setInputMode])
@@ -197,7 +196,6 @@ function App() {
       
       await sendMessage(user.id, currentMessage, true, processedAttachments, webSearchEnabled, selectedModel, systemPrompt)
     } catch (error) {
-      console.error('Error sending message:', error)
       // Don't clear attachments on error so user can retry
     }
   }
@@ -212,7 +210,6 @@ function App() {
     try {
       await deleteChat(chatId)
     } catch (error) {
-      console.error('Error deleting chat:', error)
     }
   }
 
@@ -222,7 +219,6 @@ function App() {
     try {
       await splitChat(user.id, chatId)
     } catch (error) {
-      console.error('Error splitting chat:', error)
     }
   }
 
@@ -239,7 +235,6 @@ function App() {
       try {
         await updateChatTitle(renamingChat, renameValue.trim())
       } catch (error) {
-        console.error('Error updating chat title:', error)
       }
     }
     setRenamingChat(null)
@@ -255,7 +250,6 @@ function App() {
     try {
       await authSignOut()
     } catch (error) {
-      console.error('Error signing out:', error)
     }
   }
 
@@ -267,7 +261,6 @@ function App() {
       setCreatingFolder(false)
       setNewFolderName('')
     } catch (error) {
-      console.error('Error creating folder:', error)
     }
   }
 
@@ -275,7 +268,6 @@ function App() {
     try {
       await deleteChatFolder(folderId)
     } catch (error) {
-      console.error('Error deleting folder:', error)
     }
   }
 
@@ -283,7 +275,6 @@ function App() {
     try {
       await toggleFolderExpanded(folderId)
     } catch (error) {
-      console.error('Error toggling folder:', error)
     }
   }
 
@@ -291,7 +282,6 @@ function App() {
     try {
       await moveChatToFolderAction(chatId, folderId)
     } catch (error) {
-      console.error('Error moving chat to folder:', error)
     }
   }
 
@@ -336,7 +326,6 @@ function App() {
       setShareUrl(shareUrl)
       setShowShareModal(true)
     } catch (error) {
-      console.error('Error sharing chat:', error)
       alert('Failed to create share link')
     }
   }
@@ -407,27 +396,21 @@ function App() {
     
     // Auto-start recording when switching to voice mode
     if (mode === 'voice') {
-      console.log('🎤 Auto-starting recording in voice mode...')
       setTimeout(() => {
-        console.log('🎤 Triggering auto-start recording')
         handleStartRecording()
       }, 200) // Small delay to ensure mode change is processed
     }
   }
 
   const handleStartRecording = async () => {
-    console.log('🎤 handleStartRecording called')
     if (!user?.openaiApiKey) {
       alert('OpenAI API key is required for voice mode. Please add your key in Settings.')
       return
     }
     
     try {
-      console.log('🎤 Calling startRecording from chat store')
       await startRecording()
-      console.log('🎤 startRecording completed')
     } catch (error) {
-      console.error('Error starting recording:', error)
     }
   }
 
@@ -435,7 +418,6 @@ function App() {
     try {
       await stopRecordingAndTranscribe()
     } catch (error) {
-      console.error('Error stopping recording:', error)
     }
   }
 
@@ -452,7 +434,6 @@ function App() {
       setShowEditModal(false)
       setEditingMessage(null)
     } catch (error) {
-      console.error('Error saving edited message:', error)
     }
   }
 
@@ -464,7 +445,6 @@ function App() {
       setShowEditModal(false)
       setEditingMessage(null)
     } catch (error) {
-      console.error('Error regenerating message:', error)
     }
   }
 
