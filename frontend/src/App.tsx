@@ -854,20 +854,20 @@ function App() {
             <div className={`${mobileView === 'chat' ? 'block' : 'hidden'} md:block flex-1 flex flex-col`}>
               {/* Chat Header */}
               <div className="p-4 border-b border-theme bg-theme-chat-header">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-lg font-semibold text-theme-primary">{currentChatData?.title || 'New Chat'}</h2>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <h2 className="text-lg font-semibold text-theme-primary truncate">{currentChatData?.title || 'New Chat'}</h2>
                     <p className="text-sm text-theme-secondary">
                       {currentChatData?.messages.length || 0} messages
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
                     {currentChatData && (
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={handleShareChat}
-                        className="flex items-center gap-2"
+                        className="flex items-center justify-center gap-2 w-full sm:w-auto"
                       >
                         <Share2 size={14} />
                         <span className="text-xs">Share</span>
@@ -877,10 +877,10 @@ function App() {
                       variant="outline"
                       size="sm"
                       onClick={() => setShowModelSelector(true)}
-                      className="flex items-center gap-2"
+                      className="flex items-center justify-center gap-2 w-full sm:w-auto"
                     >
-                      <span className="text-xs">{getModelName(selectedModel)}</span>
-                      <ChevronDown size={14} />
+                      <span className="text-xs truncate">{getModelName(selectedModel)}</span>
+                      <ChevronDown size={14} className="flex-shrink-0" />
                     </Button>
                   </div>
                 </div>
@@ -1152,11 +1152,13 @@ function App() {
                   </div>
                 )}
                 
-                <div className="flex gap-2">
-                  <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
+                  {/* Action buttons row on mobile, inline on desktop */}
+                  <div className="flex items-center justify-center sm:justify-start gap-2 order-2 sm:order-1">
                     <div className="relative group">
-                      <Button variant="ghost" size="icon" className="h-12 w-12">
-                        <Info size={18} />
+                      <Button variant="ghost" size="icon" className="h-10 w-10 sm:h-12 sm:w-12">
+                        <Info size={16} className="sm:hidden" />
+                        <Info size={18} className="hidden sm:block" />
                       </Button>
                       {/* Larger invisible hover area */}
                       <div className="absolute bottom-0 left-0 w-full h-full -mb-4 -ml-2 -mr-2 group-hover:pointer-events-auto pointer-events-none"></div>
@@ -1206,11 +1208,12 @@ function App() {
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        className="h-12 w-12"
+                        className="h-10 w-10 sm:h-12 sm:w-12"
                         onClick={() => document.getElementById('file-input')?.click()}
                         disabled={isStreaming}
                       >
-                        <Paperclip size={18} />
+                        <Paperclip size={16} className="sm:hidden" />
+                        <Paperclip size={18} className="hidden sm:block" />
                       </Button>
                     </div>
                     
@@ -1219,7 +1222,7 @@ function App() {
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        className={`h-12 w-12 transition-colors ${
+                        className={`h-10 w-10 sm:h-12 sm:w-12 transition-colors ${
                           webSearchEnabled 
                             ? 'bg-theme-accent text-theme-button-primary' 
                             : 'text-theme-secondary hover:text-theme-primary'
@@ -1227,7 +1230,8 @@ function App() {
                         onClick={() => setWebSearchEnabled(!webSearchEnabled)}
                         disabled={isStreaming}
                       >
-                        <Globe size={18} />
+                        <Globe size={16} className="sm:hidden" />
+                        <Globe size={18} className="hidden sm:block" />
                       </Button>
                       <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 
                 bg-black border border-theme-border rounded-lg shadow-lg shadow-black/20 
@@ -1242,40 +1246,44 @@ function App() {
                       </div>
                     </div>
                   </div>
-                  <textarea
-                    value={currentMessage}
-                    onChange={(e) => setCurrentMessage(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault()
-                        handleSendMessage()
-                      }
-                    }}
-                    onPaste={handlePaste}
-                    placeholder="Type your message or paste images/PDFs..."
-                    className="flex-1 p-3 rounded-lg bg-theme-chat-input border border-theme-chat-input text-theme-input focus:outline-none focus:ring-2 focus:ring-theme-accent resize-none min-h-[48px] max-h-32"
-                    disabled={isStreaming || (inputMode === 'voice' && (isRecording || isTranscribing))}
-                    rows={1}
-                    style={{
-                      height: 'auto',
-                      minHeight: '48px'
-                    }}
-                    onInput={(e) => {
-                      const target = e.target as HTMLTextAreaElement
-                      target.style.height = 'auto'
-                      target.style.height = Math.min(target.scrollHeight, 128) + 'px'
-                    }}
-                  />
-                  <VoiceModeButton
-                    mode={inputMode}
-                    onModeChange={handleModeChange}
-                    onSend={handleSendMessage}
-                    onStartRecording={handleStartRecording}
-                    onStopRecording={handleStopRecording}
-                    isRecording={isRecording}
-                    isDisabled={isStreaming || isTranscribing || isSynthesizing}
-                    canSendMessage={!!(currentMessage.trim() || attachments.length > 0)}
-                  />
+
+                  {/* Text input and send button row */}
+                  <div className="flex gap-2 flex-1 order-1 sm:order-2">
+                    <textarea
+                      value={currentMessage}
+                      onChange={(e) => setCurrentMessage(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault()
+                          handleSendMessage()
+                        }
+                      }}
+                      onPaste={handlePaste}
+                      placeholder="Type your message or paste images/PDFs..."
+                      className="flex-1 p-3 rounded-lg bg-theme-chat-input border border-theme-chat-input text-theme-input focus:outline-none focus:ring-2 focus:ring-theme-accent resize-none min-h-[48px] max-h-32"
+                      disabled={isStreaming || (inputMode === 'voice' && (isRecording || isTranscribing))}
+                      rows={1}
+                      style={{
+                        height: 'auto',
+                        minHeight: '48px'
+                      }}
+                      onInput={(e) => {
+                        const target = e.target as HTMLTextAreaElement
+                        target.style.height = 'auto'
+                        target.style.height = Math.min(target.scrollHeight, 128) + 'px'
+                      }}
+                    />
+                    <VoiceModeButton
+                      mode={inputMode}
+                      onModeChange={handleModeChange}
+                      onSend={handleSendMessage}
+                      onStartRecording={handleStartRecording}
+                      onStopRecording={handleStopRecording}
+                      isRecording={isRecording}
+                      isDisabled={isStreaming || isTranscribing || isSynthesizing}
+                      canSendMessage={!!(currentMessage.trim() || attachments.length > 0)}
+                    />
+                  </div>
                 </div>
                 {isStreaming && (
                   <div className="mt-2 text-center">
