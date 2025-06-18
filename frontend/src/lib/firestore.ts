@@ -10,11 +10,9 @@ import {
   where,
   orderBy,
   limit,
-  startAfter,
   Timestamp,
   setDoc,
   type DocumentSnapshot,
-  type QuerySnapshot,
   writeBatch
 } from 'firebase/firestore';
 import { db } from './firebase';
@@ -215,8 +213,8 @@ export const addMessageToChat = async (
     // Convert message timestamp to Firestore timestamp for storage and clean undefined fields
     const messageForStorage = Object.fromEntries(
       Object.entries({
-        ...newMessage,
-        timestamp: Timestamp.fromDate(newMessage.timestamp)
+      ...newMessage,
+      timestamp: Timestamp.fromDate(newMessage.timestamp)
       }).filter(([_, value]) => value !== undefined)
     );
     
@@ -265,10 +263,10 @@ export const updateMessageInChat = async (
         // Convert timestamp to Firestore timestamp for storage and clean undefined fields
         return Object.fromEntries(
           Object.entries({
-            ...updatedMessage,
-            timestamp: updatedMessage.timestamp instanceof Date 
-              ? Timestamp.fromDate(updatedMessage.timestamp)
-              : updatedMessage.timestamp
+          ...updatedMessage,
+          timestamp: updatedMessage.timestamp instanceof Date 
+            ? Timestamp.fromDate(updatedMessage.timestamp)
+            : updatedMessage.timestamp
           }).filter(([_, value]) => value !== undefined)
         );
       }
@@ -276,10 +274,10 @@ export const updateMessageInChat = async (
       // Ensure existing messages also have proper timestamps for storage and clean undefined fields
       return Object.fromEntries(
         Object.entries({
-          ...msg,
-          timestamp: msg.timestamp instanceof Date 
-            ? Timestamp.fromDate(msg.timestamp)
-            : msg.timestamp
+        ...msg,
+        timestamp: msg.timestamp instanceof Date 
+          ? Timestamp.fromDate(msg.timestamp)
+          : msg.timestamp
         }).filter(([_, value]) => value !== undefined)
       );
     });
@@ -451,7 +449,7 @@ export const updateUser = async (userId: string, updates: Partial<User>): Promis
     console.error('Error updating user:', error);
     throw error;
   }
-};
+}; 
 
 // Folder management functions
 export const createFolder = async (

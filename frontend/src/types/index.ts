@@ -7,6 +7,7 @@ export interface User {
   verified: boolean
   plan: 'free' | 'pro' | 'enterprise'
   openRouterApiKey?: string
+  openaiApiKey?: string
   selectedTheme?: string // Theme preset name (e.g., 'T3 Theme', 'Cyberpunk')
   customTheme?: any // Custom theme properties if user has customized
   createdAt: Date

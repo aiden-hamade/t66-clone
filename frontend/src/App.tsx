@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { Send, MessageSquare, Settings, User, Plus, MoreVertical, Trash2, ChevronDown, Edit2, LogOut, Info, Copy, GitBranch, Folder, FolderPlus, ChevronRight, Share2, Paperclip, X, FileText, Globe } from 'lucide-react'
+import { MessageSquare, Settings, User, Plus, MoreVertical, Trash2, ChevronDown, Edit2, LogOut, Info, Copy, GitBranch, Folder, FolderPlus, ChevronRight, Share2, Paperclip, X, FileText, Globe, Mic, Volume2, Edit3 } from 'lucide-react'
 import './App.css'
 
 // Components
@@ -12,6 +12,9 @@ import { SettingsModal } from './components/settings/SettingsModal'
 import { ModelSelectorModal } from './components/settings/ModelSelectorModal'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { SharedChatView } from './components/chat/SharedChatView'
+import { VoiceModeButton, type InputMode } from './components/ui/VoiceModeButton'
+import { ShareModal } from './components/ui/ShareModal'
+import { EditMessageModal } from './components/ui/EditMessageModal'
 
 // Stores
 import { useAuthStore } from './stores/authStore'
@@ -21,6 +24,7 @@ import systemPromptTemplate from './assets/system_prompt.txt?raw'
 
 // Utils
 import { estimateTokenCount } from './lib/openrouter'
+import { isVoiceModeSupported } from './lib/openai'
 
 // Types
 import type { ChatSettings } from './types'
@@ -36,6 +40,10 @@ function App() {
   const [attachments, setAttachments] = useState<File[]>([])
   const [systemPrompt, setSystemPrompt] = useState('')
   const [webSearchEnabled, setWebSearchEnabled] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingMessage, setEditingMessage] = useState<{id: string, content: string, model: string} | null>(null)
+  const [shareUrl, setShareUrl] = useState('')
 
   // Auth store
   const { user, signOut: authSignOut, setUser: setAuthUser } = useAuthStore()
@@ -49,7 +57,6 @@ function App() {
     folders,
     activeChat,
     currentMessage,
-    isLoading,
     isStreaming,
     isSearching,
     isThinking,
@@ -57,6 +64,12 @@ function App() {
     error,
     showContinuePrompt,
     continueMessageId,
+    inputMode,
+    isRecording,
+    isTranscribing,
+    isSynthesizing,
+    isPlayingAudio,
+    autoPlayResponses,
     setActiveChat,
     setCurrentMessage,
     setUser,
@@ -64,7 +77,6 @@ function App() {
     loadUserFolders,
     createNewChat,
     createNewFolder,
-    updateFolderName,
     deleteChatFolder,
     toggleFolderExpanded,
     moveChatToFolderAction,
@@ -73,12 +85,16 @@ function App() {
     deleteChat,
     sendMessage,
     continueMessage,
-    setShowContinuePrompt,
-    setContinueMessageId,
     clearError,
     getChatById,
-    getOriginalChatTitle,
-    stopStreaming
+    stopStreaming,
+    setInputMode,
+    startRecording,
+    stopRecordingAndTranscribe,
+    synthesizeAndPlayResponse,
+    cleanupAudioRecorder,
+    editMessage,
+    regenerateFromMessage
   } = useChatStore()
 
   const currentChatData = chats.find(chat => chat.id === activeChat)
@@ -115,6 +131,31 @@ function App() {
       loadUserFolders(user.id)
     }
   }, [user, setUser, setThemeUser, loadUserChats, loadUserFolders])
+
+  // Cleanup audio recorder on unmount
+  useEffect(() => {
+    return () => {
+      cleanupAudioRecorder()
+    }
+  }, [cleanupAudioRecorder])
+
+  // Auto-switch to text mode if current model doesn't support voice mode
+  useEffect(() => {
+    if (inputMode === 'voice' && !isVoiceModeSupported(selectedModel)) {
+      console.log(`Model ${selectedModel} does not support voice mode, switching to text mode`)
+      setInputMode('text')
+    }
+  }, [selectedModel, inputMode, setInputMode])
+
+  // Auto-play responses when enabled and in voice mode
+  useEffect(() => {
+    if (autoPlayResponses && inputMode === 'voice' && currentChatData?.messages) {
+      const lastMessage = currentChatData.messages[currentChatData.messages.length - 1]
+      if (lastMessage?.role === 'assistant' && lastMessage.content && !isStreaming && !isSynthesizing && !isPlayingAudio) {
+        synthesizeAndPlayResponse(lastMessage.content)
+      }
+    }
+  }, [autoPlayResponses, inputMode, currentChatData?.messages, isStreaming, isSynthesizing, isPlayingAudio, synthesizeAndPlayResponse])
 
   const handleSendMessage = async () => {
     if ((!currentMessage.trim() && attachments.length === 0) || !user?.id || isStreaming) return
@@ -291,12 +332,11 @@ function App() {
       const shareId = await shareChat(currentChatData.id)
       const shareUrl = `${window.location.origin}/chats?${shareId}`
       
-      await navigator.clipboard.writeText(shareUrl)
-      alert('Share link copied to clipboard!')
-      console.log('Share link copied to clipboard:', shareUrl)
+      setShareUrl(shareUrl)
+      setShowShareModal(true)
     } catch (error) {
       console.error('Error sharing chat:', error)
-      alert('Failed to copy share link')
+      alert('Failed to create share link')
     }
   }
 
@@ -354,17 +394,92 @@ function App() {
     })
   }
 
+  // Voice mode handlers
+  const handleModeChange = (mode: InputMode) => {
+    // Check if voice mode is supported for current model
+    if (mode === 'voice' && !isVoiceModeSupported(selectedModel)) {
+      alert(`Voice mode is not supported for ${getModelName(selectedModel)}. Please select a non-reasoning model to use voice mode.`)
+      return
+    }
+    
+    setInputMode(mode)
+    
+    // Auto-start recording when switching to voice mode
+    if (mode === 'voice') {
+      console.log('🎤 Auto-starting recording in voice mode...')
+      setTimeout(() => {
+        console.log('🎤 Triggering auto-start recording')
+        handleStartRecording()
+      }, 200) // Small delay to ensure mode change is processed
+    }
+  }
+
+  const handleStartRecording = async () => {
+    console.log('🎤 handleStartRecording called')
+    if (!user?.openaiApiKey) {
+      alert('OpenAI API key is required for voice mode. Please add your key in Settings.')
+      return
+    }
+    
+    try {
+      console.log('🎤 Calling startRecording from chat store')
+      await startRecording()
+      console.log('🎤 startRecording completed')
+    } catch (error) {
+      console.error('Error starting recording:', error)
+    }
+  }
+
+  const handleStopRecording = async () => {
+    try {
+      await stopRecordingAndTranscribe()
+    } catch (error) {
+      console.error('Error stopping recording:', error)
+    }
+  }
+
+  const handleEditMessage = (messageId: string, content: string, model: string) => {
+    setEditingMessage({ id: messageId, content, model })
+    setShowEditModal(true)
+  }
+
+  const handleSaveEditedMessage = async (newContent: string, newModel: string) => {
+    if (!editingMessage) return
+    
+    try {
+      await editMessage(editingMessage.id, newContent, newModel)
+      setShowEditModal(false)
+      setEditingMessage(null)
+    } catch (error) {
+      console.error('Error saving edited message:', error)
+    }
+  }
+
+  const handleRegenerateMessage = async (newContent: string, newModel: string) => {
+    if (!editingMessage) return
+    
+    try {
+      await regenerateFromMessage(editingMessage.id, newContent, newModel)
+      setShowEditModal(false)
+      setEditingMessage(null)
+    } catch (error) {
+      console.error('Error regenerating message:', error)
+    }
+  }
+
+
+
   return (
     <Router>
       <Routes>
         <Route path="/chats" element={<SharedChatView />} />
         <Route path="/*" element={
-          <ProtectedRoute>
+      <ProtectedRoute>
         <div className="min-h-screen bg-theme-background">
           <div className="flex h-screen bg-theme-background text-theme-primary">
-            {/* Sidebar */}
-            <div className="w-64 bg-theme-surface border-r border-theme flex flex-col">
-              {/* Header */}
+                          {/* Sidebar */}
+              <div className="w-64 bg-theme-surface border-r border-theme flex flex-col">
+                              {/* Header */}
               <div className="p-3 border-b border-theme">
                 <div className="flex flex-col items-center">
                   <img 
@@ -373,7 +488,7 @@ function App() {
                     className="h-8 w-auto mb-1"
                   />
                   <p className="text-xs text-theme-secondary text-center">A T3 Chat Clone</p>
-                </div>
+                  </div>
               </div>
 
               {/* New Chat Button */}
@@ -480,42 +595,42 @@ function App() {
                       {folder.isExpanded && (
                         <div className="ml-4 space-y-1">
                           {folderChats.map(chat => (
-                            <div
-                              key={chat.id}
+                  <div
+                    key={chat.id}
                               draggable
                               onDragStart={(e) => handleDragStart(e, chat.id)}
                               className={`group relative flex items-center p-2 rounded-md transition-all duration-200 cursor-move ${
-                                activeChat === chat.id 
+                      activeChat === chat.id 
                                   ? 'bg-theme-sidebar-active text-theme-primary shadow-sm' 
-                                  : 'hover:bg-theme-sidebar-hover'
-                              }`}
-                            >
-                              {renamingChat === chat.id ? (
-                                <div className="flex-1 flex items-center gap-2">
+                        : 'hover:bg-theme-sidebar-hover'
+                    }`}
+                  >
+                    {renamingChat === chat.id ? (
+                      <div className="flex-1 flex items-center gap-2">
                                   {chat.isSplit ? (
                                     <GitBranch size={14} className="text-theme-secondary flex-shrink-0" />
                                   ) : (
                                     <MessageSquare size={14} className="text-theme-secondary flex-shrink-0" />
                                   )}
-                                  <input
-                                    type="text"
-                                    value={renameValue}
-                                    onChange={(e) => setRenameValue(e.target.value)}
-                                    onKeyPress={(e) => {
-                                      if (e.key === 'Enter') {
-                                        finishRenaming()
-                                      } else if (e.key === 'Escape') {
-                                        cancelRenaming()
-                                      }
-                                    }}
-                                    onBlur={finishRenaming}
+                        <input
+                          type="text"
+                          value={renameValue}
+                          onChange={(e) => setRenameValue(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              finishRenaming()
+                            } else if (e.key === 'Escape') {
+                              cancelRenaming()
+                            }
+                          }}
+                          onBlur={finishRenaming}
                                     className="flex-1 px-2 py-1 text-xs bg-theme-input border border-theme-input text-theme-input rounded focus:outline-none focus:ring-1 focus:ring-theme-accent"
-                                    autoFocus
-                                  />
-                                </div>
-                              ) : (
-                                <button
-                                  onClick={() => setActiveChat(chat.id)}
+                          autoFocus
+                        />
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setActiveChat(chat.id)}
                                   className="flex-1 text-left min-w-0 flex items-start gap-2"
                                 >
                                   {chat.isSplit ? (
@@ -559,8 +674,8 @@ function App() {
                                     <DropdownItem 
                                       onClick={() => handleDeleteChat(chat.id)}
                                       variant="destructive"
-                                    >
-                                      <div className="flex items-center gap-2">
+                      >
+                        <div className="flex items-center gap-2">
                                         <Trash2 size={12} />
                                         <span className="text-xs">Delete</span>
                                       </div>
@@ -637,45 +752,45 @@ function App() {
                               {chat.messages.length} message{chat.messages.length !== 1 ? 's' : ''}
                             </div>
                           </div>
-                        </button>
-                      )}
-                      
+                      </button>
+                    )}
+                    
                       {/* Chat Menu */}
-                      {renamingChat !== chat.id && (
+                    {renamingChat !== chat.id && (
                         <div className="opacity-0 group-hover:opacity-100 transition-opacity ml-1">
-                          <Dropdown
-                            trigger={
+                        <Dropdown
+                          trigger={
                               <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-theme-hover-surface">
                                 <MoreVertical size={12} />
-                              </Button>
-                            }
-                          >
-                            <DropdownItem onClick={() => startRenaming(chat.id)}>
-                              <div className="flex items-center gap-2">
+                            </Button>
+                          }
+                        >
+                          <DropdownItem onClick={() => startRenaming(chat.id)}>
+                            <div className="flex items-center gap-2">
                                 <Edit2 size={12} />
                                 <span className="text-xs">Rename</span>
-                              </div>
-                            </DropdownItem>
-                            <DropdownItem onClick={() => handleSplitChat(chat.id)}>
-                              <div className="flex items-center gap-2">
+                            </div>
+                          </DropdownItem>
+                          <DropdownItem onClick={() => handleSplitChat(chat.id)}>
+                            <div className="flex items-center gap-2">
                                 <Copy size={12} />
                                 <span className="text-xs">Split Chat</span>
-                              </div>
-                            </DropdownItem>
-                            <DropdownItem 
-                              onClick={() => handleDeleteChat(chat.id)}
-                              variant="destructive"
-                            >
-                              <div className="flex items-center gap-2">
+                            </div>
+                          </DropdownItem>
+                          <DropdownItem 
+                            onClick={() => handleDeleteChat(chat.id)}
+                            variant="destructive"
+                          >
+                            <div className="flex items-center gap-2">
                                 <Trash2 size={12} />
                                 <span className="text-xs">Delete</span>
-                              </div>
-                            </DropdownItem>
-                          </Dropdown>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                            </div>
+                          </DropdownItem>
+                        </Dropdown>
+                      </div>
+                    )}
+                  </div>
+                ))}
                 </div>
               </div>
 
@@ -750,31 +865,74 @@ function App() {
                 </div>
               </div>
 
-              {/* Web Search Indicator - Above Chat */}
-              {isSearching && webSearchEnabled && (
+              {/* Status Indicators - Above Chat */}
+              {(isSearching && webSearchEnabled) || isTranscribing || isSynthesizing ? (
                 <div className="bg-theme-surface/95 backdrop-blur-sm border-b border-theme py-3 px-4">
                   <div className="flex items-center justify-center">
                     <div className="flex items-center gap-3">
-                      <div className="relative">
-                        {/* Outer rotating ring */}
-                        <div className="w-6 h-6 border-2 border-theme-accent/30 border-t-theme-accent rounded-full animate-spin"></div>
-                        {/* Inner pulsing globe */}
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <Globe size={12} className="text-theme-accent animate-pulse" />
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-theme-accent">Searching Web</span>
-                        <div className="flex space-x-1">
-                          <div className="w-1 h-1 bg-theme-accent rounded-full animate-bounce"></div>
-                          <div className="w-1 h-1 bg-theme-accent rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                          <div className="w-1 h-1 bg-theme-accent rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                        </div>
-                      </div>
+                      {/* Web Search Indicator */}
+                      {isSearching && webSearchEnabled && (
+                        <>
+                          <div className="relative">
+                            <div className="w-6 h-6 border-2 border-theme-accent/30 border-t-theme-accent rounded-full animate-spin"></div>
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <Globe size={12} className="text-theme-accent animate-pulse" />
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-theme-accent">Searching Web</span>
+                            <div className="flex space-x-1">
+                              <div className="w-1 h-1 bg-theme-accent rounded-full animate-bounce"></div>
+                              <div className="w-1 h-1 bg-theme-accent rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                              <div className="w-1 h-1 bg-theme-accent rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                      
+                      {/* Transcription Indicator */}
+                      {isTranscribing && (
+                        <>
+                          <div className="relative">
+                            <div className="w-6 h-6 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <Mic size={12} className="text-blue-500 animate-pulse" />
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-blue-500">Transcribing Audio</span>
+                            <div className="flex space-x-1">
+                              <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce"></div>
+                              <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                              <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                      
+                      {/* Speech Synthesis Indicator */}
+                      {isSynthesizing && (
+                        <>
+                          <div className="relative">
+                            <div className="w-6 h-6 border-2 border-green-500/30 border-t-green-500 rounded-full animate-spin"></div>
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <Volume2 size={12} className="text-green-500 animate-pulse" />
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-green-500">Generating Speech</span>
+                            <div className="flex space-x-1">
+                              <div className="w-1 h-1 bg-green-500 rounded-full animate-bounce"></div>
+                              <div className="w-1 h-1 bg-green-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                              <div className="w-1 h-1 bg-green-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
-              )}
+              ) : null}
 
               {/* Messages */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -787,10 +945,10 @@ function App() {
                 {currentChatData?.messages.map(message => (
                   <div
                     key={message.id}
-                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} group`}
                   >
                     <div
-                      className={`max-w-[70%] p-4 rounded-lg message-enter ${
+                      className={`max-w-[70%] p-4 rounded-lg message-enter relative ${
                         message.role === 'user'
                           ? 'bg-theme-chat-user text-theme-button-primary'
                           : 'bg-theme-chat-assistant border border-theme'
@@ -830,6 +988,7 @@ function App() {
                       ) : (
                         <MarkdownRenderer content={message.content} />
                       )}
+
                       <p className="text-xs mt-2 flex items-center gap-2">
                         <span className="text-theme-secondary">{message.timestamp instanceof Date ? message.timestamp.toLocaleTimeString() : new Date(message.timestamp).toLocaleTimeString()}</span>
                         {message.role === 'assistant' && message.metadata?.model && (
@@ -875,6 +1034,20 @@ function App() {
                         )}
                       </p>
                     </div>
+                    
+                    {/* Edit button below user messages */}
+                    {message.role === 'user' && (
+                      <div className="flex justify-end mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 text-theme-secondary hover:text-theme-primary hover:bg-theme-hover-surface"
+                          onClick={() => handleEditMessage(message.id, message.content, message.metadata?.model || selectedModel)}
+                        >
+                          <Edit3 size={12} />
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 ))}
                 
@@ -885,7 +1058,7 @@ function App() {
                   <div className="bg-theme-button-secondary border border-theme text-theme-accent px-4 py-3 rounded-lg text-sm">
                     The {getModelName(currentChatData?.settings.model || 'AI')} reached its response token limit. Would you like to{' '}
                     <button
-                      onClick={() => continueMessage(user?.id || '')}
+                      onClick={() => continueMessage()}
                       className="underline hover:no-underline font-medium text-theme-link"
                       disabled={isStreaming}
                     >
@@ -1047,7 +1220,7 @@ function App() {
                     onPaste={handlePaste}
                     placeholder="Type your message or paste images/PDFs..."
                     className="flex-1 p-3 rounded-lg bg-theme-chat-input border border-theme-chat-input text-theme-input focus:outline-none focus:ring-2 focus:ring-theme-accent resize-none min-h-[48px] max-h-32"
-                    disabled={isStreaming}
+                    disabled={isStreaming || (inputMode === 'voice' && (isRecording || isTranscribing))}
                     rows={1}
                     style={{
                       height: 'auto',
@@ -1059,14 +1232,16 @@ function App() {
                       target.style.height = Math.min(target.scrollHeight, 128) + 'px'
                     }}
                   />
-                  <Button
-                    onClick={handleSendMessage}
-                    disabled={(!currentMessage.trim() && attachments.length === 0) || isStreaming}
-                    size="icon"
-                    className="h-12 w-12 bg-theme-button-primary text-theme-button-primary hover:opacity-90"
-                  >
-                    <Send size={18} />
-                  </Button>
+                  <VoiceModeButton
+                    mode={inputMode}
+                    onModeChange={handleModeChange}
+                    onSend={handleSendMessage}
+                    onStartRecording={handleStartRecording}
+                    onStopRecording={handleStopRecording}
+                    isRecording={isRecording}
+                    isDisabled={isStreaming || isTranscribing || isSynthesizing}
+                    canSendMessage={!!(currentMessage.trim() || attachments.length > 0)}
+                  />
                 </div>
                 {isStreaming && (
                   <div className="mt-2 text-center">
@@ -1081,6 +1256,8 @@ function App() {
                     </Button>
                   </div>
                 )}
+                
+                
                 <p className="text-xs text-theme-secondary mt-2 text-center">
                   T66 can make mistakes. Consider checking important information.
                 </p>
@@ -1106,8 +1283,30 @@ function App() {
             selectedModel={selectedModel}
             onModelSelect={setSelectedModel}
           />
+
+          {/* Share Modal */}
+          <ShareModal
+            isOpen={showShareModal}
+            onClose={() => setShowShareModal(false)}
+            shareUrl={shareUrl}
+            title="Share Chat"
+            description="Share this conversation with others. They'll be able to view the chat but not edit it."
+          />
+
+          {/* Edit Message Modal */}
+          <EditMessageModal
+            isOpen={showEditModal}
+            onClose={() => {
+              setShowEditModal(false)
+              setEditingMessage(null)
+            }}
+            originalMessage={editingMessage?.content || ''}
+            currentModel={editingMessage?.model || selectedModel}
+            onSave={handleSaveEditedMessage}
+            onRegenerate={handleRegenerateMessage}
+          />
         </div>
-          </ProtectedRoute>
+      </ProtectedRoute>
         } />
       </Routes>
     </Router>

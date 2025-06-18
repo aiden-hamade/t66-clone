@@ -20,7 +20,8 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
   const [isEditing, setIsEditing] = useState(false)
   const [editForm, setEditForm] = useState({
     name: user?.name || '',
-    openRouterApiKey: user?.openRouterApiKey || ''
+    openRouterApiKey: user?.openRouterApiKey || '',
+    openaiApiKey: user?.openaiApiKey || ''
   })
   const [isSaving, setIsSaving] = useState(false)
 
@@ -31,14 +32,16 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
       setIsSaving(true)
       await updateUserProfile(user.id, {
         name: editForm.name,
-        openRouterApiKey: editForm.openRouterApiKey
+        openRouterApiKey: editForm.openRouterApiKey,
+        openaiApiKey: editForm.openaiApiKey
       })
       
       // Update the user object and notify parent
       const updatedUser = {
         ...user,
         name: editForm.name,
-        openRouterApiKey: editForm.openRouterApiKey
+        openRouterApiKey: editForm.openRouterApiKey,
+        openaiApiKey: editForm.openaiApiKey
       }
       onUserUpdate(updatedUser)
       setIsEditing(false)
@@ -53,7 +56,8 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
   const handleCancel = () => {
     setEditForm({
       name: user?.name || '',
-      openRouterApiKey: user?.openRouterApiKey || ''
+      openRouterApiKey: user?.openRouterApiKey || '',
+      openaiApiKey: user?.openaiApiKey || ''
     })
     setIsEditing(false)
   }
@@ -81,7 +85,7 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
             {/* Left Column */}
             <div className="space-y-8">
               
-              {/* Profile Section */}
+            {/* Profile Section */}
               <div className="bg-theme-surface rounded-xl p-6 border border-theme-modal">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
@@ -90,53 +94,53 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                     </div>
                     <h3 className="text-lg font-semibold text-theme-primary">Profile</h3>
                   </div>
-                  {!isEditing && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setIsEditing(true)}
+                {!isEditing && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsEditing(true)}
                       className="flex items-center gap-2"
-                    >
+                  >
                       <UserIcon size={14} />
                       Edit Profile
-                    </Button>
-                  )}
-                </div>
-                
+                  </Button>
+                )}
+              </div>
+              
                 <div className="space-y-6">
-                  {/* Profile Picture */}
+                {/* Profile Picture */}
                   <div className="flex items-center gap-4">
                     <div className="w-16 h-16 bg-theme-button-primary rounded-full flex items-center justify-center">
-                      {user?.avatar ? (
+                    {user?.avatar ? (
                         <img src={user.avatar} alt="Profile" className="w-16 h-16 rounded-full object-cover" />
-                      ) : (
+                    ) : (
                         <UserIcon size={24} className="text-theme-button-primary" />
-                      )}
-                    </div>
+                    )}
+                  </div>
                     <div className="flex-1">
                       <h4 className="font-medium text-theme-primary">{user?.name || 'Anonymous User'}</h4>
                       <p className="text-sm text-theme-secondary">{user?.email || 'No email provided'}</p>
                     </div>
-                    {isEditing && (
+                  {isEditing && (
                       <Button variant="outline" size="sm" className="flex items-center gap-2">
                         <Upload size={14} />
                         Change Photo
-                      </Button>
-                    )}
-                  </div>
+                    </Button>
+                  )}
+                </div>
 
                   {/* Name Field */}
-                  <div>
+                <div>
                     <label className="block text-sm font-medium text-theme-primary mb-2">Display Name</label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editForm.name}
-                        onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editForm.name}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
                         className="w-full p-3 text-sm rounded-lg border border-theme-input bg-theme-input text-theme-input focus:ring-2 focus:ring-theme-accent focus:border-transparent"
                         placeholder="Enter your display name"
-                      />
-                    ) : (
+                    />
+                  ) : (
                       <div className="p-3 bg-theme-input rounded-lg border border-theme-input">
                         <span className="text-theme-primary">{user?.name || 'Not set'}</span>
                       </div>
@@ -162,9 +166,9 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                   </div>
                   <h3 className="text-lg font-semibold text-theme-primary">Appearance</h3>
                 </div>
-                
+
                 <div className="space-y-4">
-                  <div>
+                <div>
                     <label className="block text-sm font-medium text-theme-primary mb-2">Theme Customization</label>
                     <p className="text-sm text-theme-secondary mb-4">
                       Personalize your chat interface with beautiful themes and custom colors
@@ -184,8 +188,8 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
 
             {/* Right Column */}
             <div className="space-y-8">
-              
-              {/* API Configuration Section */}
+
+            {/* API Configuration Section */}
               <div className="bg-theme-surface rounded-xl p-6 border border-theme-modal">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-8 h-8 bg-theme-accent rounded-lg flex items-center justify-center">
@@ -195,17 +199,81 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                 </div>
                 
                 <div className="space-y-4">
-                  <div>
+            <div>
                     <label className="block text-sm font-medium text-theme-primary mb-2">OpenRouter API Key</label>
                     <p className="text-sm text-theme-secondary mb-4">
-                      Required for AI functionality. Get your key from{' '}
+                  Required for AI functionality. Get your key from{' '}
                       <a 
                         href="https://openrouter.ai/keys" 
                         target="_blank" 
                         rel="noopener noreferrer" 
                         className="text-theme-accent hover:underline font-medium"
                       >
-                        openrouter.ai/keys
+                    openrouter.ai/keys
+                  </a>
+                </p>
+                    
+                {isEditing ? (
+                  <div className="relative">
+                    <input
+                      type={showApiKey ? 'text' : 'password'}
+                      value={editForm.openRouterApiKey}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, openRouterApiKey: e.target.value }))}
+                          className="w-full p-3 pr-12 text-sm rounded-lg border border-theme-input bg-theme-input text-theme-input focus:ring-2 focus:ring-theme-accent focus:border-transparent font-mono"
+                      placeholder="sk-or-v1-..."
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowApiKey(!showApiKey)}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-theme-secondary hover:text-theme-primary transition-colors"
+                    >
+                          {showApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                ) : (
+                      <div className="bg-theme-input rounded-lg border border-theme-input p-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <span className="text-sm text-theme-primary font-mono break-all">
+                      {user?.openRouterApiKey ? 
+                        (showApiKey ? user.openRouterApiKey : '••••••••••••••••••••••••••••••••••••••••••••••••••••') 
+                        : 'Not configured'
+                      }
+                    </span>
+                          </div>
+                    {user?.openRouterApiKey && (
+                      <button
+                        onClick={() => setShowApiKey(!showApiKey)}
+                              className="text-theme-secondary hover:text-theme-primary transition-colors flex-shrink-0"
+                      >
+                              {showApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {!user?.openRouterApiKey && (
+                      <div className="mt-3 p-3 bg-theme-button-secondary rounded-lg border border-theme-accent">
+                        <p className="text-sm text-theme-accent">
+                          ⚠️ API key required for AI functionality
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* OpenAI API Key */}
+                  <div>
+                    <label className="block text-sm font-medium text-theme-primary mb-2">OpenAI API Key</label>
+                    <p className="text-sm text-theme-secondary mb-4">
+                      For Voice Mode and Image Generation. Get your key from{' '}
+                      <a 
+                        href="https://platform.openai.com/api-keys" 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-theme-accent hover:underline font-medium"
+                      >
+                        platform.openai.com/api-keys
                       </a>
                     </p>
                     
@@ -213,10 +281,10 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                       <div className="relative">
                         <input
                           type={showApiKey ? 'text' : 'password'}
-                          value={editForm.openRouterApiKey}
-                          onChange={(e) => setEditForm(prev => ({ ...prev, openRouterApiKey: e.target.value }))}
+                          value={editForm.openaiApiKey}
+                          onChange={(e) => setEditForm(prev => ({ ...prev, openaiApiKey: e.target.value }))}
                           className="w-full p-3 pr-12 text-sm rounded-lg border border-theme-input bg-theme-input text-theme-input focus:ring-2 focus:ring-theme-accent focus:border-transparent font-mono"
-                          placeholder="sk-or-v1-..."
+                          placeholder="sk-..."
                         />
                         <button
                           type="button"
@@ -231,13 +299,13 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                         <div className="flex items-center justify-between gap-3">
                           <div className="flex-1 min-w-0">
                             <span className="text-sm text-theme-primary font-mono break-all">
-                              {user?.openRouterApiKey ? 
-                                (showApiKey ? user.openRouterApiKey : '••••••••••••••••••••••••••••••••••••••••••••••••••••') 
+                              {user?.openaiApiKey ? 
+                                (showApiKey ? user.openaiApiKey : '••••••••••••••••••••••••••••••••••••••••••••••••••••') 
                                 : 'Not configured'
                               }
                             </span>
                           </div>
-                          {user?.openRouterApiKey && (
+                          {user?.openaiApiKey && (
                             <button
                               onClick={() => setShowApiKey(!showApiKey)}
                               className="text-theme-secondary hover:text-theme-primary transition-colors flex-shrink-0"
@@ -246,14 +314,6 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                             </button>
                           )}
                         </div>
-                      </div>
-                    )}
-                    
-                    {!user?.openRouterApiKey && (
-                      <div className="mt-3 p-3 bg-theme-button-secondary rounded-lg border border-theme-accent">
-                        <p className="text-sm text-theme-accent">
-                          ⚠️ API key required for AI functionality
-                        </p>
                       </div>
                     )}
                   </div>
@@ -287,26 +347,26 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                       A modern AI chat interface with multiple LLM support and beautiful theming.
                     </p>
                   </div>
-                </div>
               </div>
             </div>
           </div>
+        </div>
 
           {/* Action Buttons */}
           <div className="flex justify-end gap-3 pt-8 border-t border-theme-modal mt-8">
             {isEditing ? (
               <>
-                <Button variant="outline" onClick={handleCancel} disabled={isSaving}>
+            <Button variant="outline" onClick={handleCancel} disabled={isSaving}>
                   Cancel Changes
-                </Button>
+            </Button>
                 <Button onClick={handleSave} disabled={isSaving} className="min-w-[120px]">
-                  {isSaving ? 'Saving...' : 'Save Changes'}
-                </Button>
+              {isSaving ? 'Saving...' : 'Save Changes'}
+            </Button>
               </>
             ) : (
-              <Button variant="outline" onClick={onClose}>
+            <Button variant="outline" onClick={onClose}>
                 Close Settings
-              </Button>
+            </Button>
             )}
           </div>
         </div>

@@ -35,7 +35,7 @@ function CodeBlock({ children, className, ...props }: any) {
     setShowHtmlPreview(true)
   }
 
-return (
+  return (
     <>
       <div className="relative group my-4">
         <div className="flex items-center justify-between text-xs text-muted-foreground mb-1 px-2">
@@ -50,23 +50,23 @@ return (
                 Try HTML
               </button>
             )}
-            <button
-              onClick={handleCopy}
+          <button
+            onClick={handleCopy}
               className="flex items-center gap-1 px-2 py-1 rounded hover:bg-background transition-colors opacity-0 group-hover:opacity-100"
-            >
-              {copied ? (
-                <>
-                  <Check size={12} />
-                  Copied!
-                </>
-              ) : (
-                <>
-                  <Copy size={12} />
-                  Copy
-                </>
-              )}
-            </button>
-          </div>
+          >
+            {copied ? (
+              <>
+                <Check size={12} />
+                Copied!
+              </>
+            ) : (
+              <>
+                <Copy size={12} />
+                Copy
+              </>
+            )}
+          </button>
+        </div>
         </div>
 
         <SyntaxHighlighter
@@ -83,7 +83,7 @@ return (
         >
           {code}
         </SyntaxHighlighter>
-      </div>
+    </div>
 
       {/* HTML Preview Modal */}
       {isHtml && (

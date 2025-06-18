@@ -20,6 +20,10 @@ import {
   estimateTokenCount,
   type ChatMessage as OpenRouterMessage
 } from '../lib/openrouter';
+import { transcribeAudio, synthesizeSpeech, playAudioBlob } from '../lib/openai';
+import { AudioRecorder } from '../lib/audioRecording';
+
+export type InputMode = 'text' | 'voice';
 
 interface ChatState {
   chats: Chat[];
@@ -36,6 +40,16 @@ interface ChatState {
   continueMessageId: string | null;
   user: User | null;
   abortController: AbortController | null;
+  
+  // Voice mode state
+  inputMode: InputMode;
+  isRecording: boolean;
+  isTranscribing: boolean;
+  isSynthesizing: boolean;
+  isPlayingAudio: boolean;
+  audioRecorder: AudioRecorder | null;
+  autoPlayResponses: boolean;
+  selectedVoice: string;
 }
 
 interface ChatActions {
@@ -74,13 +88,29 @@ interface ChatActions {
   
   // Message management
   sendMessage: (userId: string, content: string, useStreaming?: boolean, attachments?: any[], webSearch?: boolean, currentModel?: string, systemMessage?: string) => Promise<void>;
-  continueMessage: (userId: string) => Promise<void>;
+  continueMessage: () => Promise<void>;
   addUserMessage: (chatId: string, content: string, attachments?: any[]) => Promise<void>;
   updateLastMessage: (chatId: string, content: string) => void;
+  editMessage: (messageId: string, newContent: string, newModel?: string) => Promise<void>;
+  regenerateFromMessage: (messageId: string, newContent: string, newModel?: string) => Promise<void>;
   
   // Helper functions
   getChatById: (chatId: string) => Chat | undefined;
   getOriginalChatTitle: (chatId: string) => string | undefined;
+  
+  // Voice mode actions
+  setInputMode: (mode: InputMode) => void;
+  setIsRecording: (isRecording: boolean) => void;
+  setIsTranscribing: (isTranscribing: boolean) => void;
+  setIsSynthesizing: (isSynthesizing: boolean) => void;
+  setIsPlayingAudio: (isPlayingAudio: boolean) => void;
+  setAutoPlayResponses: (autoPlay: boolean) => void;
+  setSelectedVoice: (voice: string) => void;
+  initializeAudioRecorder: () => Promise<void>;
+  startRecording: () => Promise<void>;
+  stopRecordingAndTranscribe: () => Promise<void>;
+  synthesizeAndPlayResponse: (text: string) => Promise<void>;
+  cleanupAudioRecorder: () => void;
 }
 
 type ChatStore = ChatState & ChatActions;
@@ -101,6 +131,16 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
   continueMessageId: null,
   user: null,
   abortController: null,
+  
+  // Voice mode state
+  inputMode: 'text',
+  isRecording: false,
+  isTranscribing: false,
+  isSynthesizing: false,
+  isPlayingAudio: false,
+  audioRecorder: null,
+  autoPlayResponses: false,
+  selectedVoice: 'coral',
 
   // Basic setters
   setChats: (chats) => set({ chats }),
@@ -130,6 +170,15 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
       });
     }
   },
+
+  // Voice mode setters
+  setInputMode: (inputMode) => set({ inputMode }),
+  setIsRecording: (isRecording) => set({ isRecording }),
+  setIsTranscribing: (isTranscribing) => set({ isTranscribing }),
+  setIsSynthesizing: (isSynthesizing) => set({ isSynthesizing }),
+  setIsPlayingAudio: (isPlayingAudio) => set({ isPlayingAudio }),
+  setAutoPlayResponses: (autoPlayResponses) => set({ autoPlayResponses }),
+  setSelectedVoice: (selectedVoice) => set({ selectedVoice }),
 
   // Load user chats from Firestore
   loadUserChats: async (userId) => {
@@ -434,7 +483,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
   },
 
   // Continue message when token limit is reached
-  continueMessage: async (userId) => {
+  continueMessage: async () => {
     const { 
       activeChat, 
       chats, 
@@ -443,9 +492,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
       setError,
       setShowContinuePrompt,
       setContinueMessageId,
-      updateLastMessage,
-      updateChatTitle,
-      generateChatTitle
+      updateLastMessage
     } = get();
     
     if (!activeChat || !continueMessageId) {
@@ -576,7 +623,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
         systemMessage: systemMessage
       };
       
-      const newChatId = await createNewChat(userId, 'New Chat', defaultSettings);
+      await createNewChat(userId, 'New Chat', defaultSettings);
       // Update activeChat after creating new chat
       const { activeChat: updatedActiveChat } = get();
       if (!updatedActiveChat) {
@@ -1082,5 +1129,472 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
     const { chats } = get();
     const originalChat = chats.find(chat => chat.id === chatId && chat.isSplit);
     return originalChat?.title;
+  },
+
+  // Voice mode implementation functions
+  initializeAudioRecorder: async () => {
+    const { setError } = get();
+    
+    try {
+      const recorder = new AudioRecorder({
+        sampleRate: 16000,
+        channels: 1,
+        bitsPerSample: 16,
+        silenceThreshold: 0.02, // Backup silence threshold (very low, mainly for safety)
+        silenceDuration: 30000  // 30 seconds fallback (user should use "End Message" button)
+      });
+      
+      await recorder.initialize();
+      set({ audioRecorder: recorder });
+      console.log('Audio recorder initialized successfully with silence detection');
+    } catch (error) {
+      console.error('Error initializing audio recorder:', error);
+      setError('Failed to access microphone. Please check permissions.');
+    }
+  },
+
+  startRecording: async () => {
+    const { audioRecorder, setIsRecording, setError, initializeAudioRecorder, stopRecordingAndTranscribe } = get();
+    
+    try {
+      setError(null);
+      
+      // Initialize recorder if not already done
+      if (!audioRecorder) {
+        await initializeAudioRecorder();
+        const { audioRecorder: newRecorder } = get();
+        if (!newRecorder) {
+          throw new Error('Failed to initialize audio recorder');
+        }
+      }
+      
+      const recorder = get().audioRecorder;
+      if (!recorder) {
+        throw new Error('Audio recorder not available');
+      }
+      
+      console.log('Starting recording with silence detection');
+      
+      // Start recording with silence detection callback
+      await recorder.startRecording(() => {
+        console.log('Silence detected, stopping recording and transcribing');
+        stopRecordingAndTranscribe();
+      });
+      
+      setIsRecording(true);
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      setError(`Failed to start recording: ${(error as Error).message}`);
+    }
+  },
+
+  stopRecordingAndTranscribe: async () => {
+    const { 
+      audioRecorder, 
+      user, 
+      setIsRecording, 
+      setIsTranscribing, 
+      setCurrentMessage, 
+      setError 
+    } = get();
+    
+    if (!audioRecorder) {
+      setError('Audio recorder not initialized');
+      return;
+    }
+    
+    if (!user?.openaiApiKey) {
+      setError('OpenAI API key not configured. Please add your key in Settings.');
+      return;
+    }
+    
+    try {
+      setError(null);
+      setIsRecording(false);
+      setIsTranscribing(true);
+      const audioBlob = await audioRecorder.stopRecording();
+      
+      // Convert blob to supported format
+      const audioFile = await audioRecorder.convertToSupportedFormat(audioBlob);
+      
+      // Transcribe the audio
+      const transcription = await transcribeAudio(audioFile, user.openaiApiKey, {
+        model: 'gpt-4o-mini-transcribe',
+        responseFormat: 'text'
+      });
+      
+      // Set the transcribed text as current message
+      setCurrentMessage(transcription.text);
+      setIsTranscribing(false);
+      
+      // Auto-send the transcribed message and get voice response
+      if (transcription.text.trim() && user?.id) {
+        console.log('Auto-sending transcribed message:', transcription.text.trim());
+        
+        // Get current selected model and system prompt from state
+        const { sendMessage, synthesizeAndPlayResponse, autoPlayResponses } = get();
+        
+        // Send the message (this will create a new chat if needed)
+        await sendMessage(
+          user.id, 
+          transcription.text.trim(), 
+          true, // useStreaming
+          [], // no attachments
+          false, // no web search for voice mode
+          undefined, // use current model
+          undefined // use current system message
+        );
+        
+        // Wait a bit for the response to be generated, then get the latest assistant message
+        setTimeout(async () => {
+          const { chats, activeChat, inputMode } = get();
+          const currentChat = chats.find(chat => chat.id === activeChat);
+          
+          if (currentChat && currentChat.messages.length > 0 && inputMode === 'voice') {
+            const lastMessage = currentChat.messages[currentChat.messages.length - 1];
+            
+            // If the last message is from assistant and has content, synthesize it
+            if (lastMessage.role === 'assistant' && lastMessage.content) {
+              console.log('🔊 Auto-playing voice response for voice message');
+              await synthesizeAndPlayResponse(lastMessage.content);
+            }
+          }
+        }, 1000); // Reduced wait time to 1 second
+      }
+      
+    } catch (error) {
+      console.error('Error during transcription:', error);
+      setError(`Transcription failed: ${(error as Error).message}`);
+      setIsTranscribing(false);
+    }
+  },
+
+  synthesizeAndPlayResponse: async (text: string) => {
+    const { 
+      user, 
+      selectedVoice, 
+      setIsSynthesizing, 
+      setIsPlayingAudio, 
+      setError 
+    } = get();
+    
+    if (!user?.openaiApiKey) {
+      setError('OpenAI API key not configured. Please add your key in Settings.');
+      return;
+    }
+    
+    if (!text.trim()) {
+      console.log('No text to synthesize');
+      return;
+    }
+    
+    try {
+      setError(null);
+      setIsSynthesizing(true);
+      
+      console.log('Synthesizing speech for text:', text.substring(0, 100) + '...');
+      console.log('Using voice:', selectedVoice);
+      
+      // Synthesize speech
+      const audioBlob = await synthesizeSpeech(text, user.openaiApiKey, {
+        model: 'gpt-4o-mini-tts',
+        voice: selectedVoice as any,
+        responseFormat: 'mp3'
+      });
+      
+      console.log('Speech synthesis completed, audio size:', audioBlob.size, 'bytes');
+      setIsSynthesizing(false);
+      setIsPlayingAudio(true);
+      
+      // Play the audio
+      await playAudioBlob(audioBlob);
+      
+      setIsPlayingAudio(false);
+      console.log('Audio playback completed');
+      
+      // Auto-start recording again for the next user input (if still in voice mode)
+      const { inputMode, startRecording } = get();
+      if (inputMode === 'voice') {
+        console.log('🎤 Auto-starting recording after AI response');
+        setTimeout(() => {
+          startRecording();
+        }, 500); // Small delay to ensure audio cleanup
+      }
+      
+    } catch (error) {
+      console.error('Error during speech synthesis:', error);
+      setError(`Speech synthesis failed: ${(error as Error).message}`);
+      setIsSynthesizing(false);
+      setIsPlayingAudio(false);
+    }
+  },
+
+  cleanupAudioRecorder: () => {
+    const { audioRecorder } = get();
+    
+    if (audioRecorder) {
+      audioRecorder.cleanup();
+      set({ 
+        audioRecorder: null, 
+        isRecording: false,
+        isTranscribing: false,
+        isSynthesizing: false,
+        isPlayingAudio: false
+      });
+      console.log('Audio recorder cleaned up');
+    }
+  },
+
+  // Edit message content
+  editMessage: async (messageId: string, newContent: string, newModel?: string) => {
+    const { chats, activeChat, setChats, setError } = get();
+    
+    if (!activeChat) {
+      setError('No active chat');
+      return;
+    }
+    
+    try {
+      setError(null);
+      
+      // Find the chat and message
+      const chatIndex = chats.findIndex(chat => chat.id === activeChat);
+      if (chatIndex === -1) {
+        throw new Error('Chat not found');
+      }
+      
+      const chat = chats[chatIndex];
+      const messageIndex = chat.messages.findIndex(msg => msg.id === messageId);
+      if (messageIndex === -1) {
+        throw new Error('Message not found');
+      }
+      
+      // Update the message
+      const updatedMessage = {
+        ...chat.messages[messageIndex],
+        content: newContent,
+        metadata: {
+          ...chat.messages[messageIndex].metadata,
+          model: newModel || chat.messages[messageIndex].metadata?.model
+        }
+      };
+      
+      const updatedMessages = [...chat.messages];
+      updatedMessages[messageIndex] = updatedMessage;
+      
+      const updatedChat = {
+        ...chat,
+        messages: updatedMessages,
+        updatedAt: new Date()
+      };
+      
+      // Update local state
+      const updatedChats = [...chats];
+      updatedChats[chatIndex] = updatedChat;
+      setChats(updatedChats);
+      
+      // Update in Firestore
+      await updateMessageInChat(activeChat, messageId, updatedMessage);
+      
+    } catch (error) {
+      console.error('Error editing message:', error);
+      setError('Failed to edit message');
+    }
+  },
+
+  // Regenerate response from a message
+  regenerateFromMessage: async (messageId: string, newContent: string, newModel?: string) => {
+    const { chats, activeChat, user, setChats, setError, setStreaming, setThinking, setSearching } = get();
+    
+    if (!activeChat || !user) {
+      setError('No active chat or user');
+      return;
+    }
+    
+    try {
+      setError(null);
+      
+      // Find the chat and message
+      const chatIndex = chats.findIndex(chat => chat.id === activeChat);
+      if (chatIndex === -1) {
+        throw new Error('Chat not found');
+      }
+      
+      const chat = chats[chatIndex];
+      const messageIndex = chat.messages.findIndex(msg => msg.id === messageId);
+      if (messageIndex === -1) {
+        throw new Error('Message not found');
+      }
+      
+      // Update the user message
+      const updatedMessage = {
+        ...chat.messages[messageIndex],
+        content: newContent,
+        metadata: {
+          ...chat.messages[messageIndex].metadata,
+          model: newModel || chat.messages[messageIndex].metadata?.model
+        }
+      };
+      
+      // Remove all messages after this one (including the old AI response)
+      const messagesUpToEdit = chat.messages.slice(0, messageIndex + 1);
+      messagesUpToEdit[messageIndex] = updatedMessage;
+      
+      const updatedChat = {
+        ...chat,
+        messages: messagesUpToEdit,
+        updatedAt: new Date(),
+        settings: {
+          ...chat.settings,
+          model: newModel || chat.settings.model
+        }
+      };
+      
+      // Update local state
+      const updatedChats = [...chats];
+      updatedChats[chatIndex] = updatedChat;
+      setChats(updatedChats);
+      
+      // Update the message in Firestore
+      await updateMessageInChat(activeChat, messageId, updatedMessage);
+      
+      // Generate new response
+      const messages: OpenRouterMessage[] = messagesUpToEdit.map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
+      
+      // Add system message if exists
+      if (chat.settings.systemMessage) {
+        messages.unshift({
+          role: 'system',
+          content: chat.settings.systemMessage
+        });
+      }
+      
+      const abortController = new AbortController();
+      set({ abortController, isStreaming: true });
+      
+      let assistantResponse = '';
+      let webSearchResults: Array<{url: string, title: string, content?: string}> | undefined;
+      
+      await createStreamingChatCompletion(
+        messages,
+        {
+          model: newModel || chat.settings.model,
+          temperature: chat.settings.temperature,
+                     apiKey: user.openRouterApiKey,
+           webSearch: false
+        },
+        (chunk: string) => {
+          assistantResponse += chunk;
+          
+          // Update the last message in real-time
+          const { chats: currentChats } = get();
+          const currentChatIndex = currentChats.findIndex(c => c.id === activeChat);
+          if (currentChatIndex !== -1) {
+            const currentChat = currentChats[currentChatIndex];
+            const lastMessage = currentChat.messages[currentChat.messages.length - 1];
+            
+            if (lastMessage?.role === 'assistant') {
+              // Update existing assistant message
+              const updatedMessages = [...currentChat.messages];
+              updatedMessages[updatedMessages.length - 1] = {
+                ...lastMessage,
+                content: assistantResponse
+              };
+              
+              const updatedChat = {
+                ...currentChat,
+                messages: updatedMessages
+              };
+              
+              const updatedChats = [...currentChats];
+              updatedChats[currentChatIndex] = updatedChat;
+              setChats(updatedChats);
+            } else {
+              // Create new assistant message
+              const newAssistantMessage: Message = {
+                id: Date.now().toString(),
+                content: assistantResponse,
+                role: 'assistant',
+                timestamp: new Date(),
+                metadata: {
+                  model: newModel || chat.settings.model,
+                  tokens: estimateTokenCount(assistantResponse)
+                }
+              };
+              
+              const updatedMessages = [...currentChat.messages, newAssistantMessage];
+              const updatedChat = {
+                ...currentChat,
+                messages: updatedMessages
+              };
+              
+              const updatedChats = [...currentChats];
+              updatedChats[currentChatIndex] = updatedChat;
+              setChats(updatedChats);
+            }
+          }
+        },
+        (reason: string) => {
+          console.log('Streaming finished:', reason);
+        },
+        async (searchResults) => {
+          webSearchResults = searchResults;
+          
+          // Create final assistant message
+          const finalAssistantMessage: Message = {
+            id: Date.now().toString(),
+            content: assistantResponse,
+            role: 'assistant',
+            timestamp: new Date(),
+            metadata: {
+              model: newModel || chat.settings.model,
+              tokens: estimateTokenCount(assistantResponse),
+              webSearchUsed: !!webSearchResults,
+              webSearchResults: webSearchResults
+            }
+          };
+          
+          // Add to Firestore
+          await addMessageToChat(activeChat, finalAssistantMessage);
+          
+          set({ 
+            isStreaming: false, 
+            isThinking: false, 
+            isSearching: false,
+            abortController: null 
+          });
+        },
+        (error: Error) => {
+          console.error('Streaming error:', error);
+          setError(`Failed to generate response: ${error.message}`);
+          set({ 
+            isStreaming: false, 
+            isThinking: false, 
+            isSearching: false,
+            abortController: null 
+          });
+        },
+        (isThinking: boolean, summary?: string) => {
+          setThinking(isThinking);
+          if (summary) {
+            set({ thinkingSummary: summary });
+          }
+        },
+        abortController.signal
+      );
+      
+    } catch (error) {
+      console.error('Error regenerating from message:', error);
+      setError('Failed to regenerate response');
+      set({ 
+        isStreaming: false, 
+        isThinking: false, 
+        isSearching: false,
+        abortController: null 
+      });
+    }
   }
 })); 

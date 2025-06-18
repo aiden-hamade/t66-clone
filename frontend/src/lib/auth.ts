@@ -30,6 +30,7 @@ export const createUserProfile = async (user: FirebaseUser, additionalData?: any
         verified: user.emailVerified,
         plan: 'free',
         openRouterApiKey: additionalData?.openRouterApiKey,
+        openaiApiKey: additionalData?.openaiApiKey,
         createdAt: createdAt.toDate(),
         updatedAt: createdAt.toDate(),
         ...additionalData
@@ -44,6 +45,7 @@ export const createUserProfile = async (user: FirebaseUser, additionalData?: any
         verified: userData.verified,
         plan: userData.plan,
         ...(userData.openRouterApiKey ? { openRouterApiKey: userData.openRouterApiKey } : {}),
+        ...(userData.openaiApiKey ? { openaiApiKey: userData.openaiApiKey } : {}),
         createdAt,
         updatedAt: createdAt
       };
@@ -67,6 +69,7 @@ export const createUserProfile = async (user: FirebaseUser, additionalData?: any
     verified: userData.verified,
     plan: userData.plan,
     openRouterApiKey: userData.openRouterApiKey,
+    openaiApiKey: userData.openaiApiKey,
     selectedTheme: userData.selectedTheme,
     customTheme: userData.customTheme,
     createdAt: userData.createdAt.toDate(),
@@ -153,6 +156,7 @@ export const getCurrentUserProfile = async (): Promise<User | null> => {
         verified: userData.verified,
         plan: userData.plan,
         openRouterApiKey: userData.openRouterApiKey,
+        openaiApiKey: userData.openaiApiKey,
         selectedTheme: userData.selectedTheme,
         customTheme: userData.customTheme,
         createdAt: userData.createdAt.toDate(),
@@ -180,6 +184,7 @@ export const updateUserProfile = async (userId: string, updates: Partial<User>):
     if (updates.name !== undefined) firestoreUpdates.name = updates.name;
     if (updates.avatar !== undefined) firestoreUpdates.avatar = updates.avatar;
     if (updates.openRouterApiKey !== undefined) firestoreUpdates.openRouterApiKey = updates.openRouterApiKey;
+    if (updates.openaiApiKey !== undefined) firestoreUpdates.openaiApiKey = updates.openaiApiKey;
     if (updates.selectedTheme !== undefined) firestoreUpdates.selectedTheme = updates.selectedTheme;
     if (updates.customTheme !== undefined) firestoreUpdates.customTheme = updates.customTheme;
     

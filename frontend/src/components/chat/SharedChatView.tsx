@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { LogIn, Users, Copy, Check, ArrowLeft, FileText } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { MarkdownRenderer } from '../ui/MarkdownRenderer'
 import { useAuthStore } from '../../stores/authStore'
 import { getSharedChat, addCollaboratorToChat } from '../../lib/firestore'
-import type { Chat, User } from '../../types'
+import type { Chat } from '../../types'
 
 interface SharedChatViewProps {}
 
