@@ -8,6 +8,14 @@
 
 > 🚀 **A powerful, open-source AI chat platform** - Built for the T3 Chat Cloneathon with cutting-edge features and beautiful design.
 
+## 🎬 Demo
+
+[![T66 Demo Video](https://img.youtube.com/vi/UoTBjFbPuik/0.jpg)](https://youtu.be/UoTBjFbPuik)
+
+*Click to watch the full demo showcasing T66's features and capabilities*
+
+## 🔥 Overview
+
 **T66** is a modern, feature-rich AI chat application that brings together multiple language models in an intuitive interface. Built with React 19, TypeScript, and Firebase, it offers a seamless experience for chatting with various AI providers including OpenAI, Anthropic, Google, and more through OpenRouter.
 
 ## ✨ Features
