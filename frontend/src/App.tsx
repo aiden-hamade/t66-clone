@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import t66_logo from './assets/t66-chat-logo.svg'
-import { MessageSquare, Settings, User, Plus, MoreVertical, Trash2, ChevronDown, Edit2, LogOut, Info, Copy, GitBranch, Folder, FolderPlus, ChevronRight, Share2, Paperclip, X, FileText, Globe, Mic, Volume2, Edit3 } from 'lucide-react'
+import { MessageSquare, Settings, User, Plus, MoreVertical, Trash2, ChevronDown, Edit2, LogOut, Info, Copy, GitBranch, Folder, FolderPlus, ChevronRight, Share2, Paperclip, X, FileText, Globe, Mic, Volume2, Edit3, Menu } from 'lucide-react'
 import './App.css'
 
 // Components
@@ -45,6 +45,7 @@ function App() {
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingMessage, setEditingMessage] = useState<{id: string, content: string, model: string} | null>(null)
   const [shareUrl, setShareUrl] = useState('')
+  const [mobileView, setMobileView] = useState<'history' | 'chat'>('chat')
 
   // Auth store
   const { user, signOut: authSignOut, setUser: setAuthUser } = useAuthStore()
@@ -204,6 +205,8 @@ function App() {
     // Just clear the current chat selection
     // The actual chat will be created when the first message is sent
     setActiveChat(null)
+    // Auto-switch to chat view on mobile when creating a new chat
+    setMobileView('chat')
   }
 
   const handleDeleteChat = async (chatId: string) => {
@@ -448,8 +451,6 @@ function App() {
     }
   }
 
-
-
   return (
     <Router>
       <Routes>
@@ -457,9 +458,41 @@ function App() {
         <Route path="/*" element={
       <ProtectedRoute>
         <div className="min-h-screen bg-theme-background">
-          <div className="flex h-screen bg-theme-background text-theme-primary">
-                          {/* Sidebar */}
-              <div className="w-64 bg-theme-surface border-r border-theme flex flex-col">
+          {/* Mobile Navigation Toggle - Only visible on mobile */}
+          <div className="md:hidden bg-theme-surface border-b border-theme">
+            <div className="flex items-center justify-between p-3">
+              <div className="flex items-center gap-2">
+                <img src={t66_logo} className="h-6 w-auto" />
+                <span className="text-sm font-medium text-theme-primary">T66</span>
+              </div>
+              <div className="flex bg-theme-background rounded-lg p-1">
+                <button
+                  onClick={() => setMobileView('history')}
+                  className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                    mobileView === 'history'
+                      ? 'bg-theme-accent text-theme-button-primary'
+                      : 'text-theme-secondary hover:text-theme-primary'
+                  }`}
+                >
+                  History
+                </button>
+                <button
+                  onClick={() => setMobileView('chat')}
+                  className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                    mobileView === 'chat'
+                      ? 'bg-theme-accent text-theme-button-primary'
+                      : 'text-theme-secondary hover:text-theme-primary'
+                  }`}
+                >
+                  Chat
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex h-[calc(100vh-60px)] md:h-screen bg-theme-background text-theme-primary">
+            {/* Sidebar - Hidden on mobile, always visible on desktop */}
+            <div className={`${mobileView === 'history' ? 'block' : 'hidden'} md:block w-full md:w-64 bg-theme-surface border-r border-theme flex flex-col`}>
                               {/* Header */}
               <div className="p-3 border-b border-theme">
                 <div className="flex flex-col items-center">
@@ -610,7 +643,11 @@ function App() {
                       </div>
                     ) : (
                       <button
-                        onClick={() => setActiveChat(chat.id)}
+                        onClick={() => {
+                          setActiveChat(chat.id)
+                          // Auto-switch to chat view on mobile when selecting a chat
+                          setMobileView('chat')
+                        }}
                                   className="flex-1 text-left min-w-0 flex items-start gap-2"
                                 >
                                   {chat.isSplit ? (
@@ -716,7 +753,11 @@ function App() {
                         </div>
                       ) : (
                         <button
-                          onClick={() => setActiveChat(chat.id)}
+                          onClick={() => {
+                            setActiveChat(chat.id)
+                            // Auto-switch to chat view on mobile when selecting a chat
+                            setMobileView('chat')
+                          }}
                           className="flex-1 text-left min-w-0 flex items-start gap-2"
                         >
                           {chat.isSplit ? (
@@ -809,8 +850,8 @@ function App() {
               </div>
             </div>
 
-            {/* Main Chat Area */}
-            <div className="flex-1 flex flex-col">
+            {/* Main Chat Area - Hidden on mobile when history view is active */}
+            <div className={`${mobileView === 'chat' ? 'block' : 'hidden'} md:block flex-1 flex flex-col`}>
               {/* Chat Header */}
               <div className="p-4 border-b border-theme bg-theme-chat-header">
                 <div className="flex items-center justify-between">
@@ -1139,6 +1180,8 @@ function App() {
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setActiveChat(currentChatData.splitFromChatId!);
+                                    // Auto-switch to chat view on mobile when navigating to original chat
+                                    setMobileView('chat');
                                   }}
                                 >
                                   → Go to original chat

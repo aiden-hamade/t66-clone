@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>T66 Icon Generator</title>
+    <style>
+        canvas { border: 1px solid #ccc; margin: 10px; }
+        .icon-grid { display: flex; flex-wrap: wrap; }
+    </style>
+</head>
+<body>
+    <h1>T66 PWA Icon Generator</h1>
+    <p>This page generates PWA icons from the T66 logo. Right-click each canvas and "Save image as..." to download.</p>
+    
+    <div class="icon-grid" id="iconGrid"></div>
+
+    <script>
+        const sizes = [16, 32, 72, 96, 128, 144, 152, 192, 384, 512];
+        const svgContent = `
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <!-- T66 Logo Background -->
+                <defs>
+                    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+                <rect width="200" height="200" rx="40" fill="url(#bgGradient)"/>
+                
+                <!-- T66 Text -->
+                <text x="100" y="120" font-family="Inter, sans-serif" font-size="48" font-weight="bold" 
+                      text-anchor="middle" fill="white">T66</text>
+                      
+                <!-- AI Accent -->
+                <circle cx="160" cy="60" r="8" fill="#fbbf24"/>
+                <circle cx="40" cy="160" r="6" fill="#34d399"/>
+            </svg>
+        `;
+
+        function generateIcon(size) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = size;
+            canvas.height = size;
+            
+            const img = new Image();
+            const svgBlob = new Blob([svgContent], {type: 'image/svg+xml;charset=utf-8'});
+            const url = URL.createObjectURL(svgBlob);
+            
+            img.onload = function() {
+                ctx.drawImage(img, 0, 0, size, size);
+                URL.revokeObjectURL(url);
+                
+                // Add canvas to page
+                const label = document.createElement('div');
+                label.innerHTML = `<strong>${size}x${size}</strong><br>`;
+                label.appendChild(canvas);
+                document.getElementById('iconGrid').appendChild(label);
+            };
+            
+            img.src = url;
+        }
+
+        // Generate all icon sizes
+        sizes.forEach(generateIcon);
+    </script>
+</body>
+</html> 

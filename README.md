@@ -194,10 +194,32 @@ T66 includes a powerful theming system with:
 ## 📱 Mobile Support
 
 T66 is fully responsive and works great on mobile devices:
-- Touch-friendly interface
+- Touch-friendly interface with History/Chat toggle navigation
 - Swipe gestures for navigation
 - Mobile-optimized voice input
-- Progressive Web App (PWA) capabilities
+- **Progressive Web App (PWA) capabilities** - Install on your home screen!
+
+### 📲 Mobile PWA Experience
+
+For the best mobile experience, T66 includes full PWA support:
+
+- **Install on iOS/Android**: Add to home screen for app-like experience
+- **Offline Functionality**: Basic functionality works without internet
+- **Native Feel**: Runs like a native app with smooth animations
+- **Mobile-First Design**: Optimized layout for touch devices
+
+#### Access the Mobile PWA:
+- **Production**: Visit [mobile.t66.dev](https://mobile.t66.dev) on your mobile device
+- **Development**: Use the `pwa` branch for the latest mobile features
+- **Install**: Tap "Add to Home Screen" in your browser menu
+
+```bash
+# To run the PWA branch locally:
+git checkout pwa
+cd frontend
+npm install
+npm run dev
+```
 
 ## 🔊 Voice Features
 
