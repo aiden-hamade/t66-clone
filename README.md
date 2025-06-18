@@ -251,6 +251,10 @@ npm run build
 
 The build artifacts will be in `frontend/dist/`.
 
+## Future Development
+
+We are working on a Progressive Web App (PWA). A buggy version can be found on branch 'pwa'.
+
 ## 🤝 Contributing
 
 We welcome contributions! Here's how to get started:
