@@ -151,6 +151,11 @@ t66-clone/
 6. **Open your browser**
    - Frontend: http://localhost:5173
 
+7. **Create an account**
+   - Login
+   - Paste OpenRouter API key in settings for general model usage
+   - Paste OpenAI API key in settings for voice model usage
+
 ### Docker Setup (Optional)
 
 ```bash
