@@ -113,7 +113,7 @@ t66-clone/
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/t66-clone.git
+   git clone https://github.com/aiden-hamade/t66-clone.git
    cd t66-clone
    ```
 
