@@ -539,9 +539,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
            accumulatedContent += chunk;
            updateLastMessage(activeChat, accumulatedContent);
          },
-         (reason) => {
-           // Handle finish reason for continuation
-         },
+         () => {},
          async () => {
            setStreaming(false);
            
@@ -558,7 +556,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
            } catch (error) {
            }
          },
-         (error) => {
+         (error: Error) => {
            if ((error as any).name === 'AbortError') {
            } else {
              setStreaming(false);
@@ -856,7 +854,6 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
                     error: error.message,
                     webSearchUsed: webSearch
                   }
-                }).catch(saveError => {
                 });
               }
               
