@@ -471,10 +471,10 @@ function App() {
         <div className="container mx-auto px-4 py-16">
           {/* Hero Section */}
           <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 bg-dynamic-surface text-dynamic-secondary px-4 py-2 rounded-full text-sm font-medium mb-6">
+            <div className="inline-flex items-center text-sm font-medium">
               <img src={t66_logo} className="w-64 h-32" />
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-dynamic-subtitle mb-6 tracking-tight">A T3 Chat Clone</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-dynamic-primary mb-6">A T3 Chat Clone</h2>
             <p className="text-dynamic-primary">
               Welcome to T66-Chat, an LLM chat interface to be entered into the T3 Chat Cloneathon.<br />
               The name inspired by Palpatine's Order 66, where the clones were programmed to kill the Jedi.<br />
