@@ -201,6 +201,9 @@ T66 includes a powerful theming system with:
 
 ## 📱 Mobile Support
 
+### Mobile Preview
+![Mobile Preview](frontend/src/assets/IMG_8415.jpeg)
+
 T66 is fully responsive and works great on mobile devices:
 - Touch-friendly interface
 - Swipe gestures for navigation
