@@ -42,7 +42,7 @@ const getProviderConfig = (providerName: string): Provider => {
       name: 'OpenAI',
       color: '#000000', // Updated to black based on new 2024 branding
       logo: (
-        <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+        <svg viewBox="0 0 24 24" className="w-5 h-5" fill="white">
           <path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"/>
         </svg>
       )
@@ -160,23 +160,18 @@ const getBadgeStyles = (badge: string): string => {
 // Helper function to get capability titles
 const getCapabilityTitle = (capability: string): string => {
   switch (capability) {
-    case 'text':
-      return 'Text Generation';
-    case 'vision':
-      return 'Vision/Image Understanding';
-    case 'reasoning':
-    case 'thinking':
-      return 'Advanced Reasoning';
-    case 'coding':
-      return 'Code Generation';
-    case 'math':
-      return 'Mathematical Problem Solving';
-    case 'function_calling':
-      return 'Function Calling';
-    case 'extended_context':
-      return 'Extended Context Window';
+    case '🧠':
+      return 'Reasoning';
+    case '🌐':
+      return 'Web Search';
+    case '👁️':
+      return 'Image Upload';
+    case '📄':
+      return 'PDF Upload';
+    case '🎤':
+      return 'Voice';
     default:
-      return capability.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+      return 'Capability';
   }
 };
 
@@ -199,7 +194,7 @@ const MODELS: Model[] = [
     description: 'Most powerful reasoning model for complex scientific and mathematical problems',
     contextLength: 200000,
     pricing: { input: 20.00, output: 80.00 },
-    capabilities: ['🧠', '🔬', '💻'],
+    capabilities: ['🧠'],
     badges: ['Reasoning'],
   },
   {
@@ -209,7 +204,7 @@ const MODELS: Model[] = [
     description: 'Compact reasoning model optimized for efficiency and speed',
     contextLength: 200000,
     pricing: { input: 1.10, output: 4.40 },
-    capabilities: ['🧠', '💻'],
+    capabilities: ['🧠'],
     badges: ['Reasoning'],
   },
   {
@@ -219,7 +214,7 @@ const MODELS: Model[] = [
     description: 'Next-generation multimodal model with enhanced capabilities',
     contextLength: 128000,
     pricing: { input: 75.00, output: 150.00 },
-    capabilities: ['💭', '👁️', '🎵'],
+    capabilities: ['🧠', '👁️', '📄', '🎤', '🌐'],
     badges: ['Recommended'],
   },
   {
@@ -229,7 +224,7 @@ const MODELS: Model[] = [
     description: 'Advanced multimodal model with vision, audio, and text capabilities',
     contextLength: 128000,
     pricing: { input: 2.50, output: 10.00 },
-    capabilities: ['💭', '👁️', '🎵'],
+    capabilities: ['🧠', '👁️', '🎤', '📄', '🌐'],
     badges: ['Popular'],
   },
   {
@@ -239,7 +234,7 @@ const MODELS: Model[] = [
     description: 'Enhanced model with improved reasoning and extended context',
     contextLength: 1047576,
     pricing: { input: 2.00, output: 8.00 },
-    capabilities: ['💭', '👁️', '💻'],
+    capabilities: ['🧠', '👁️', '📄', '🌐'],
     badges: [],
   },
   {
@@ -249,7 +244,7 @@ const MODELS: Model[] = [
     description: 'Efficient version of GPT-4.1 with balanced performance and cost',
     contextLength: 1047576,
     pricing: { input: 0.40, output: 1.60 },
-    capabilities: ['💭', '👁️'],
+    capabilities: ['🧠', '👁️'],
     badges: [],
   },
   {
@@ -259,7 +254,7 @@ const MODELS: Model[] = [
     description: 'Ultra-efficient model for high-volume applications',
     contextLength: 1047576,
     pricing: { input: 0.10, output: 0.40 },
-    capabilities: ['💭'],
+    capabilities: ['🧠'],
     badges: [],
   },
 
@@ -271,7 +266,7 @@ const MODELS: Model[] = [
     description: 'Most intelligent model with best-in-class analysis and coding capabilities',
     contextLength: 200000,
     pricing: { input: 3.00, output: 15.00 },
-    capabilities: ['💭', '👁️', '💻'],
+    capabilities: ['🧠', '👁️', '📄'],
     badges: ['Popular', 'Recommended'],
   },
   {
@@ -281,7 +276,7 @@ const MODELS: Model[] = [
     description: 'Enhanced Sonnet model with improved reasoning and analysis',
     contextLength: 200000,
     pricing: { input: 3.00, output: 15.00 },
-    capabilities: ['💭', '👁️', '💻'],
+    capabilities: ['🧠', '👁️', '📄'],
     badges: [],
   },
   {
@@ -291,7 +286,7 @@ const MODELS: Model[] = [
     description: 'Claude 3.7 with advanced reasoning and thinking capabilities',
     contextLength: 200000,
     pricing: { input: 3.00, output: 15.00 },
-    capabilities: ['🧠', '💭', '💻'],
+    capabilities: ['🧠', '👁️', '📄'],
     badges: ['Reasoning'],
   },
   {
@@ -301,7 +296,7 @@ const MODELS: Model[] = [
     description: 'Most powerful Claude model for highly complex tasks',
     contextLength: 200000,
     pricing: { input: 15.00, output: 75.00 },
-    capabilities: ['💭', '👁️', '🧠'],
+    capabilities: ['🧠', '👁️', '📄'],
     badges: [],
   },
   {
@@ -311,7 +306,7 @@ const MODELS: Model[] = [
     description: 'Next-generation Claude model with enhanced capabilities',
     contextLength: 200000,
     pricing: { input: 3.00, output: 15.00 },
-    capabilities: ['💭', '👁️', '💻'],
+    capabilities: ['🧠', '👁️', '📄'],
     badges: [],
   },
 
@@ -323,7 +318,7 @@ const MODELS: Model[] = [
     description: 'Latest open-source model with improved capabilities',
     contextLength: 131072,
     pricing: { input: 0.00, output: 0.00 },
-    capabilities: ['💭', '💻'],
+    capabilities: ['🧠', '👁️'],
     badges: ['Free'],
   },
   {
@@ -333,7 +328,7 @@ const MODELS: Model[] = [
     description: 'Next-generation Llama model with enhanced understanding',
     contextLength: 1048576,
     pricing: { input: 0.08, output: 0.30 },
-    capabilities: ['💭', '👁️', '💻'],
+    capabilities: ['🧠', '👁️', '📄'],
     badges: [],
   },
   {
@@ -343,7 +338,7 @@ const MODELS: Model[] = [
     description: 'Advanced Llama 4 variant with superior performance',
     contextLength: 1048576,
     pricing: { input: 0.15, output: 0.60 },
-    capabilities: ['💭', '👁️', '💻'],
+    capabilities: ['🧠', '👁️', '📄'],
     badges: [],
   },
 
@@ -355,7 +350,7 @@ const MODELS: Model[] = [
     description: 'Latest open-source model with exceptional capabilities',
     contextLength: 163840,
     pricing: { input: 0.00, output: 0.00 },
-    capabilities: ['💭', '💻', '🔢'],
+    capabilities: ['🧠', '👁️'],
     badges: ['Free', 'Popular'],
   },
   {
@@ -365,7 +360,7 @@ const MODELS: Model[] = [
     description: 'Advanced reasoning model with strong problem-solving abilities',
     contextLength: 128000,
     pricing: { input: 0.45, output: 2.15 },
-    capabilities: ['🧠', '💻', '🔢'],
+    capabilities: ['🧠'],
     badges: ['Reasoning'],
   },
   {
@@ -375,7 +370,7 @@ const MODELS: Model[] = [
     description: 'Enhanced version of DeepSeek R1 with improved reasoning',
     contextLength: 128000,
     pricing: { input: 0.50, output: 2.15 },
-    capabilities: ['🧠', '💻', '🔢'],
+    capabilities: ['🧠'],
     badges: ['Reasoning'],
   },
   {
@@ -385,7 +380,7 @@ const MODELS: Model[] = [
     description: 'Distilled reasoning model based on Qwen architecture',
     contextLength: 131072,
     pricing: { input: 0.10, output: 0.20 },
-    capabilities: ['🧠', '💻'],
+    capabilities: ['🧠'],
     badges: [],
   },
   {
@@ -395,7 +390,7 @@ const MODELS: Model[] = [
     description: 'Efficient distilled reasoning model based on Llama',
     contextLength: 32000,
     pricing: { input: 0.04, output: 0.04 },
-    capabilities: ['🧠', '💻'],
+    capabilities: ['🧠'],
     badges: [],
   },
 
@@ -407,7 +402,7 @@ const MODELS: Model[] = [
     description: 'Advanced AI with personality and real-time knowledge',
     contextLength: 131072,
     pricing: { input: 3.00, output: 15.00 },
-    capabilities: ['💭', '🧠', '🌐'],
+    capabilities: ['🧠', '🌐'],
     badges: [],
   },
   {
@@ -417,7 +412,7 @@ const MODELS: Model[] = [
     description: 'Compact version of Grok 3 with efficient performance',
     contextLength: 131072,
     pricing: { input: 0.30, output: 0.50 },
-    capabilities: ['💭', '🧠'],
+    capabilities: ['🧠', '🌐'],
     badges: [],
   },
 
@@ -429,7 +424,7 @@ const MODELS: Model[] = [
     description: 'Reasoning-focused model with question-answering capabilities',
     contextLength: 131072,
     pricing: { input: 0.15, output: 0.20 },
-    capabilities: ['🧠', '💻', '🔢'],
+    capabilities: ['🧠'],
     badges: [],
   },
   {
@@ -439,7 +434,7 @@ const MODELS: Model[] = [
     description: 'Vision-language model with multimodal understanding',
     contextLength: 128000,
     pricing: { input: 0.90, output: 0.90 },
-    capabilities: ['💭', '👁️', '💻'],
+    capabilities: ['🧠', '👁️', '📄'],
     badges: [],
   },
 
@@ -451,7 +446,7 @@ const MODELS: Model[] = [
     description: 'Lightweight version of Gemini 2.5 Flash for efficient processing',
     contextLength: 1048576,
     pricing: { input: 0.10, output: 0.40 },
-    capabilities: ['💭', '👁️'],
+    capabilities: ['🧠', '👁️', '🎤', '📄'],
     badges: [],
   },
   {
@@ -461,7 +456,7 @@ const MODELS: Model[] = [
     description: 'Fast, efficient multimodal model with enhanced capabilities',
     contextLength: 1048576,
     pricing: { input: 0.30, output: 2.50 },
-    capabilities: ['💭', '👁️', '🎵'],
+    capabilities: ['🧠', '👁️', '🎤', '📄'],
     badges: ['Popular'],
   },
   {
@@ -471,7 +466,7 @@ const MODELS: Model[] = [
     description: 'Advanced model with massive context and superior performance',
     contextLength: 1048576,
     pricing: { input: 1.25, output: 10.00 },
-    capabilities: ['💭', '👁️', '🎵'],
+    capabilities: ['🧠', '👁️', '🎤', '📄'],
     badges: ['Recommended'],
   },
   {
@@ -481,7 +476,7 @@ const MODELS: Model[] = [
     description: 'Gemini 2.5 Flash with advanced reasoning and thinking capabilities',
     contextLength: 1048576,
     pricing: { input: 0.15, output: 3.50 },
-    capabilities: ['🧠', '👁️', '💻'],
+    capabilities: ['🧠', '👁️', '📄'],
     badges: ['Reasoning'],
   },
 ];
@@ -506,22 +501,6 @@ export function ModelSelectorModal({ isOpen, onClose, selectedModel, onModelSele
   const handleModelSelect = (modelId: string) => {
     onModelSelect(modelId)
     onClose()
-  }
-
-  const renderCapabilityIcon = (capability: string) => {
-    switch(capability) {
-      case 'reasoning':
-      case 'thinking':
-        return <Brain size={12} className="text-purple-400" />
-      case 'coding':
-        return <Code size={12} className="text-green-400" />
-      case 'vision':
-        return <Eye size={12} className="text-blue-400" />
-      case 'math':
-        return <Calculator size={12} className="text-orange-400" />
-      default:
-        return <Layers size={12} className="text-gray-400" />
-    }
   }
 
   return (
@@ -585,7 +564,6 @@ export function ModelSelectorModal({ isOpen, onClose, selectedModel, onModelSele
                       model={model} 
                       isSelected={selectedModel === model.id}
                       onSelect={() => handleModelSelect(model.id)}
-                      renderCapabilityIcon={renderCapabilityIcon}
                     />
                   ))}
                 </div>
@@ -594,91 +572,14 @@ export function ModelSelectorModal({ isOpen, onClose, selectedModel, onModelSele
           ) : (
             // Show filtered results
             <div className="grid gap-3">
-              {filteredModels.map((model) => {
-                const provider = getProviderConfig(model.provider);
-                const isSelected = selectedModel === model.id;
-                const showThinking = isReasoningModel(model.id);
-
-                return (
-                  <div
-                    key={model.id}
-                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 hover:shadow-md ${
-                      isSelected
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                    }`}
-                    onClick={() => handleModelSelect(model.id)}
-                  >
-                    {/* Model Header */}
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div 
-                          className="p-2 rounded-lg"
-                          style={{ backgroundColor: `${provider.color}20`, color: provider.color }}
-                        >
-                          {provider.logo}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-gray-900 dark:text-white">{model.name}</h3>
-                            {showThinking && (
-                              <span className="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full font-medium">
-                                Reasoning
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">{model.provider}</p>
-                        </div>
-                      </div>
-                      
-                      {/* Badges */}
-                      <div className="flex flex-wrap gap-1">
-                        {model.badges?.map((badge) => (
-                          <span
-                            key={badge}
-                            className={`text-xs px-2 py-1 rounded-full font-medium ${getBadgeStyles(badge)}`}
-                          >
-                            {badge}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Description */}
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
-                      {model.description}
-                    </p>
-
-                    {/* Capabilities */}
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-xs text-gray-500 dark:text-gray-400">Capabilities:</span>
-                      <div className="flex gap-1">
-                        {model.capabilities.map((capability, index) => (
-                          <span key={index} className="text-sm" title={getCapabilityTitle(capability)}>
-                            {capability}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Pricing and Context */}
-                    <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-                      <div className="flex items-center gap-4">
-                        <span>${model.pricing?.input?.toFixed(2)}/${model.pricing?.output?.toFixed(2)} per 1M tokens</span>
-                        <span>{(model.contextLength / 1000).toFixed(0)}K context</span>
-                      </div>
-                      {isSelected && (
-                        <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400">
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                          <span className="font-medium">Selected</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+              {filteredModels.map((model) => (
+                <ModelCard 
+                  key={model.id} 
+                  model={model} 
+                  isSelected={selectedModel === model.id}
+                  onSelect={() => handleModelSelect(model.id)}
+                />
+              ))}
             </div>
           )}
         </div>
@@ -701,10 +602,9 @@ interface ModelCardProps {
   model: Model
   isSelected: boolean
   onSelect: () => void
-  renderCapabilityIcon: (capability: string) => React.ReactElement
 }
 
-function ModelCard({ model, isSelected, onSelect, renderCapabilityIcon }: ModelCardProps) {
+function ModelCard({ model, isSelected, onSelect }: ModelCardProps) {
   const providerInfo = getProviderConfig(model.provider)
   
   return (
@@ -722,7 +622,7 @@ function ModelCard({ model, isSelected, onSelect, renderCapabilityIcon }: ModelC
                      <div className="flex items-center gap-3">
              <div 
                className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-               style={{ backgroundColor: providerInfo.color, color: 'white' }}
+               style={{ backgroundColor: providerInfo.color }}
              >
                {providerInfo.logo}
              </div>
@@ -760,7 +660,7 @@ function ModelCard({ model, isSelected, onSelect, renderCapabilityIcon }: ModelC
 
           {/* Stats */}
           <div className="flex items-center gap-4 text-xs text-theme-secondary">
-            <span className="font-medium" style={{ color: providerInfo.color }}>
+            <span className="font-medium" style={{ color: providerInfo.name === 'OpenAI' ? 'var(--color-text-primary)' : providerInfo.color }}>
               {model.provider}
             </span>
             <span className="flex items-center gap-1">
@@ -778,9 +678,8 @@ function ModelCard({ model, isSelected, onSelect, renderCapabilityIcon }: ModelC
           {/* Capabilities */}
           <div className="flex flex-wrap gap-2">
             {model.capabilities.slice(0, 6).map(cap => (
-              <div key={cap} className="flex items-center gap-1 text-xs bg-theme-button-secondary text-theme-secondary px-2 py-1 rounded-full">
-                {renderCapabilityIcon(cap)}
-                {cap.replace('_', ' ')}
+              <div key={cap} title={getCapabilityTitle(cap)} className="flex items-center gap-1 text-xs bg-theme-button-secondary text-theme-secondary px-2 py-1 rounded-full">
+                {cap}
               </div>
             ))}
             {model.capabilities.length > 6 && (

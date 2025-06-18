@@ -202,7 +202,7 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                         href="https://openrouter.ai/keys" 
                         target="_blank" 
                         rel="noopener noreferrer" 
-                        className="text-theme-accent hover:underline font-medium"
+                        className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
                       >
                     openrouter.ai/keys
                   </a>
@@ -266,7 +266,7 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                         href="https://platform.openai.com/api-keys" 
                         target="_blank" 
                         rel="noopener noreferrer" 
-                        className="text-theme-accent hover:underline font-medium"
+                        className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
                       >
                         platform.openai.com/api-keys
                       </a>
