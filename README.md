@@ -33,7 +33,6 @@
 - **File Attachments** - Upload and chat about images, PDFs, and documents
 - **Web Search** - Real-time web search integration with source citations
 - **Chat Sharing** - Share conversations with public links
-- **Authentication** - Secure user accounts with Firebase Auth
 - **Cross-device Sync** - Conversations sync across all your devices
 
 ## 🏗️ Architecture
