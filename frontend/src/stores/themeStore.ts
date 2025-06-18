@@ -119,7 +119,7 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
     }
     
     // Save to storage (async) - don't await to keep store method synchronous
-    saveThemeToStorage(newTheme, currentUser?.id, 'Custom').catch(error => {
+    saveThemeToStorage(newTheme, currentUser?.id, 'Custom').catch(_error => {
     })
   },
 
@@ -139,7 +139,7 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
     })
     
     // Save to storage (async) - don't await to keep store method synchronous
-    saveThemeToStorage(theme.properties, currentUser?.id, theme.name).catch(error => {
+    saveThemeToStorage(theme.properties, currentUser?.id, theme.name).catch(_error => {
     })
   },
 
@@ -159,7 +159,7 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
     })
     
     // Save to storage (async) - don't await to keep store method synchronous
-    saveThemeToStorage(defaultTheme, currentUser?.id, 'T3 Theme').catch(error => {
+    saveThemeToStorage(defaultTheme, currentUser?.id, 'T3 Theme').catch(_error => {
     })
   },
 

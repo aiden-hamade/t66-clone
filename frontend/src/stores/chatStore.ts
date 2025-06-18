@@ -767,7 +767,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
                   model: currentModel,
                   webSearchUsed: webSearch
                 }
-              }).catch(error => {
+              }).catch(_error => {
               });
             }
             
@@ -779,7 +779,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
                   model: currentModel,
                   webSearchUsed: webSearch
                 }
-              }).catch(error => {
+              }).catch(_error => {
               });
             }
           },
@@ -829,11 +829,11 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
                     await updateChatTitle(currentActiveChat, generatedTitle);
                   } else {
                   }
-                } catch (titleError) {
+                } catch (_titleError) {
                 }
               } else {
               }
-            } catch (error) {
+            } catch (_error) {
             }
           },
           (error) => {
@@ -1452,7 +1452,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
             }
           }
         },
-        (reason: string) => {
+        (_reason: string) => {
         },
         async (searchResults) => {
           webSearchResults = searchResults;
