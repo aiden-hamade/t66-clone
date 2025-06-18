@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import t66_logo from './assets/t66-chat-logo.svg'
+// Logo path - using public folder for better deployment compatibility
+const t66_logo = '/t66-chat-logo.svg'
 import { MessageSquare, Settings, User, Plus, MoreVertical, Trash2, ChevronDown, Edit2, LogOut, Info, Copy, GitBranch, Folder, FolderPlus, ChevronRight, Share2, Paperclip, X, FileText, Globe, Mic, Volume2, Edit3 } from 'lucide-react'
 import './App.css'
 
@@ -187,7 +188,7 @@ function App() {
             size: file.size,
             type: file.type,
             url: base64,
-            createdAt: new Date()
+            createdAt: new Date().toISOString()
           }
         })
       )
@@ -457,7 +458,7 @@ function App() {
         <Route path="/chats" element={<SharedChatView />} />
         <Route path="/*" element={
       <ProtectedRoute>
-        <div className="min-h-screen bg-theme-background">
+        <div className="h-screen bg-theme-background flex flex-col overflow-hidden">
           {/* Mobile Navigation Toggle - Only visible on mobile */}
           <div className="md:hidden bg-theme-surface border-b border-theme">
             <div className="flex items-center justify-between p-3">
@@ -490,11 +491,11 @@ function App() {
             </div>
           </div>
 
-          <div className="flex h-[calc(100vh-60px)] md:h-screen bg-theme-background text-theme-primary">
+          <div className="flex flex-1 bg-theme-background text-theme-primary desktop-container">
             {/* Sidebar - Hidden on mobile, always visible on desktop */}
-            <div className={`${mobileView === 'history' ? 'block' : 'hidden'} md:block w-full md:w-64 bg-theme-surface border-r border-theme flex flex-col`}>
+            <div className={`${mobileView === 'history' ? 'block w-full' : 'hidden'} md:block desktop-sidebar bg-theme-surface border-r border-theme sidebar-content`}>
                               {/* Header */}
-              <div className="p-3 border-b border-theme">
+              <div className="p-3 border-b border-theme sidebar-header">
                 <div className="flex flex-col items-center">
                   <img
                     src={t66_logo}
@@ -505,7 +506,7 @@ function App() {
               </div>
 
               {/* New Chat Button */}
-              <div className="p-3">
+              <div className="p-3 sidebar-new-chat">
                 <Button
                   onClick={handleCreateNewChat}
                   className="w-full flex items-center gap-2 text-sm py-2"
@@ -516,7 +517,7 @@ function App() {
               </div>
 
               {/* Chat List */}
-              <div className="flex-1 overflow-y-auto px-2 pb-2 space-y-1">
+              <div className="px-2 pb-2 space-y-1 sidebar-chat-list">
                 {/* Create Folder Button */}
                 <div className="mb-2">
                   {creatingFolder ? (
@@ -816,7 +817,7 @@ function App() {
               </div>
 
               {/* User Section */}
-              <div className="p-3 border-t border-theme">
+              <div className="p-3 border-t border-theme sidebar-user">
                 <div className="flex items-center gap-2">
                   <div className="w-7 h-7 bg-theme-button-primary rounded-full flex items-center justify-center flex-shrink-0">
                     <User size={14} className="text-theme-button-primary" />
@@ -851,7 +852,7 @@ function App() {
             </div>
 
             {/* Main Chat Area - Hidden on mobile when history view is active */}
-            <div className={`${mobileView === 'chat' ? 'block' : 'hidden'} md:block flex-1 flex flex-col`}>
+            <div className={`${mobileView === 'chat' ? 'block w-full' : 'hidden'} md:block desktop-main flex flex-col min-w-0`}>
               {/* Chat Header */}
               <div className="p-4 border-b border-theme bg-theme-chat-header">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
@@ -956,7 +957,7 @@ function App() {
               ) : null}
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 chat-messages-container">
                 {currentChatData?.messages.map(message => (
                   <div
                     key={message.id}
@@ -1103,7 +1104,7 @@ function App() {
               </div>
 
               {/* Message Input */}
-              <div className="p-4 border-t border-theme bg-theme-chat-header">
+              <div className="p-4 border-t border-theme bg-theme-chat-header chat-input-area">
                 {/* Attachment Preview */}
                 {attachments.length > 0 && (
                   <div className="mb-3 flex flex-wrap gap-2">
