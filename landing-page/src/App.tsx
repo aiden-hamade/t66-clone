@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { flushSync } from 'react-dom'
 import wip from './assets/wip.webp'
+import koby_pfp from './assets/koby_pfp.png'
+import aiden_pfp from './assets/2024-P13259.jpg'
 import './App.css'
 
 function App() {
@@ -104,9 +106,9 @@ function App() {
 
   /* Navigation Links */
   const links = [
-    { title: 'Documentation', url: 'https://example.com/docs' },
+    { title: 'Competition', url: 'https://cloneathon.t3.chat' },
     { title: 'GitHub Repo', url: 'https://github.com/aiden-hamade/t66-clone' },
-    { title: 'Live Demo', url: 'https://example.com/demo' },
+    { title: 'Live Demo', url: 'https://chat.t66.dev' },
   ];
 
   /* Theme Presets */
@@ -480,7 +482,7 @@ function App() {
             <p className="text-dynamic-primary">
               Welcome to T66-Chat, an LLM chat interface to be entered into the T3 Chat Cloneathon.<br />
               The name inspired by Palpatine's Order 66, where the clones were programmed to kill the Jedi.<br />
-              Below are quick links to documentation, source code, and a live demo.
+              Below are quick links to the cloneathon, source code, and a live demo.
             </p>
           </div>
 
@@ -495,7 +497,7 @@ function App() {
                 className="group bg-dynamic-surface hover:bg-dynamic-hover border border-dynamic rounded-xl p-8 text-center transition-all duration-300 hover:scale-105 hover:shadow-2xl"
               >
                 <div className="w-16 h-16 bg-dynamic-accent rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
-                  {link.title === 'Documentation' ? (
+                  {link.title === 'Competition' ? (
                     <svg className="w-8 h-8 text-dynamic-primary" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/>
                       <polyline points="14,2 14,8 20,8"/>
@@ -523,16 +525,6 @@ function App() {
             ))}
           </div>
 
-          {/* Work in Progress Notice */}
-          <div className="mb-16">
-            <div className="bg-dynamic-surface border border-dynamic rounded-xl p-8 w-2/3 mx-auto text-center">
-              <h2 className="text-3xl font-semibold text-dynamic-primary mb-4">Stay Tuned!</h2>
-              <p className="text-dynamic-secondary">
-                This project is currently a work in progress. Check back soon for updates!
-              </p>
-            </div>
-          </div>
-
           {/* About Section */}
           <div className="mb-16">
             <h2 className="text-4xl font-bold text-dynamic-primary text-center mb-8">About T66-Chat</h2>
@@ -550,16 +542,16 @@ function App() {
             <h3 className="text-2xl font-semibold text-dynamic-primary text-center mb-8">Meet the Team</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-2xl mx-auto">
               <div className="bg-dynamic-surface hover:bg-dynamic-hover p-6 rounded-xl border border-dynamic transition-all duration-200 text-center">
-                <div className="w-16 h-16 bg-dynamic-accent rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-dynamic-primary text-2xl font-bold">KP</span>
+                <div className="w-64 h-64 bg-dynamic-accent rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
+                  <img src={koby_pfp} alt="Koby Pierce" className="w-full h-full object-cover" />
                 </div>
                 <h4 className="text-xl font-semibold text-dynamic-primary mb-1">Koby Pierce</h4>
                 <p className="text-dynamic-accent text-sm">Lead Developer</p>
               </div>
               
               <div className="bg-dynamic-surface hover:bg-dynamic-hover p-6 rounded-xl border border-dynamic transition-all duration-200 text-center">
-                <div className="w-16 h-16 bg-dynamic-accent rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-dynamic-primary text-2xl font-bold">AH</span>
+                <div className="w-64 h-64 bg-dynamic-accent rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
+                  <img src={aiden_pfp} alt="Aiden Hamade" className="w-full h-full object-cover" />
                 </div>
                 <h4 className="text-xl font-semibold text-dynamic-primary mb-1">Aiden Hamade</h4>
                 <p className="text-dynamic-accent text-sm">Lead Developer</p>
@@ -704,8 +696,6 @@ function App() {
                 <p className="text-dynamic-secondary">Native-like mobile experience with offline support and app-like functionality.</p>
               </div>
             </div>
-            
-            <p className="text-dynamic-secondary text-center mt-8 text-lg">And more features going to be announced later in development</p>
           </div>
 
           {/* Style Editor Button */}
