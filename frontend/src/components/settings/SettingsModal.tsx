@@ -1,6 +1,6 @@
 import { Modal } from '../ui/Modal'
 import { Button } from '../ui/Button'
-import { Eye, EyeOff, Upload, User as UserIcon, Palette, Settings as SettingsIcon, Info, Key } from 'lucide-react'
+import { Eye, EyeOff, User as UserIcon, Palette, Settings as SettingsIcon, Info, Key } from 'lucide-react'
 import { useState } from 'react'
 import { updateUserProfile } from '../../lib/auth'
 import { useThemeStore } from '../../stores/themeStore'
