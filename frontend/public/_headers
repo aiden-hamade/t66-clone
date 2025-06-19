@@ -1,0 +1,24 @@
+# Cloudflare Headers Configuration
+
+# Cache icons for 1 hour (to allow updates for PWA)
+/icons/*
+  Cache-Control: public, max-age=3600
+  
+# Cache manifest for 1 hour (to allow PWA updates)
+/manifest.json
+  Cache-Control: public, max-age=3600
+  Content-Type: application/manifest+json
+
+# Service Worker - don't cache
+/sw.js
+  Cache-Control: public, max-age=0, must-revalidate
+  
+# Main app files
+/*.html
+  Cache-Control: public, max-age=3600
+  
+/*.js
+  Cache-Control: public, max-age=31536000, immutable
+  
+/*.css  
+  Cache-Control: public, max-age=31536000, immutable 

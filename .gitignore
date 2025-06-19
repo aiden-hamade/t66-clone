@@ -58,8 +58,9 @@ out/
 # Nuxt.js
 .nuxt/
 
-# Gatsby
+# Gatsby - ignore public but allow frontend/public for PWA
 public/
+!frontend/public/
 .cache/
 
 # ========================================

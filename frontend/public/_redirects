@@ -1,0 +1,8 @@
+# Redirect all routes to index.html for SPA routing
+/*    /index.html   200
+
+# Ensure icons are served with correct headers
+/icons/*  /icons/:splat  200
+
+# Ensure manifest is served correctly
+/manifest.json  /manifest.json  200 
