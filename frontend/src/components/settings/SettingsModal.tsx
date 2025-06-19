@@ -228,7 +228,7 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                       <div className="bg-theme-input rounded-lg border border-theme-input p-3 min-h-[3rem]">
                         <div className="flex items-center justify-between gap-3">
                           <div className="flex-1 min-w-0 flex items-center">
-                            <span className="text-sm text-theme-primary font-mono break-all">
+                            <span className="text-sm text-theme-primary font-mono break-all truncate">
                       {user?.openRouterApiKey ? 
                         (showOpenRouterApiKey ? user.openRouterApiKey : '••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••') 
                         : 'Not configured'
@@ -292,7 +292,7 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                       <div className="bg-theme-input rounded-lg border border-theme-input p-3 min-h-[3rem]">
                         <div className="flex items-center justify-between gap-3">
                           <div className="flex-1 min-w-0 flex items-center">
-                            <span className="text-sm text-theme-primary font-mono break-all">
+                            <span className="text-sm text-theme-primary font-mono break-all truncate">
                               {user?.openaiApiKey ? 
                                 (showOpenAIApiKey ? user.openaiApiKey : '••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••') 
                                 : 'Not configured'
@@ -330,7 +330,7 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-theme-secondary">Version</span>
-                    <span className="text-sm font-medium text-theme-primary">0.1.0</span>
+                    <span className="text-sm font-medium text-theme-primary">0.2.1</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-theme-secondary">Built for</span>
