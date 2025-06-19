@@ -8,11 +8,159 @@
 
 > 🚀 **A powerful, open-source AI chat platform** - Built for the T3 Chat Cloneathon with cutting-edge features and beautiful design.
 
-## 🎬 Demo
+## 📱 Previews
 
-[![T66 Demo Video](https://img.youtube.com/vi/UoTBjFbPuik/0.jpg)](https://youtu.be/UoTBjFbPuik)
+<div align="center">
 
-*Click to watch the full demo showcasing T66's features and capabilities*
+<!-- Hero Video Section -->
+<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px; border-radius: 20px; margin: 20px 0; box-shadow: 0 20px 40px rgba(0,0,0,0.1);">
+  <h3 style="color: white; margin: 0 0 20px 0; font-size: 28px;">🎬 Experience T66 in Action</h3>
+  <div style="position: relative; display: inline-block; border-radius: 15px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.3);">
+    <a href="https://youtu.be/UoTBjFbPuik">
+      <img src="https://img.youtube.com/vi/UoTBjFbPuik/0.jpg" alt="T66 Demo Video" style="width: 600px; max-width: 100%; transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"/>
+    </a>
+  </div>
+  <p style="color: rgba(255,255,255,0.9); margin: 20px 0 0 0; font-size: 16px;">✨ Click to watch the full demo showcasing T66's cutting-edge features</p>
+</div>
+
+<!-- Screenshots Gallery -->
+<div style="background: linear-gradient(135deg, #f8f9ff 0%, #e8f0ff 100%); padding: 40px 20px; border-radius: 20px; margin: 40px 0;">
+  <h3 style="color: #667eea; font-size: 28px; text-align: center; margin-bottom: 30px;">📸 Application Screenshots</h3>
+  
+  <table style="width: 100%; border-collapse: collapse;">
+    <tr>
+      <td align="center" style="padding: 20px; vertical-align: top;">
+        <div style="background: white; border-radius: 15px; padding: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.1);">
+          <h4 style="color: #667eea; margin: 0 0 15px 0;">💬 Chat Interface</h4>
+          <div style="height: 400px; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 10px;">
+            <img src="frontend/src/assets/Chat.png" alt="T66 Chat Interface" style="max-width: 580px; max-height: 400px; width: auto; height: auto; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
+          </div>
+          <p style="margin: 15px 0 0 0; color: #666; font-size: 14px; line-height: 1.5;">Modern AI chat with multiple models, syntax highlighting, and real-time streaming responses</p>
+        </div>
+      </td>
+      <td align="center" style="padding: 20px; vertical-align: top;">
+        <div style="background: white; border-radius: 15px; padding: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.1);">
+          <h4 style="color: #764ba2; margin: 0 0 15px 0;">📚 Chat History</h4>
+          <div style="height: 400px; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 10px;">
+            <img src="frontend/src/assets/History.png" alt="T66 Chat History" style="max-width: 380px; max-height: 400px; width: auto; height: auto; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
+          </div>
+          <p style="margin: 15px 0 0 0; color: #666; font-size: 14px; line-height: 1.5;">Organized conversation management with folders, search, and intelligent categorization</p>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" style="padding: 20px; vertical-align: top;">
+        <div style="background: white; border-radius: 15px; padding: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.1);">
+          <h4 style="color: #f093fb; margin: 0 0 15px 0;">📱 Mobile Experience</h4>
+          <div style="height: 400px; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 10px;">
+            <img src="frontend/src/assets/IMG_0368.PNG" alt="T66 Mobile View" style="max-width: 380px; max-height: 400px; width: auto; height: auto; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
+          </div>
+          <p style="margin: 15px 0 0 0; color: #666; font-size: 14px; line-height: 1.5;">Responsive PWA design optimized for mobile with touch-friendly interface</p>
+        </div>
+      </td>
+      <td align="center" style="padding: 20px; vertical-align: top;">
+        <div style="background: white; border-radius: 15px; padding: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.1);">
+          <h4 style="color: #9b59b6; margin: 0 0 15px 0;">📱 Mobile Features</h4>
+          <div style="height: 400px; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 10px;">
+            <img src="frontend/src/assets/IMG_8415.jpeg" alt="T66 Mobile Features" style="max-width: 380px; max-height: 400px; width: auto; height: auto; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
+          </div>
+          <p style="margin: 15px 0 0 0; color: #666; font-size: 14px; line-height: 1.5;">Advanced mobile functionality with intuitive gesture controls and optimized performance</p>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" colspan="2" style="padding: 20px; vertical-align: top;">
+        <div style="background: white; border-radius: 15px; padding: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); max-width: 800px; margin: 0 auto;">
+          <h4 style="color: #fcb69f; margin: 0 0 15px 0;">🎨 App Branding</h4>
+          <div style="background: linear-gradient(45deg, #ffecd2, #fcb69f); padding: 30px; border-radius: 10px; margin-bottom: 15px;">
+            <img src="frontend/src/assets/Icon (2).png" alt="T66 App Icon" width="200" style="border-radius: 30px;"/>
+          </div>
+          <p style="margin: 0; color: #666; font-size: 14px; line-height: 1.5;">Beautiful T66 branding with PWA support for home screen installation</p>
+        </div>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<!-- AI Providers Section -->
+<div style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding: 50px 30px; border-radius: 25px; margin: 60px 0;">
+  <h3 style="font-size: 28px; margin-bottom: 30px; color: #2c3e50;">🎯 Powered by Leading AI Providers</h3>
+  <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 25px; margin: 40px 0;">
+    <div style="background: white; padding: 20px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+      <img src="frontend/src/assets/openai.svg" alt="OpenAI" width="60" height="60"/>
+    </div>
+    <div style="background: white; padding: 20px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+      <img src="frontend/src/assets/claude-color.svg" alt="Anthropic Claude" width="60" height="60"/>
+    </div>
+    <div style="background: white; padding: 20px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+      <img src="frontend/src/assets/google-color.svg" alt="Google AI" width="60" height="60"/>
+    </div>
+    <div style="background: white; padding: 20px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+      <img src="frontend/src/assets/meta-color.svg" alt="Meta AI" width="60" height="60"/>
+    </div>
+    <div style="background: white; padding: 20px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+      <img src="frontend/src/assets/deepseek-color.svg" alt="DeepSeek" width="60" height="60"/>
+    </div>
+    <div style="background: white; padding: 20px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+      <img src="frontend/src/assets/qwen-color.svg" alt="Qwen" width="60" height="60"/>
+    </div>
+    <div style="background: white; padding: 20px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+      <img src="frontend/src/assets/xai.svg" alt="xAI Grok" width="60" height="60"/>
+    </div>
+  </div>
+  <div style="background: rgba(255,255,255,0.8); padding: 20px; border-radius: 15px; margin-top: 30px;">
+    <p style="margin: 0; color: #34495e; font-size: 18px; font-weight: 500;">🌟 Access to <strong>50+ AI models</strong> through seamless OpenRouter integration</p>
+  </div>
+</div>
+
+## 💡 Our Vision
+
+<div align="center">
+
+**We really wanted to build something that we would genuinely want to use, so that is what we built with T66 Chat.**
+
+### 🚀 Future Features
+
+> There are several features we didn't get to build, such as an **advanced mode** that would allow you to create functions, update system prompts, adjust temperature, and access more advanced settings. We also want to add simple features that aren't in T3, such as **memory** (which was almost completed before the Cloneathon deadline but was too buggy to release).
+
+### ✨ Our Commitment
+
+**We plan on continuing this project after the Cloneathon ends to create the AI chat experience we truly want to use every day.**
+
+---
+
+</div>
+
+<!-- Team Section -->
+<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 20px; border-radius: 20px; margin: 40px 0;">
+  <h3 style="color: white; font-size: 28px; text-align: center; margin-bottom: 30px;">👥 Meet the Team</h3>
+  
+  <table style="width: 100%; max-width: 700px; margin: 0 auto; border-collapse: collapse;">
+    <tr>
+      <td align="center" style="padding: 20px;">
+        <div style="background: rgba(255,255,255,0.95); padding: 30px; border-radius: 15px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+          <img src="landing-page/src/assets/koby_pfp.png" alt="Koby Pierce" width="120" height="120" style="border-radius: 50%; border: 4px solid #667eea; margin-bottom: 20px;"/>
+          <h4 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 20px;">👨‍💻 Koby Pierce</h4>
+          <p style="margin: 0; color: #7f8c8d; font-style: italic;">Co-Founder & Developer</p>
+        </div>
+      </td>
+      <td align="center" style="padding: 20px;">
+        <div style="background: rgba(255,255,255,0.95); padding: 30px; border-radius: 15px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+          <img src="landing-page/src/assets/aidenpfp.png" alt="Aiden Hamade" width="120" height="120" style="border-radius: 50%; border: 4px solid #764ba2; margin-bottom: 20px;"/>
+          <h4 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 20px;">🚀 Aiden Hamade</h4>
+          <p style="margin: 0; color: #7f8c8d; font-style: italic;">Co-Founder & Developer</p>
+        </div>
+      </td>
+    </tr>
+  </table>
+  
+  <div style="background: rgba(255,255,255,0.15); padding: 25px; border-radius: 15px; margin-top: 30px; text-align: center; max-width: 600px; margin-left: auto; margin-right: auto;">
+    <p style="margin: 0; color: white; font-size: 18px; font-weight: bold;">🏆 Built for the T3 Chat Cloneathon Competition</p>
+    <p style="margin: 10px 0 0 0; color: rgba(255,255,255,0.9); font-size: 15px;">Pushing the boundaries of AI chat experiences</p>
+  </div>
+</div>
+
+</div>
 
 ## 🔥 Overview
 
