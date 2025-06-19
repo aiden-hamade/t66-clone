@@ -330,7 +330,7 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-theme-secondary">Version</span>
-                    <span className="text-sm font-medium text-theme-primary">0.2.1</span>
+                    <span className="text-sm font-medium text-theme-primary">0.2.2</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-theme-secondary">Built for</span>
