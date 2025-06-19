@@ -206,14 +206,29 @@ export const addMessageToChat = async (
     };
 
     // Convert message timestamp to Firestore timestamp for storage and clean undefined fields
-    const messageForStorage = Object.fromEntries(
-      Object.entries({
+    const messageForStorage = {
       ...newMessage,
       timestamp: Timestamp.fromDate(newMessage.timestamp)
-      }).filter(([_, value]) => value !== undefined)
+    };
+    
+    // Handle attachments if they exist
+    if (messageForStorage.attachments) {
+      messageForStorage.attachments = messageForStorage.attachments.map(att => ({
+        id: att.id,
+        filename: att.filename,
+        size: att.size,
+        type: att.type,
+        url: att.url,
+        createdAt: typeof att.createdAt === 'string' ? att.createdAt : att.createdAt.toISOString()
+      }));
+    }
+    
+    // Clean undefined fields
+    const cleanedMessage = Object.fromEntries(
+      Object.entries(messageForStorage).filter(([_, value]) => value !== undefined)
     );
     
-    const updatedMessages = [...chat.messages, messageForStorage];
+    const updatedMessages = [...chat.messages, cleanedMessage];
     
     await updateDoc(chatRef, {
       messages: updatedMessages,
@@ -249,25 +264,55 @@ export const updateMessageInChat = async (
       if (index === messageIndex) {
         const updatedMessage = { ...msg, ...updates };
         
-        // Convert timestamp to Firestore timestamp for storage and clean undefined fields
-        return Object.fromEntries(
-          Object.entries({
+        // Convert timestamp to Firestore timestamp for storage
+        const processedMessage = {
           ...updatedMessage,
           timestamp: updatedMessage.timestamp instanceof Date 
             ? Timestamp.fromDate(updatedMessage.timestamp)
             : updatedMessage.timestamp
-          }).filter(([_, value]) => value !== undefined)
+        };
+        
+        // Handle attachments if they exist
+        if (processedMessage.attachments) {
+          processedMessage.attachments = processedMessage.attachments.map(att => ({
+            id: att.id,
+            filename: att.filename,
+            size: att.size,
+            type: att.type,
+            url: att.url,
+            createdAt: typeof att.createdAt === 'string' ? att.createdAt : att.createdAt.toISOString()
+          }));
+        }
+        
+        // Clean undefined fields
+        return Object.fromEntries(
+          Object.entries(processedMessage).filter(([_, value]) => value !== undefined)
         );
       }
       
-      // Ensure existing messages also have proper timestamps for storage and clean undefined fields
-      return Object.fromEntries(
-        Object.entries({
+      // Ensure existing messages also have proper timestamps for storage
+      const existingMessage = {
         ...msg,
         timestamp: msg.timestamp instanceof Date 
           ? Timestamp.fromDate(msg.timestamp)
           : msg.timestamp
-        }).filter(([_, value]) => value !== undefined)
+      };
+      
+      // Handle attachments if they exist
+      if (existingMessage.attachments) {
+        existingMessage.attachments = existingMessage.attachments.map(att => ({
+          id: att.id,
+          filename: att.filename,
+          size: att.size,
+          type: att.type,
+          url: att.url,
+          createdAt: typeof att.createdAt === 'string' ? att.createdAt : att.createdAt.toISOString()
+        }));
+      }
+      
+      // Clean undefined fields
+      return Object.fromEntries(
+        Object.entries(existingMessage).filter(([_, value]) => value !== undefined)
       );
     });
 

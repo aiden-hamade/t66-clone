@@ -381,7 +381,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
           size: att.size,
           type: att.type,
           url: att.url,
-          createdAt: att.createdAt
+          createdAt: att.createdAt.toISOString() // Convert Date to string
         }));
       }
       
